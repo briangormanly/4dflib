@@ -126,6 +126,9 @@ CommonServices.initializeFdfDataModel(myModel);
 // get the 4dflib settings singleton
 FdfSettings fdfSettings = FdfSettings.getInstance();
 
+// Create a array that will hold the classes that make up our 4df data model
+List<Class> myModel = new ArrayList<>();
+
 // set the database type and name and connection information
 fdfSettings.PERSISTENCE = DatabaseUtil.DatabaseType.MYSQL;
 fdfSettings.DB_PROTOCOL = DatabaseUtil.DatabaseProtocol.JDBC_MYSQL;
