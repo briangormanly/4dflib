@@ -5,9 +5,7 @@ bgormanly@gmail.com
 4dflib.com
 Copyright &copy; 2015
 
--------------------------------------------------------------------------------
 <h2>Introduction</h2>
-===============================================================================
 What is 4DF????
 
 4DF is a Library that manages your applications interaction with the database, providing ORM, database abstraction and
@@ -22,10 +20,8 @@ For more information see the follow blog posts:
 And coming soon: http://4dflib.com
 
 
-
--------------------------------------------------------------------------------
 <h2>License</h2>
-===============================================================================
+
 
 Distributed under the LGPL License (http://www.gnu.org/licenses/lgpl-3.0.en.html)
 Please see license.txt for details.
@@ -44,27 +40,18 @@ Please see license.txt for details.
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-
--------------------------------------------------------------------------------
 <h2>Logging</h2>
-===============================================================================
 
 4DFLib using SLF4J for logging for Logging Facade.  You can plug in your
 desired logging framework at deployment time.
 
 
-
--------------------------------------------------------------------------------
 <h2>Maven Repository Information</h2>
-===============================================================================
 
 Coming soon, once v1 is stable.
 
 
-
--------------------------------------------------------------------------------
 <h2>Examples of Usage</h2>
-===============================================================================
 
 The following will initialize 4DFLib to work with your application.
 ```
@@ -132,7 +119,7 @@ List<Class> myModel = new ArrayList<>();
 CommonServices.initializeFdfDataModel(myModel);
 ```
 
--------------------------------------------------------------------------------
+
 <h3>Full Example using manual class selection (Using option 2):</h3>
 
 ```
@@ -159,5 +146,13 @@ myModel.add(MySecondClass.class);
 
 // call the initialization of library!
 CommonServices.initializeFdfDataModel(myModel);
+```
+
+<h3>Simple  Example</h3>
+Let's Pretend that you have a 4DF object in your application called User.
+
+Here is what the class looks like
+```
+
 ```
 
