@@ -117,7 +117,7 @@ public interface StateServices {
         List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
 
         // create a List of entities
-        return manageReturnedEntities(returnedStates, entityState);
+        return manageReturnedEntities(returnedStates);
 
     }
 
@@ -154,7 +154,7 @@ public interface StateServices {
         List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
 
         // organize the results
-        return manageReturnedEntities(returnedStates, entityState);
+        return manageReturnedEntities(returnedStates);
 
     }
 
@@ -191,7 +191,7 @@ public interface StateServices {
         List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
 
         // organize the results
-        return manageReturnedEntities(returnedStates, entityState);
+        return manageReturnedEntities(returnedStates);
     }
 
     /**
@@ -253,7 +253,7 @@ public interface StateServices {
         List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
 
         // organize the results
-        return manageReturnedEntities(returnedStates, entityState);
+        return manageReturnedEntities(returnedStates);
     }
 
     /**
@@ -301,7 +301,7 @@ public interface StateServices {
         List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
 
         // organize the results
-        return manageReturnedEntities(returnedStates, entityState);
+        return manageReturnedEntities(returnedStates);
     }
 
     /**
@@ -341,7 +341,7 @@ public interface StateServices {
         List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
 
         // organize the results
-        return manageReturnedEntities(returnedStates, entityState);
+        return manageReturnedEntities(returnedStates);
     }
 
     /**
@@ -403,7 +403,7 @@ public interface StateServices {
         List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
 
         // organize the results
-        return manageReturnedEntities(returnedStates, entityState);
+        return manageReturnedEntities(returnedStates);
     }
 
 
@@ -443,7 +443,7 @@ public interface StateServices {
                 FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
 
         // create a List of entities
-        return manageReturnedEntity(returnedStates, entityState);
+        return manageReturnedEntity(returnedStates);
 
     }
 
@@ -490,7 +490,7 @@ public interface StateServices {
         List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
 
         // create a List of entities
-        return manageReturnedEntity(returnedStates, entityState);
+        return manageReturnedEntity(returnedStates);
 
     }
 
@@ -536,7 +536,7 @@ public interface StateServices {
         List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
 
         // create a List of entities
-        return manageReturnedEntity(returnedStates, entityState);
+        return manageReturnedEntity(returnedStates);
     }
 
     /**
@@ -607,7 +607,7 @@ public interface StateServices {
         List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
 
         // create a List of entities
-        return manageReturnedEntity(returnedStates, entityState);
+        return manageReturnedEntity(returnedStates);
     }
 
     /**
@@ -664,7 +664,7 @@ public interface StateServices {
         List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
 
         // create a List of entities
-        return manageReturnedEntity(returnedStates, entityState);
+        return manageReturnedEntity(returnedStates);
     }
 
     /**
@@ -713,7 +713,7 @@ public interface StateServices {
         List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
 
         // create a List of entities
-        return manageReturnedEntity(returnedStates, entityState);
+        return manageReturnedEntity(returnedStates);
     }
 
     /**
@@ -784,18 +784,18 @@ public interface StateServices {
         List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
 
         // create a List of entities
-        return manageReturnedEntity(returnedStates, entityState);
+        return manageReturnedEntity(returnedStates);
     }
 
 
     /**
      * Takes a list of raw states returned by a query and organizes them into separate entities of type passed.
      * @param rawStates : List of states to organize into entities
-     * @param entityState : Class of entity to use for returned type.
+     * //@param entityState : Class of entity to use for returned type.
      * @param <S> Parameterized Type of entity
      * @return List of Entities of Type passed
      */
-    static <S extends CommonState> List<FdfEntity<S>> manageReturnedEntities(List<S> rawStates, Class<S> entityState) {
+    static <S extends CommonState> List<FdfEntity<S>> manageReturnedEntities(List<S> rawStates) {
         // create a List of entities
         List<FdfEntity<S>> allEntities = new ArrayList<>();
 
@@ -831,11 +831,11 @@ public interface StateServices {
     /**
      * Takes a list of raw states returned by a query and organizes them into separate entities of type passed.
      * @param rawStates : List of states to organize into entities
-     * @param entityState : Class of entity to use for returned type.
+     * //@param entityState : Class of entity to use for returned type.
      * @param <S> Parameterized Type of entity
      * @return Entities of Type passed
      */
-    static <S extends CommonState> FdfEntity<S> manageReturnedEntity(List<S> rawStates, Class<S> entityState) {
+    static <S extends CommonState> FdfEntity<S> manageReturnedEntity(List<S> rawStates) {
         // create a List of entities
         FdfEntity<S> entity = new FdfEntity<>();
 
