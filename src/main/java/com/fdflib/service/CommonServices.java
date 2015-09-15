@@ -91,6 +91,16 @@ public class CommonServices {
 
         if(flag == 0) {
             // We have enough information to see if there exists a database
+            // do necessary logging
+            fdfLog.info("------------------------------------------------------------------");
+            fdfLog.info("4DFLib initializing database connection");
+            fdfLog.info("------------------------------------------------------------------");
+            fdfLog.info("Database Type: {}", settings.PERSISTENCE);
+            fdfLog.info("Database Protocol: {}", settings.DB_PROTOCOL);
+            fdfLog.info("Database Encoding: {}", settings.DB_ENCODING);
+            fdfLog.info("Database Host: {}", settings.DB_HOST);
+            fdfLog.info("Database schema name: {}", settings.DB_NAME);
+            fdfLog.info("------------------------------------------------------------------");
             try {
                 FdfPersistence.getInstance().createDatabase();
             } catch (SQLException e) {
