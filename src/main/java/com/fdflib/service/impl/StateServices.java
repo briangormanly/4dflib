@@ -21,6 +21,7 @@ import com.fdflib.model.state.CommonState;
 import com.fdflib.model.util.WhereClause;
 import com.fdflib.persistence.FdfPersistence;
 import com.fdflib.util.GeneralConstants;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -35,6 +36,8 @@ import java.util.List;
  */
 @SuppressWarnings("unused")
 public interface StateServices {
+
+    static org.slf4j.Logger fdfLog = LoggerFactory.getLogger(CommonState.class);
 
     /**
      * Save an Entities State to persistence internally manages all insert, update and actions associated with
@@ -88,6 +91,22 @@ public interface StateServices {
 
         // save the new state as current
         FdfPersistence.getInstance().insert(entityState, state);
+    }
+
+    /**
+     * Sets the delete flag on an entity state. If the state's df flag is set all other queries should by default
+     * ignore the deleted state unless the query is specifically designed to retrieve all data including states with
+     * the df flag set, usually this would be done for auditing purposes.
+     *
+     * Setting the df flag might require changes to the ared or arsd of prior or post states to fill the time gap left
+     * by the state marked deleted.  All of that logic is handled as part of this method.
+     *
+     * @param entityState The entity type to query
+     * @param state state to set the df flag for
+     * @param <S> The parameterized type of the entity
+     */
+    static <S extends CommonState> void setDeleteFlag(Class<S> entityState, S state) {
+
     }
 
 
@@ -887,6 +906,7 @@ public interface StateServices {
             } else {
                 if (!flag) {
                     entity.history.add((S) state);
+                    fdfLog.info("the rid was {}", state.rid);
                 }
             }
         }
