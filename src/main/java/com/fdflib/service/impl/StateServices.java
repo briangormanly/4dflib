@@ -906,7 +906,7 @@ public interface StateServices {
             } else {
                 if (!flag) {
                     entity.history.add((S) state);
-                    fdfLog.info("the rid was {}", state.rid);
+
                 }
             }
         }
