@@ -49,7 +49,7 @@ public interface StateServices {
      * @param systemId Id of system that is saving the state
      * @param <S> parameterized type of entity state
      */
-    default <S extends CommonState> void save(Class<S> entityState, S state, long userId, long systemId) {
+    default <S extends CommonState> Long save(Class<S> entityState, S state, long userId, long systemId) {
         // set the common meta fields for the new record
         state.arsd = Calendar.getInstance().getTime();
         state.ared = null;
@@ -90,7 +90,7 @@ public interface StateServices {
         }
 
         // save the new state as current
-        FdfPersistence.getInstance().insert(entityState, state);
+        return FdfPersistence.getInstance().insert(entityState, state);
     }
 
     /**

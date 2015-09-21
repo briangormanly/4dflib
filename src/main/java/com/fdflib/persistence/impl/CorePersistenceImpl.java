@@ -31,6 +31,6 @@ public interface CorePersistenceImpl {
     void createDatabase() throws SQLException;
     void createTable(Class c) throws SQLException;
     <S extends CommonState> List<S> selectQuery(Class c, List<String> select, List<WhereClause> where);
-    <S> void insert(Class<S> entityState, S state);
+    <S> Long insert(Class<S> entityState, S state);
     <S> void update(Class<S> c, S state);
 }

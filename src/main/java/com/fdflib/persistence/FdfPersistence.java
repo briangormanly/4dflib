@@ -48,13 +48,15 @@ public class FdfPersistence extends DbConnectionManager {
 
     @Override
     public <S> void update(Class<S> entityState, S state) {
+
         persistence.update(entityState, state);
     }
 
     @Override
-    public <S> void insert(Class<S> entityState, S state) {
-        persistence.insert(entityState, state);
+    public <S> Long insert(Class<S> entityState, S state) {
+        return persistence.insert(entityState, state);
     }
+
     @Override
     public <S extends CommonState> List<S> selectQuery(Class c, List<String> select, List<WhereClause> where) {
         return persistence.selectQuery(c, select, where);
