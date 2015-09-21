@@ -9,14 +9,14 @@ import java.util.List;
 /**
  * Created by brian.gormanly on 8/22/15.
  */
-public class SystemServices {
+public class SystemServices implements StateServices {
 
-    public static List<FdfEntity<SystemState>> getAllServices() {
-        return StateServices.getAll(SystemState.class);
+    public List<FdfEntity<SystemState>> getAllServices() {
+        return this.getAll(SystemState.class);
     }
 
-    public static void createDefaultService(SystemState state) {
-        StateServices.save(SystemState.class, state, 1, 1);
+    public void createDefaultService(SystemState state) {
+        this.save(SystemState.class, state, 1, 1);
     }
 
 }

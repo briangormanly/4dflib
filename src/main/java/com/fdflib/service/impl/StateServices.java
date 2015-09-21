@@ -49,7 +49,7 @@ public interface StateServices {
      * @param systemId Id of system that is saving the state
      * @param <S> parameterized type of entity state
      */
-    static <S extends CommonState> void save(Class<S> entityState, S state, long userId, long systemId) {
+    default <S extends CommonState> void save(Class<S> entityState, S state, long userId, long systemId) {
         // set the common meta fields for the new record
         state.arsd = Calendar.getInstance().getTime();
         state.ared = null;
@@ -105,7 +105,7 @@ public interface StateServices {
      * @param state state to set the df flag for
      * @param <S> The parameterized type of the entity
      */
-    static <S extends CommonState> void setDeleteFlag(Class<S> entityState, S state) {
+    default <S extends CommonState> void setDeleteFlag(Class<S> entityState, S state) {
 
     }
 
@@ -118,7 +118,7 @@ public interface StateServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    static <S extends CommonState> List<FdfEntity<S>> getAll(Class<S> entityState) {
+    default <S extends CommonState> List<FdfEntity<S>> getAll(Class<S> entityState) {
 
         // create the where statement for the query
         List<WhereClause> whereStatement = new ArrayList<>();
@@ -148,7 +148,7 @@ public interface StateServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    static <S extends CommonState> List<FdfEntity<S>> getAllCurrent(Class<S> entityState) {
+    default <S extends CommonState> List<FdfEntity<S>> getAllCurrent(Class<S> entityState) {
 
         // create the where statement for the statement
         List<WhereClause> whereStatement = new ArrayList<>();
@@ -185,7 +185,7 @@ public interface StateServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    static <S extends CommonState> List<FdfEntity<S>> getAllHistory(Class<S> entityState) {
+    default <S extends CommonState> List<FdfEntity<S>> getAllHistory(Class<S> entityState) {
 
         // create the where statement for the statement
         List<WhereClause> whereStatement = new ArrayList<>();
@@ -228,7 +228,7 @@ public interface StateServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    static <S extends CommonState> List<FdfEntity<S>> getAllAtDate(Class<S> entityState, Date date) {
+    default <S extends CommonState> List<FdfEntity<S>> getAllAtDate(Class<S> entityState, Date date) {
 
         // create the where statement for the statement
         List<WhereClause> whereStatement = new ArrayList<>();
@@ -286,7 +286,7 @@ public interface StateServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    static <S extends CommonState> List<FdfEntity<S>> getAllFromDate(Class<S> entityState, Date date) {
+    default <S extends CommonState> List<FdfEntity<S>> getAllFromDate(Class<S> entityState, Date date) {
 
         // create the where statement for the statement
         List<WhereClause> whereStatement = new ArrayList<>();
@@ -334,7 +334,7 @@ public interface StateServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    static <S extends CommonState> List<FdfEntity<S>> getAllBeforeDate(Class<S> entityState, Date date) {
+    default <S extends CommonState> List<FdfEntity<S>> getAllBeforeDate(Class<S> entityState, Date date) {
 
         // create the where statement for the statement
         List<WhereClause> whereStatement = new ArrayList<>();
@@ -376,7 +376,7 @@ public interface StateServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    static <S extends CommonState> List<FdfEntity<S>> getAllBetweenDates(Class<S> entityState,
+    default <S extends CommonState> List<FdfEntity<S>> getAllBetweenDates(Class<S> entityState,
                                                                          Date startDate, Date endDate) {
 
         // create the where statement for the statement
@@ -434,7 +434,7 @@ public interface StateServices {
      * @param <S> Parameterized type of entity
      * @return Entity of type passed
      */
-    static <S extends CommonState> FdfEntity<S> getEntity(Class<S> entityState, long id) {
+    default <S extends CommonState> FdfEntity<S> getEntity(Class<S> entityState, long id) {
 
         // create the where statement for the query
         List<WhereClause> whereStatement = new ArrayList<>();
@@ -474,7 +474,7 @@ public interface StateServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    static <S extends CommonState> FdfEntity<S> getEntityCurrent
+    default <S extends CommonState> FdfEntity<S> getEntityCurrent
         (Class<S> entityState, long id) {
 
         // create the where statement for the statement
@@ -521,7 +521,7 @@ public interface StateServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    static <S extends CommonState> FdfEntity<S> getEntityHistory(Class<S> entityState, long id) {
+    default <S extends CommonState> FdfEntity<S> getEntityHistory(Class<S> entityState, long id) {
 
         // create the where statement for the statement
         List<WhereClause> whereStatement = new ArrayList<>();
@@ -573,7 +573,7 @@ public interface StateServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    static <S extends CommonState> FdfEntity<S> getEntityAtDate(Class<S> entityState, long id, Date date) {
+    default <S extends CommonState> FdfEntity<S> getEntityAtDate(Class<S> entityState, long id, Date date) {
 
         // create the where statement for the statement
         List<WhereClause> whereStatement = new ArrayList<>();
@@ -640,7 +640,7 @@ public interface StateServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    static <S extends CommonState> FdfEntity<S> getEntityFromDate(Class<S> entityState, long id, Date date) {
+    default <S extends CommonState> FdfEntity<S> getEntityFromDate(Class<S> entityState, long id, Date date) {
 
         // create the where statement for the statement
         List<WhereClause> whereStatement = new ArrayList<>();
@@ -697,7 +697,7 @@ public interface StateServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    static <S extends CommonState> FdfEntity<S> getEntityBeforeDate(Class<S> entityState, long id, Date date) {
+    default <S extends CommonState> FdfEntity<S> getEntityBeforeDate(Class<S> entityState, long id, Date date) {
 
         // create the where statement for the statement
         List<WhereClause> whereStatement = new ArrayList<>();
@@ -748,7 +748,7 @@ public interface StateServices {
      * @param <S> Parameterized type of entity
      * @return List of type passed
      */
-    static <S extends CommonState> FdfEntity<S> getEntityBetweenDates(Class<S> entityState, long id,
+    default <S extends CommonState> FdfEntity<S> getEntityBetweenDates(Class<S> entityState, long id,
                                                                       Date startDate, Date endDate) {
 
         // create the where statement for the statement
@@ -814,7 +814,7 @@ public interface StateServices {
      * @param <S> Parameterized Type of entity
      * @return List of Entities of Type passed
      */
-    static <S extends CommonState> List<FdfEntity<S>> manageReturnedEntities(List<S> rawStates) {
+    default <S extends CommonState> List<FdfEntity<S>> manageReturnedEntities(List<S> rawStates) {
         // create a List of entities
         List<FdfEntity<S>> allEntities = new ArrayList<>();
 
@@ -854,7 +854,7 @@ public interface StateServices {
      * @param <S> Parameterized Type of entity
      * @return Entities of Type passed
      */
-    static <S extends CommonState> FdfEntity<S> manageReturnedEntity(List<S> rawStates) {
+    default <S extends CommonState> FdfEntity<S> manageReturnedEntity(List<S> rawStates) {
         // create a List of entities
         FdfEntity<S> entity = new FdfEntity<>();
 
@@ -875,7 +875,7 @@ public interface StateServices {
      * @param <S> Parameterized type of State.
      */
     @SuppressWarnings("unchecked")
-    static <S extends CommonState> void addStateToEntity(CommonState state, FdfEntity<S> entity) {
+    default <S extends CommonState> void addStateToEntity(CommonState state, FdfEntity<S> entity) {
         boolean flag = false;
 
         // check to see if this is the first state being saved to the entity, if so set the entityId
@@ -918,7 +918,7 @@ public interface StateServices {
      * @param <S>
      * @return
      */
-    static <S extends CommonState> long getNewEnityId(Class<S> entityState) {
+    default <S extends CommonState> long getNewEnityId(Class<S> entityState) {
         // get the last id assigned
         List<String> select = new ArrayList<>();
         String maxId = "max(id) as id";
