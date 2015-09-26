@@ -18,6 +18,7 @@ package com.fdflib.service.impl;
 
 import com.fdflib.model.entity.FdfEntity;
 import com.fdflib.model.state.CommonState;
+import com.fdflib.model.state.SystemState;
 import com.fdflib.model.util.WhereClause;
 import com.fdflib.persistence.FdfPersistence;
 import com.fdflib.util.GeneralConstants;
@@ -49,7 +50,7 @@ public interface StateServices {
      * @param systemId Id of system that is saving the state
      * @param <S> parameterized type of entity state
      */
-    default <S extends CommonState> Long save(Class<S> entityState, S state, long userId, long systemId) {
+    default <S extends CommonState> FdfEntity<S> save(Class<S> entityState, S state, long userId, long systemId) {
         // set the common meta fields for the new record
         state.arsd = Calendar.getInstance().getTime();
         state.ared = null;
@@ -90,7 +91,10 @@ public interface StateServices {
         }
 
         // save the new state as current
-        return FdfPersistence.getInstance().insert(entityState, state);
+        long returnedId = FdfPersistence.getInstance().insert(entityState, state);
+
+        // get the entitiy and return
+        return getEntity(entityState, returnedId);
     }
 
     /**
@@ -105,9 +109,103 @@ public interface StateServices {
      * @param state state to set the df flag for
      * @param <S> The parameterized type of the entity
      */
-    default <S extends CommonState> void setDeleteFlag(Class<S> entityState, S state) {
+    default <S extends CommonState> void setDeleteFlagSingleState(Class<S> entityState, S state) {
+        System.out.println("HELLO!!!!!!!!!!!!!!!!!!!!!!!");
+        if(entityState != null && state != null) {
+
+            // set the delete flag for the state
+            state.df = true;
+
+            // get full entity for state
+            FdfEntity<S> thisEntity = getEntity(entityState, state.id);
+
+            // find out if this it the current entity
+            System.out.println("Checking:::: " + thisEntity.current.rid + " == " + state.rid);
+            if(thisEntity.current.rid == state.rid) {
+                // since this was a current record set the ared to the current date
+                state.ared = Calendar.getInstance().getTime();
+                state.cf = false;
+
+                System.out.println("history sive: " + thisEntity.history.size());
+                // we just df the current entity so we have to see if there is history and promote the most recent
+                if(thisEntity.history.size() > 0) {
+                    // find the historical entry with the most recent endDate
+                    S lastState = null;
+                    for(S historicalState: thisEntity.history) {
+                        if(lastState == null) {
+                            lastState = historicalState;
+                        }
+                        else {
+                            if(historicalState.ared.after(lastState.ared)) {
+                                // the state being looked at is more recent
+                                lastState = historicalState;
+                            }
+                        }
+                    }
+
+                    //promote the historical state to current
+                    lastState.cf = true;
+                    lastState.ared = null;
+
+                    FdfPersistence.getInstance().update(entityState, lastState);
+                }
+            }
+
+            // save the df state
+            FdfPersistence.getInstance().update(entityState, state);
+
+        }
+    }
+
+    /**
+     *
+     * @param entityState
+     * @param state
+     * @param <S>
+     */
+    default <S extends CommonState> void removeDeleteFlagSingleState(Class<S> entityState, S state) {
+        if(entityState != null && state != null) {
+            // set the df flag off
+            state.df = false;
+
+            // get full entity for state
+            FdfEntity<S> thisEntity = getEntity(entityState, state.id);
+
+            // find out if this it not the current entity
+            if(thisEntity.current != state) {
+                //
+            }
+        }
+    }
+
+    /**
+     *
+     * @param entityState
+     * @param entityId
+     * @param <S>
+     *
+    default <S extends CommonState> void setDeleteFlagAllStates(Class<S> entityState, long entityId) {
+        if(entityId >= 0 && entityState != null) {
+            // get full entity for state
+            FdfEntity<S> thisEntity = getEntity(entityState, entityId);
+
+            if(thisEntity != null && (thisEntity.current != null || thisEntity.history.size() > 0)) {
+                // set the current
+            }
+
+        }
+    }
+
+    /**
+     *
+     * @param entityState
+     * @param entityId
+     * @param <S>
+     *
+    default <S extends CommonState> void removeDeleteFlagAllStates(Class<S> entityState, long entityId) {
 
     }
+    */
 
 
     /**
