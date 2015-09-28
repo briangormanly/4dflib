@@ -41,7 +41,7 @@ public class TenantServices implements FdfCommonServices {
         return tenantList;
     }
 
-    public FdfEntity<FdfTenant> getPrimaryTenant() {
+    public FdfEntity<FdfTenant> getDefaultTenant() {
         List<WhereClause> whereClauses = new ArrayList<>();
 
         // check that deleted records are not returned

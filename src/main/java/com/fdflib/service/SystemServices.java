@@ -32,10 +32,10 @@ public class SystemServices implements FdfCommonServices {
         // add the id check
         WhereClause whereId = new WhereClause();
         whereId.conditional = WhereClause.CONDITIONALS.AND;
-        whereId.name = "name";
+        whereId.name = "id";
         whereId.operator = WhereClause.Operators.EQUAL;
-        whereId.value = "Default";
-        whereId.valueDataType = String.class;
+        whereId.value = "1";
+        whereId.valueDataType = Long.class;
 
         whereStatement.add(whereDf);
         whereStatement.add(whereId);
