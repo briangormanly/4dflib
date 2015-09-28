@@ -27,7 +27,7 @@ import java.util.List;
 public class FdfEntity<S extends CommonState> {
     public S current;
     public List<S> history;
-    public long sisEntityId = -1;
+    public long entityId = -1;
 
     public FdfEntity() {
         current = null;
@@ -35,7 +35,7 @@ public class FdfEntity<S extends CommonState> {
     }
 
     public FdfEntity(S currentState, List<S> historyStates) {
-        sisEntityId = currentState.id;
+        entityId = currentState.id;
         current = currentState;
         history = historyStates;
     }

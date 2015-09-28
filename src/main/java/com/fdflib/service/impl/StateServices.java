@@ -964,7 +964,7 @@ public interface StateServices {
 
             // compare this id against existing ones
             for(FdfEntity thisEntity : allEntities) {
-                if (thisEntity.sisEntityId == state.id) {
+                if (thisEntity.entityId == state.id) {
 
                     // match
                     flag++;
@@ -1018,13 +1018,13 @@ public interface StateServices {
         boolean flag = false;
 
         // check to see if this is the first state being saved to the entity, if so set the entityId
-        if(entity.sisEntityId == -1) {
-            entity.sisEntityId = state.id;
+        if(entity.entityId == -1) {
+            entity.entityId = state.id;
         }
 
         // check to see that the id of the state passed matches the existing id for this entity, otherwise it does
         // not belong here.
-        if(entity.sisEntityId == state.id) {
+        if(entity.entityId == state.id) {
 
             // if there is history for the entity and this is not a current state, check to see if the passed state
             // is there already.
