@@ -45,6 +45,17 @@ public class FdfSettings {
     public static String DB_ROOT_USER = null;
     public static String DB_ROOT_PASSWORD = null;
 
+    public static String DEFAULT_TENANT_NAME = "Default FdfTenant";
+    public static String DEFAULT_TENANT_DESRIPTION = "Default FdfTenant is created by 4dflib, if you do not intent to use "
+            + "built in multi-tenancy or only have one FdfTenant, all data is member of this tenant by "
+            + "default";
+    public static String DEFAULT_TENANT_WEBSITE = "http://www.4dflib.com";
+    public static Boolean DEFAULT_TENANT_IS_PRIMARY = true;
+
+    public static String DEFAULT_SYSTEM_NAME = "Default FdfSystem";
+    public static String DEFAULT_SYSTEM_DESCRIPTION = "Default system represents the actual application and not"
+            + " a registered external system.";
+
     private FdfSettings() {
     }
 
