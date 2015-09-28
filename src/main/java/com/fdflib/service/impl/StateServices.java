@@ -18,7 +18,6 @@ package com.fdflib.service.impl;
 
 import com.fdflib.model.entity.FdfEntity;
 import com.fdflib.model.state.CommonState;
-import com.fdflib.model.state.SystemState;
 import com.fdflib.model.util.WhereClause;
 import com.fdflib.persistence.FdfPersistence;
 import com.fdflib.util.GeneralConstants;
@@ -67,7 +66,7 @@ public interface StateServices {
         }
 
         // get full entity for state
-        FdfEntity<S> thisEntity = getEntity(entityState, state.id);
+        FdfEntity<S> thisEntity = getEntityById(entityState, state.id);
 
         // check to see if there is an existing entity, if not, create
         if(thisEntity == null) {
@@ -91,10 +90,10 @@ public interface StateServices {
         }
 
         // save the new state as current
-        long returnedId = FdfPersistence.getInstance().insert(entityState, state);
+        long returnedRid = FdfPersistence.getInstance().insert(entityState, state);
 
         // get the entitiy and return
-        return getEntity(entityState, returnedId);
+        return getEntityByRid(entityState, returnedRid);
     }
 
     /**
@@ -110,25 +109,24 @@ public interface StateServices {
      * @param <S> The parameterized type of the entity
      */
     default <S extends CommonState> void setDeleteFlagSingleState(Class<S> entityState, S state) {
-        System.out.println("HELLO!!!!!!!!!!!!!!!!!!!!!!!");
         if(entityState != null && state != null) {
 
             // set the delete flag for the state
             state.df = true;
 
             // get full entity for state
-            FdfEntity<S> thisEntity = getEntity(entityState, state.id);
+            FdfEntity<S> thisEntity = getEntityById(entityState, state.id);
 
             // find out if this it the current entity
-            System.out.println("Checking:::: " + thisEntity.current.rid + " == " + state.rid);
             if(thisEntity.current.rid == state.rid) {
+
                 // since this was a current record set the ared to the current date
                 state.ared = Calendar.getInstance().getTime();
                 state.cf = false;
 
-                System.out.println("history sive: " + thisEntity.history.size());
                 // we just df the current entity so we have to see if there is history and promote the most recent
                 if(thisEntity.history.size() > 0) {
+
                     // find the historical entry with the most recent endDate
                     S lastState = null;
                     for(S historicalState: thisEntity.history) {
@@ -136,9 +134,11 @@ public interface StateServices {
                             lastState = historicalState;
                         }
                         else {
-                            if(historicalState.ared.after(lastState.ared)) {
+                            // if the state ared we are looking at is greater then then the last one make it the last
+                            if(historicalState.ared.getTime() > lastState.ared.getTime()) {
                                 // the state being looked at is more recent
                                 lastState = historicalState;
+
                             }
                         }
                     }
@@ -158,6 +158,8 @@ public interface StateServices {
     }
 
     /**
+     * Removes a delete flag from the state passed.  Restores the state to current if appropriate and adjusts others
+     * states affected by the change if necessary.
      *
      * @param entityState
      * @param state
@@ -165,47 +167,46 @@ public interface StateServices {
      */
     default <S extends CommonState> void removeDeleteFlagSingleState(Class<S> entityState, S state) {
         if(entityState != null && state != null) {
-            // set the df flag off
-            state.df = false;
 
             // get full entity for state
-            FdfEntity<S> thisEntity = getEntity(entityState, state.id);
+            FdfEntity<S> thisEntity = getEntityById(entityState, state.id);
 
-            // find out if this it not the current entity
-            if(thisEntity.current != state) {
-                //
+            // check to see if there is no current row, if not, then promote deleted row back to current
+            if(thisEntity.current == null) {
+                state.df = false;
+                state.cf = true;
+                state.ared = null;
+
+                // update the df row
+                FdfPersistence.getInstance().update(entityState, state);
+            }
+            else {
+                // there was a current row, check to see if the deleted row had the greatest arsd, if it did it should
+                // be promoted back to the current row.
+                if(thisEntity.current.arsd.getTime() < state.arsd.getTime()) {
+                    state.df = false;
+                    state.cf = true;
+                    state.ared = null;
+
+                    // demote the current, current row
+                    thisEntity.current.cf = false;
+                    thisEntity.current.ared = state.arsd;
+
+                    FdfPersistence.getInstance().update(entityState, thisEntity.current);
+
+                    // update the df row
+                    FdfPersistence.getInstance().update(entityState, state);
+                }
+                else {
+                    // the arsd does not indicate the deleted row should be current, just remove deleted status
+                    state.df = false;
+
+                    // update the df row
+                    FdfPersistence.getInstance().update(entityState, state);
+                }
             }
         }
     }
-
-    /**
-     *
-     * @param entityState
-     * @param entityId
-     * @param <S>
-     *
-    default <S extends CommonState> void setDeleteFlagAllStates(Class<S> entityState, long entityId) {
-        if(entityId >= 0 && entityState != null) {
-            // get full entity for state
-            FdfEntity<S> thisEntity = getEntity(entityState, entityId);
-
-            if(thisEntity != null && (thisEntity.current != null || thisEntity.history.size() > 0)) {
-                // set the current
-            }
-
-        }
-    }
-
-    /**
-     *
-     * @param entityState
-     * @param entityId
-     * @param <S>
-     *
-    default <S extends CommonState> void removeDeleteFlagAllStates(Class<S> entityState, long entityId) {
-
-    }
-    */
 
 
     /**
@@ -532,7 +533,7 @@ public interface StateServices {
      * @param <S> Parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> FdfEntity<S> getEntity(Class<S> entityState, long id) {
+    default <S extends CommonState> FdfEntity<S> getEntityById(Class<S> entityState, long id) {
 
         // create the where statement for the query
         List<WhereClause> whereStatement = new ArrayList<>();
@@ -565,6 +566,46 @@ public interface StateServices {
     }
 
     /**
+     * Retrieves the entity associated with the rid passed. Returns current and historical states for the entity
+     *
+     * @param entityState The entity type to query
+     * @param rid The Id of the Entity to retrieve
+     * @param <S> Parameterized type of entity
+     * @return Entity of type passed
+     */
+    default <S extends CommonState> FdfEntity<S> getEntityByRid(Class<S> entityState, long rid) {
+
+        // create the where statement for the query
+        List<WhereClause> whereStatement = new ArrayList<>();
+
+        // check that deleted records are not returned
+        WhereClause whereDf = new WhereClause();
+        whereDf.name = "df";
+        whereDf.operator = WhereClause.Operators.NOT_EQUAL;
+        whereDf.value = "1";
+        whereDf.valueDataType = Integer.class;
+
+        // add the id check
+        WhereClause whereId = new WhereClause();
+        whereId.conditional = WhereClause.CONDITIONALS.AND;
+        whereId.name = "rid";
+        whereId.operator = WhereClause.Operators.EQUAL;
+        whereId.value = Long.toString(rid);
+        whereId.valueDataType = Long.class;
+
+        whereStatement.add(whereDf);
+        whereStatement.add(whereId);
+
+        // do the query
+        List<S> returnedStates =
+                FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
+
+        // now that we have the state with the rid, get all of the states with the id it contains
+        return getEntityById(entityState, returnedStates.get(0).id);
+
+    }
+
+    /**
      * Retrieves the entity of type passed from persistence, only returns current data, without any historical
      * data.
      *
@@ -572,7 +613,7 @@ public interface StateServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> FdfEntity<S> getEntityCurrent
+    default <S extends CommonState> FdfEntity<S> getEntityCurrentById
         (Class<S> entityState, long id) {
 
         // create the where statement for the statement
@@ -619,7 +660,7 @@ public interface StateServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> FdfEntity<S> getEntityHistory(Class<S> entityState, long id) {
+    default <S extends CommonState> FdfEntity<S> getEntityHistoryById(Class<S> entityState, long id) {
 
         // create the where statement for the statement
         List<WhereClause> whereStatement = new ArrayList<>();
@@ -671,7 +712,7 @@ public interface StateServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> FdfEntity<S> getEntityAtDate(Class<S> entityState, long id, Date date) {
+    default <S extends CommonState> FdfEntity<S> getEntityAtDateById(Class<S> entityState, long id, Date date) {
 
         // create the where statement for the statement
         List<WhereClause> whereStatement = new ArrayList<>();
@@ -738,7 +779,7 @@ public interface StateServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> FdfEntity<S> getEntityFromDate(Class<S> entityState, long id, Date date) {
+    default <S extends CommonState> FdfEntity<S> getEntityFromDateById(Class<S> entityState, long id, Date date) {
 
         // create the where statement for the statement
         List<WhereClause> whereStatement = new ArrayList<>();
@@ -795,7 +836,7 @@ public interface StateServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> FdfEntity<S> getEntityBeforeDate(Class<S> entityState, long id, Date date) {
+    default <S extends CommonState> FdfEntity<S> getEntityBeforeDateById(Class<S> entityState, long id, Date date) {
 
         // create the where statement for the statement
         List<WhereClause> whereStatement = new ArrayList<>();
@@ -846,7 +887,7 @@ public interface StateServices {
      * @param <S> Parameterized type of entity
      * @return List of type passed
      */
-    default <S extends CommonState> FdfEntity<S> getEntityBetweenDates(Class<S> entityState, long id,
+    default <S extends CommonState> FdfEntity<S> getEntityBetweenDatesById(Class<S> entityState, long id,
                                                                       Date startDate, Date endDate) {
 
         // create the where statement for the statement

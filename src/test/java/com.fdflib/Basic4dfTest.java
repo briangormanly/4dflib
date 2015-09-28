@@ -73,8 +73,26 @@ public class Basic4dfTest {
         // save the new description
         FdfEntity<SystemState> dbUts2 = ss.save(SystemState.class, dbUts1.current, 1, defaultSystem.current.id);
 
+        // make a third change to the description
+        dbUts2.current.description = "This is the third description";
+
+        // sleep for a couple of seconds
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // save the new description
+        FdfEntity<SystemState> dbUts3 = ss.save(SystemState.class, dbUts2.current, 1, defaultSystem.current.id);
+
+        if(dbUts3.current == null) {
+            System.out.println("~~~~ it was null!~");
+            System.out.println(" there was : " + dbUts3.history.size() + " in the history!");
+        }
+
         // do an update to the name, change to "Unit Test ERROR"
-        dbUts2.current.name = "Unit Test ERRROR";
+        dbUts3.current.name = "Unit Test ERRROR";
 
         // sleep for almost a couple of seconds
         try {
@@ -84,12 +102,27 @@ public class Basic4dfTest {
         }
 
         // save the new description
-        FdfEntity<SystemState> dbUts3 = ss.save(SystemState.class, dbUts2.current, 1, defaultSystem.current.id);
+        FdfEntity<SystemState> dbUts4 = ss.save(SystemState.class, dbUts3.current, 1, defaultSystem.current.id);
+
+        // sleep for almost a couple of seconds
+        try {
+            Thread.sleep(1800);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         // opps... that was bad mark this record as being in error
-        ss.setDeleteFlagSingleState(SystemState.class, dbUts3.current);
+        ss.setDeleteFlagSingleState(SystemState.class, dbUts4.current);
 
+        // sleep for almost a couple of seconds
+        try {
+            Thread.sleep(4000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
+        //now that we deleted the row, put it back!!!!
+        ss.removeDeleteFlagSingleState(SystemState.class, dbUts4.current);
 
     }
 }
