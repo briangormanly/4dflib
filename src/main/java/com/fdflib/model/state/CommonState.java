@@ -31,6 +31,7 @@ public class CommonState {
     public Date ared;
     public long euid;
     public long esid;
+    public long tid;    // tenantId
 
     public CommonState() {
         this.rid = -1;
@@ -41,5 +42,6 @@ public class CommonState {
         this.ared = null;
         this.esid = -1;
         this.euid = -1;
+        this.tid = -1;
     }
 }

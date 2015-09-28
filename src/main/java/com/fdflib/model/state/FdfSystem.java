@@ -19,12 +19,12 @@ package com.fdflib.model.state;
 /**
  * Created by brian.gormanly on 8/21/15.
  */
-public class SystemState extends CommonState {
+public class FdfSystem extends CommonState {
 
     public String name;
     public String description;
 
-    public SystemState() {
+    public FdfSystem() {
         super();
 
         name = "";

@@ -16,7 +16,8 @@
 
 package com.fdflib.service;
 
-import com.fdflib.model.state.SystemState;
+import com.fdflib.model.state.FdfSystem;
+import com.fdflib.model.state.FdfTenant;
 import com.fdflib.persistence.FdfPersistence;
 import com.fdflib.persistence.database.DatabaseUtil;
 import com.fdflib.util.FdfSettings;
@@ -86,8 +87,11 @@ public class CommonServices {
         // register the passed in 4df data model (represented by passed list of classes)
         FdfSettings.getInstance().modelClasses.addAll(passedClasses);
 
-        // add the library serviceState model
-        FdfSettings.getInstance().modelClasses.add(SystemState.class);
+        // add the library FdfSystem model
+        FdfSettings.getInstance().modelClasses.add(FdfSystem.class);
+
+        // add the library FdfTenant model
+        FdfSettings.getInstance().modelClasses.add(FdfTenant.class);
 
         if(flag == 0) {
             // We have enough information to see if there exists a database

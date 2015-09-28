@@ -35,13 +35,14 @@ import java.util.List;
  * @author brian.gormanly
  */
 @SuppressWarnings("unused")
-public interface StateServices {
+public interface FdfCommonServices {
 
     static org.slf4j.Logger fdfLog = LoggerFactory.getLogger(CommonState.class);
 
+
     /**
      * Save an Entities State to persistence internally manages all insert, update and actions associated with
-     * maintaining the correct state of the data in persistence.
+     * maintaining the correct state of the data in persistence.  Uses the Default FdfTenant (when not using multi-tenant)
      *
      * @param entityState State Type to save
      * @param state state to save
@@ -50,14 +51,33 @@ public interface StateServices {
      * @param <S> parameterized type of entity state
      */
     default <S extends CommonState> FdfEntity<S> save(Class<S> entityState, S state, long userId, long systemId) {
+
+        return save(entityState, state, userId, systemId, 1);
+    }
+
+
+    /**
+     * Save an Entities State to persistence internally manages all insert, update and actions associated with
+     * maintaining the correct state of the data in persistence.  Includes specified tenant (when using multi-tenant)
+     *
+     * @param entityState State Type to save
+     * @param state state to save
+     * @param userId Id of user that is saving the state
+     * @param systemId Id of system that is saving the state
+     * @param tenantId Id of tenant this entity is associated with
+     * @param <S> parameterized type of entity state
+     * @return
+     */
+    default <S extends CommonState> FdfEntity<S> save(Class<S> entityState, S state,
+                                                      long userId, long systemId, long tenantId) {
         // set the common meta fields for the new record
         state.arsd = Calendar.getInstance().getTime();
         state.ared = null;
         state.cf = true;
         state.df = false;
-        // TODO:: These should be set dynamically!!!!!! We need the Id passed in, and the system table!
         state.euid = userId;
         state.esid = systemId;
+        state.tid = tenantId;
 
         // check to see if this if an id is assigned (existing vs new entity)
         if(state.id <= 0) {
@@ -95,6 +115,7 @@ public interface StateServices {
         // get the entitiy and return
         return getEntityByRid(entityState, returnedRid);
     }
+
 
     /**
      * Sets the delete flag on an entity state. If the state's df flag is set all other queries should by default
@@ -211,13 +232,28 @@ public interface StateServices {
 
     /**
      * Retrieves all entities of type passed from persistence. Includes all current and historical data for
-     * each entity returned.
+     * each entity returned.  Uses the Default FdfTenant (when not using multi-tenant)
      *
      * @param entityState The entity type to query
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
     default <S extends CommonState> List<FdfEntity<S>> getAll(Class<S> entityState) {
+
+        return getAll(entityState, 1);
+
+    }
+
+    /**
+     * Retrieves all entities of type passed from persistence. Includes all current and historical data for
+     * each entity returned.  Includes specified tenant (when using multi-tenant)
+     *
+     * @param entityState The entity type to query
+     * @param tenantId Id of the tenant to retrieve for (Multi-FdfTenant mode)
+     * @param <S> parameterized type of entity
+     * @return List of type passed
+     */
+    default <S extends CommonState> List<FdfEntity<S>> getAll(Class<S> entityState, long tenantId) {
 
         // create the where statement for the query
         List<WhereClause> whereStatement = new ArrayList<>();
@@ -229,7 +265,14 @@ public interface StateServices {
         whereDf.value = "1";
         whereDf.valueDataType = Integer.class;
 
+        WhereClause whereTid = new WhereClause();
+        whereTid.name = "tid";
+        whereTid.operator = WhereClause.Operators.EQUAL;
+        whereTid.value = Long.toString(tenantId);
+        whereTid.valueDataType = Long.class;
+
         whereStatement.add(whereDf);
+        whereStatement.add(whereTid);
 
         // do the query
         List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
@@ -241,13 +284,28 @@ public interface StateServices {
 
     /**
      * Retrieves all entities of type passed from persistence, only returns current data for each entity, without
-     * any historical data.
+     * any historical data.  Uses the Default FdfTenant (when not using multi-tenant)
      *
      * @param entityState The entity type to query
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
     default <S extends CommonState> List<FdfEntity<S>> getAllCurrent(Class<S> entityState) {
+
+        return getAllCurrent(entityState, 1);
+
+    }
+
+    /**
+     * Retrieves all entities of type passed from persistence, only returns current data for each entity, without
+     * any historical data.  Includes specified tenant (when using multi-tenant)
+     *
+     * @param entityState The entity type to query
+     * @param tenantId Id of the tenant to retrieve for (Multi-FdfTenant mode)
+     * @param <S> parameterized type of entity
+     * @return List of type passed
+     */
+    default <S extends CommonState> List<FdfEntity<S>> getAllCurrent(Class<S> entityState, long tenantId) {
 
         // create the where statement for the statement
         List<WhereClause> whereStatement = new ArrayList<>();
@@ -265,8 +323,15 @@ public interface StateServices {
         whereCf.value = "true";
         whereCf.valueDataType = Boolean.class;
 
+        WhereClause whereTid = new WhereClause();
+        whereTid.name = "tid";
+        whereTid.operator = WhereClause.Operators.EQUAL;
+        whereTid.value = Long.toString(tenantId);
+        whereTid.valueDataType = Long.class;
+
         whereStatement.add(whereDf);
         whereStatement.add(whereCf);
+        whereStatement.add(whereTid);
 
         // do the query
         List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
@@ -276,15 +341,32 @@ public interface StateServices {
 
     }
 
+
     /**
      * Retrieves all entities of type passed from persistence, only returning the historical data in the entity,
-     * no current data is included.
+     * no current data is included.  Uses the Default FdfTenant (when not using multi-tenant)
      *
      * @param entityState The entity type to query
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
     default <S extends CommonState> List<FdfEntity<S>> getAllHistory(Class<S> entityState) {
+
+        return getAllHistory(entityState, 1);
+
+    }
+
+
+    /**
+     * Retrieves all entities of type passed from persistence, only returning the historical data in the entity,
+     * no current data is included.  Includes specified tenant (when using multi-tenant)
+     *
+     * @param entityState The entity type to query
+     * @param tenantId Id of the tenant to retrieve for (Multi-FdfTenant mode)
+     * @param <S> parameterized type of entity
+     * @return List of type passed
+     */
+    default <S extends CommonState> List<FdfEntity<S>> getAllHistory(Class<S> entityState, long tenantId) {
 
         // create the where statement for the statement
         List<WhereClause> whereStatement = new ArrayList<>();
@@ -302,8 +384,15 @@ public interface StateServices {
         whereCf.value = "false";
         whereCf.valueDataType = Boolean.class;
 
+        WhereClause whereTid = new WhereClause();
+        whereTid.name = "tid";
+        whereTid.operator = WhereClause.Operators.EQUAL;
+        whereTid.value = Long.toString(tenantId);
+        whereTid.valueDataType = Long.class;
+
         whereStatement.add(whereDf);
         whereStatement.add(whereCf);
+        whereStatement.add(whereTid);
 
         // do the query
         List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
@@ -311,6 +400,7 @@ public interface StateServices {
         // organize the results
         return manageReturnedEntities(returnedStates);
     }
+
 
     /**
      * Retrieves all entities of the passed type from persistence as they existed at the date passed. Only states
@@ -322,12 +412,39 @@ public interface StateServices {
      * One state will be returned for each entity, if the state is still the current state it will be contained
      * in the entity.current else it will be in the entity.history
      *
+     * Uses the Default FdfTenant (when not using multi-tenant)
+     *
      * @param entityState The entity type to query
      * @param date Date at which to get entities state
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
     default <S extends CommonState> List<FdfEntity<S>> getAllAtDate(Class<S> entityState, Date date) {
+
+        return getAllAtDate(entityState, date, 1);
+
+    }
+
+
+    /**
+     * Retrieves all entities of the passed type from persistence as they existed at the date passed. Only states
+     * existing at the date passed will be returned.  Usually this will only return one State per Entity in the form
+     * they were in at that time, however if the time passed was the same time as a change to a entity you will get
+     * back both the states as the end date of the outgoing and the startdate of the incoming will match the date
+     * passed.
+     *
+     * One state will be returned for each entity, if the state is still the current state it will be contained
+     * in the entity.current else it will be in the entity.history
+     *
+     * Includes specified tenant (when using multi-tenant)
+     *
+     * @param entityState The entity type to query
+     * @param date Date at which to get entities state
+     * @param tenantId Id of the tenant to retrieve for (Multi-FdfTenant mode)
+     * @param <S> parameterized type of entity
+     * @return List of type passed
+     */
+    default <S extends CommonState> List<FdfEntity<S>> getAllAtDate(Class<S> entityState, Date date, long tenantId) {
 
         // create the where statement for the statement
         List<WhereClause> whereStatement = new ArrayList<>();
@@ -362,10 +479,17 @@ public interface StateServices {
         endDateNull.value = WhereClause.NULL;
         endDateNull.groupings.add(WhereClause.GROUPINGS.CLOSE_PARENTHESIS);
 
+        WhereClause whereTid = new WhereClause();
+        whereTid.name = "tid";
+        whereTid.operator = WhereClause.Operators.EQUAL;
+        whereTid.value = Long.toString(tenantId);
+        whereTid.valueDataType = Long.class;
+
         whereStatement.add(whereDf);
         whereStatement.add(startDate);
         whereStatement.add(endDate);
         whereStatement.add(endDateNull);
+        whereStatement.add(whereTid);
 
         // do the query
         List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
@@ -374,11 +498,14 @@ public interface StateServices {
         return manageReturnedEntities(returnedStates);
     }
 
+
     /**
      * Retrieves all entities that have states active starting at or after the date passed into the method.  Will
      * return current and historical data for the entity equal to or newer then the passed date, but no history
      * with an end date before the passed date.  If a entity does not have a record with a end date equal to or
      * past the passed date, nothing will be returned for that entity.
+     *
+     * Uses the Default FdfTenant (when not using multi-tenant)
      *
      * @param entityState The entity type to query
      * @param date Date to get entities states from
@@ -386,6 +513,27 @@ public interface StateServices {
      * @return List of type passed
      */
     default <S extends CommonState> List<FdfEntity<S>> getAllFromDate(Class<S> entityState, Date date) {
+
+        return getAllFromDate(entityState, date, 1);
+
+    }
+
+
+    /**
+     * Retrieves all entities that have states active starting at or after the date passed into the method.  Will
+     * return current and historical data for the entity equal to or newer then the passed date, but no history
+     * with an end date before the passed date.  If a entity does not have a record with a end date equal to or
+     * past the passed date, nothing will be returned for that entity.
+     *
+     * Includes specified tenant (when using multi-tenant)
+     *
+     * @param entityState The entity type to query
+     * @param date Date to get entities states from
+     * @param tenantId Id of the tenant to retrieve for (Multi-FdfTenant mode)
+     * @param <S> parameterized type of entity
+     * @return List of type passed
+     */
+    default <S extends CommonState> List<FdfEntity<S>> getAllFromDate(Class<S> entityState, Date date, long tenantId) {
 
         // create the where statement for the statement
         List<WhereClause> whereStatement = new ArrayList<>();
@@ -411,9 +559,16 @@ public interface StateServices {
         enddate2.operator = WhereClause.Operators.IS;
         enddate2.value = WhereClause.NULL;
 
+        WhereClause whereTid = new WhereClause();
+        whereTid.name = "tid";
+        whereTid.operator = WhereClause.Operators.EQUAL;
+        whereTid.value = Long.toString(tenantId);
+        whereTid.valueDataType = Long.class;
+
         whereStatement.add(whereDf);
         whereStatement.add(endDate1);
         whereStatement.add(enddate2);
+        whereStatement.add(whereTid);
 
         // do the query
         List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
@@ -422,11 +577,14 @@ public interface StateServices {
         return manageReturnedEntities(returnedStates);
     }
 
+
     /**
      * Retrieves all entities that have states active starting at or before at the date passed into the method.
      * Will return current and historical data for the entity existing prior to the passed date, but no history
      * with an beginning date after the passed date.  If a entity does not have a record with a beginning date
      * equal to or before the passed date, nothing will be returned for that entity.
+     *
+     * Uses the Default FdfTenant (when not using multi-tenant)
      *
      * @param entityState The entity type to query
      * @param date Date to get entities states before
@@ -434,6 +592,28 @@ public interface StateServices {
      * @return List of type passed
      */
     default <S extends CommonState> List<FdfEntity<S>> getAllBeforeDate(Class<S> entityState, Date date) {
+
+        return getAllBeforeDate(entityState, date, 1);
+
+    }
+
+
+    /**
+     * Retrieves all entities that have states active starting at or before at the date passed into the method.
+     * Will return current and historical data for the entity existing prior to the passed date, but no history
+     * with an beginning date after the passed date.  If a entity does not have a record with a beginning date
+     * equal to or before the passed date, nothing will be returned for that entity.
+     *
+     * Includes specified tenant (when using multi-tenant)
+     *
+     * @param entityState The entity type to query
+     * @param date Date to get entities states before
+     * @param tenantId Id of the tenant to retrieve for (Multi-FdfTenant mode)
+     * @param <S> parameterized type of entity
+     * @return List of type passed
+     */
+    default <S extends CommonState> List<FdfEntity<S>> getAllBeforeDate(Class<S> entityState,
+                                                                        Date date, long tenantId) {
 
         // create the where statement for the statement
         List<WhereClause> whereStatement = new ArrayList<>();
@@ -452,8 +632,15 @@ public interface StateServices {
         endDate1.value = GeneralConstants.DB_DATE_FORMAT.format(date);
         endDate1.valueDataType = Date.class;
 
+        WhereClause whereTid = new WhereClause();
+        whereTid.name = "tid";
+        whereTid.operator = WhereClause.Operators.EQUAL;
+        whereTid.value = Long.toString(tenantId);
+        whereTid.valueDataType = Long.class;
+
         whereStatement.add(whereDf);
         whereStatement.add(endDate1);
+        whereStatement.add(whereTid);
 
         // do the query
         List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
@@ -469,6 +656,8 @@ public interface StateServices {
      * that exist both inside and outside the range, only the ones existing within the range will be returned.  If a
      * entity has no states existing in the range then that entity will not be returned.
      *
+     * Uses the Default FdfTenant (when not using multi-tenant)
+     *
      * @param entityState The entity type to query
      * @param startDate Starting date in range to return entity state in
      * @param endDate Ending date in range to return entity state in
@@ -477,6 +666,30 @@ public interface StateServices {
      */
     default <S extends CommonState> List<FdfEntity<S>> getAllBetweenDates(Class<S> entityState,
                                                                          Date startDate, Date endDate) {
+
+        return getAllBetweenDates(entityState, startDate, endDate, 1);
+
+    }
+
+
+    /**
+     * Retrieves all entities that have states active starting at or before at the startDate passed into the method
+     * and ending at or after the endDate passed. Will return current and historical data for the entity existing
+     * between these dates, but no history that exists completely before or after the range.  If an entity has states
+     * that exist both inside and outside the range, only the ones existing within the range will be returned.  If a
+     * entity has no states existing in the range then that entity will not be returned.
+     *
+     * Includes specified tenant (when using multi-tenant)
+     *
+     * @param entityState The entity type to query
+     * @param startDate Starting date in range to return entity state in
+     * @param endDate Ending date in range to return entity state in
+     * @param tenantId Id of the tenant to retrieve for (Multi-FdfTenant mode)
+     * @param <S> parameterized type of entity
+     * @return List of type passed
+     */
+    default <S extends CommonState> List<FdfEntity<S>> getAllBetweenDates(Class<S> entityState,
+                                                                          Date startDate, Date endDate, long tenantId) {
 
         // create the where statement for the statement
         List<WhereClause> whereStatement = new ArrayList<>();
@@ -512,10 +725,17 @@ public interface StateServices {
         enddate2.value = WhereClause.NULL;
         enddate2.groupings.add(WhereClause.GROUPINGS.CLOSE_PARENTHESIS);
 
+        WhereClause whereTid = new WhereClause();
+        whereTid.name = "tid";
+        whereTid.operator = WhereClause.Operators.EQUAL;
+        whereTid.value = Long.toString(tenantId);
+        whereTid.valueDataType = Long.class;
+
         whereStatement.add(whereDf);
         whereStatement.add(startDate1);
         whereStatement.add(endDate1);
         whereStatement.add(enddate2);
+        whereStatement.add(whereTid);
 
         // do the query
         List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
@@ -527,6 +747,8 @@ public interface StateServices {
 
     /**
      * Retrieves the entity associated with the id passed. Returns current and historical states for the entity
+     *
+     * Getting an entity by Id is a "FdfTenant Safe" operation and works for multi and single tenant calls.
      *
      * @param entityState The entity type to query
      * @param id The Id of the Entity to retrieve
@@ -568,6 +790,8 @@ public interface StateServices {
     /**
      * Retrieves the entity associated with the rid passed. Returns current and historical states for the entity
      *
+     * Getting an entity by Id is a "FdfTenant Safe" operation and works for multi and single tenant calls.
+     *
      * @param entityState The entity type to query
      * @param rid The Id of the Entity to retrieve
      * @param <S> Parameterized type of entity
@@ -608,6 +832,8 @@ public interface StateServices {
     /**
      * Retrieves the entity of type passed from persistence, only returns current data, without any historical
      * data.
+     *
+     * Getting an entity by Id is a "FdfTenant Safe" operation and works for multi and single tenant calls.
      *
      * @param entityState The entity type to query
      * @param <S> parameterized type of entity
@@ -655,6 +881,8 @@ public interface StateServices {
     /**
      * Retrieves entity of type passed from persistence, only returning the historical data in the entity,
      * no current data is included.
+     *
+     * Getting an entity by Id is a "FdfTenant Safe" operation and works for multi and single tenant calls.
      *
      * @param entityState The entity type to query
      * @param <S> parameterized type of entity
@@ -706,6 +934,8 @@ public interface StateServices {
      *
      * If the state is still the current state it will be contained in the entity.current else it will be
      * in the entity.history
+     *
+     * Getting an entity by Id is a "FdfTenant Safe" operation and works for multi and single tenant calls.
      *
      * @param entityState The entity type to query
      * @param date Date to get entity state at
@@ -774,6 +1004,8 @@ public interface StateServices {
      * with an end date before the passed date.  If a entity does not have a record with a end date equal to or
      * past the passed date, nothing will be returned for that entity.
      *
+     * Getting an entity by Id is a "FdfTenant Safe" operation and works for multi and single tenant calls.
+     *
      * @param entityState The entity type to query
      * @param date Date to get entity state(s) from
      * @param <S> parameterized type of entity
@@ -831,6 +1063,8 @@ public interface StateServices {
      * with an beginning date after the passed date.  If a entity does not have a record with a beginning date
      * equal to or before the passed date, nothing will be returned for that entity.
      *
+     * Getting an entity by Id is a "FdfTenant Safe" operation and works for multi and single tenant calls.
+     *
      * @param entityState The entity type to query
      * @param date Date to get entity state(s) before
      * @param <S> parameterized type of entity
@@ -880,6 +1114,8 @@ public interface StateServices {
      * between these dates, but no history that exists completely before or after the range.  If an entity has states
      * that exist both inside and outside the range, only the ones existing within the range will be returned.  If a
      * entity has no states existing in the range then that entity will not be returned.
+     *
+     * Getting an entity by Id is a "FdfTenant Safe" operation and works for multi and single tenant calls.
      *
      * @param entityState The entity type to query
      * @param startDate Start date in range to get entity state(s) within

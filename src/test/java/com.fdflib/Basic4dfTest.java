@@ -1,12 +1,11 @@
 package com.fdflib;
 
 import com.fdflib.model.entity.FdfEntity;
-import com.fdflib.model.state.SystemState;
+import com.fdflib.model.state.FdfSystem;
 import com.fdflib.persistence.database.DatabaseUtil;
 import com.fdflib.service.CommonServices;
 import com.fdflib.service.SystemServices;
 import com.fdflib.util.FdfSettings;
-import junit.framework.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -46,19 +45,19 @@ public class Basic4dfTest {
 
         // check that the database exists and that we can query the default system.
         SystemServices ss = new SystemServices();
-        List<FdfEntity<SystemState>> systems = ss.getAllSystems();
+        List<FdfEntity<FdfSystem>> systems = ss.getAllSystems();
         //Assert.assertEquals("Number of systems is 0", 1, systems.size());
         if(systems.size() < 1) {
             // get the default system
-            FdfEntity<SystemState> defaultSystem = ss.getDefaultSystem();
+            FdfEntity<FdfSystem> defaultSystem = ss.getDefaultSystem();
 
             // create a new system called "Unit Test Syste"
-            SystemState uts = new SystemState();
+            FdfSystem uts = new FdfSystem();
             uts.name = "Unit Test Syste";
             uts.description = "This is the first description from the basicSystemTest unit test";
 
             // add the new system
-            FdfEntity<SystemState> dbUts1 = ss.save(SystemState.class, uts, 1, defaultSystem.current.id);
+            FdfEntity<FdfSystem> dbUts1 = ss.save(FdfSystem.class, uts, 1, defaultSystem.current.id);
 
             // do an update to the "Unit Test Syste" record change description
             dbUts1.current.description = "This is the changed description";
@@ -71,7 +70,7 @@ public class Basic4dfTest {
             }
 
             // save the new description
-            FdfEntity<SystemState> dbUts2 = ss.save(SystemState.class, dbUts1.current, 1, defaultSystem.current.id);
+            FdfEntity<FdfSystem> dbUts2 = ss.save(FdfSystem.class, dbUts1.current, 1, defaultSystem.current.id);
 
             // make a third change to the description
             dbUts2.current.description = "This is the third description";
@@ -84,11 +83,11 @@ public class Basic4dfTest {
             }
 
             // save the new description
-            FdfEntity<SystemState> dbUts3 = ss.save(SystemState.class, dbUts2.current, 1, defaultSystem.current.id);
+            FdfEntity<FdfSystem> dbUts3 = ss.save(FdfSystem.class, dbUts2.current, 1, defaultSystem.current.id);
 
             if(dbUts3.current == null) {
-                System.out.println("~~~~ it was null!~");
-                System.out.println(" there was : " + dbUts3.history.size() + " in the history!");
+                java.lang.System.out.println("~~~~ it was null!~");
+                java.lang.System.out.println(" there was : " + dbUts3.history.size() + " in the history!");
             }
 
             // do an update to the name, change to "Unit Test ERROR"
@@ -102,7 +101,7 @@ public class Basic4dfTest {
             }
 
             // save the new description
-            FdfEntity<SystemState> dbUts4 = ss.save(SystemState.class, dbUts3.current, 1, defaultSystem.current.id);
+            FdfEntity<FdfSystem> dbUts4 = ss.save(FdfSystem.class, dbUts3.current, 1, defaultSystem.current.id);
 
             // sleep for almost a couple of seconds
             try {
@@ -112,7 +111,7 @@ public class Basic4dfTest {
             }
 
             // opps... that was bad mark this record as being in error
-            ss.setDeleteFlagSingleState(SystemState.class, dbUts4.current);
+            ss.setDeleteFlagSingleState(FdfSystem.class, dbUts4.current);
 
             // sleep for almost a couple of seconds
             try {
@@ -122,7 +121,7 @@ public class Basic4dfTest {
             }
 
             //now that we deleted the row, put it back!!!!
-            ss.removeDeleteFlagSingleState(SystemState.class, dbUts4.current);
+            ss.removeDeleteFlagSingleState(FdfSystem.class, dbUts4.current);
         }
 
 

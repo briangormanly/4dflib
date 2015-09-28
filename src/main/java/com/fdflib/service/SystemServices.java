@@ -1,10 +1,10 @@
 package com.fdflib.service;
 
 import com.fdflib.model.entity.FdfEntity;
-import com.fdflib.model.state.SystemState;
+import com.fdflib.model.state.FdfSystem;
 import com.fdflib.model.util.WhereClause;
 import com.fdflib.persistence.FdfPersistence;
-import com.fdflib.service.impl.StateServices;
+import com.fdflib.service.impl.FdfCommonServices;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,13 +12,13 @@ import java.util.List;
 /**
  * Created by brian.gormanly on 8/22/15.
  */
-public class SystemServices implements StateServices {
+public class SystemServices implements FdfCommonServices {
 
-    public List<FdfEntity<SystemState>> getAllSystems() {
-        return this.getAll(SystemState.class);
+    public List<FdfEntity<FdfSystem>> getAllSystems() {
+        return this.getAll(FdfSystem.class);
     }
 
-    public FdfEntity<SystemState> getDefaultSystem() {
+    public FdfEntity<FdfSystem> getDefaultSystem() {
         // create the where statement for the query
         List<WhereClause> whereStatement = new ArrayList<>();
 
@@ -41,14 +41,14 @@ public class SystemServices implements StateServices {
         whereStatement.add(whereId);
 
         // do the query
-        List<SystemState> returnedService =
-                FdfPersistence.getInstance().selectQuery(SystemState.class, null, whereStatement);
+        List<FdfSystem> returnedService =
+                FdfPersistence.getInstance().selectQuery(FdfSystem.class, null, whereStatement);
 
         // create a List of entities
         return manageReturnedEntity(returnedService);
     }
 
-    public List<FdfEntity<SystemState>> getSystemsByName(String name) {
+    public List<FdfEntity<FdfSystem>> getSystemsByName(String name) {
         // create the where statement for the query
         List<WhereClause> whereStatement = new ArrayList<>();
 
@@ -71,16 +71,20 @@ public class SystemServices implements StateServices {
         whereStatement.add(whereId);
 
         // do the query
-        List<SystemState> returnedService =
-                FdfPersistence.getInstance().selectQuery(SystemState.class, null, whereStatement);
+        List<FdfSystem> returnedService =
+                FdfPersistence.getInstance().selectQuery(FdfSystem.class, null, whereStatement);
 
         // create a List of entities
         return manageReturnedEntities(returnedService);
     }
 
-    public void createDefaultService(SystemState state) {
+    public FdfEntity<FdfSystem> saveSystem(FdfSystem systemState, long userId, long systemId) {
+        return save(FdfSystem.class, systemState, userId, systemId);
+    }
 
-        this.save(SystemState.class, state, 1, 1);
+    public void createDefaultService(FdfSystem state) {
+
+        this.save(FdfSystem.class, state, 1, 1);
     }
 
 }
