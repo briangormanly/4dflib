@@ -825,8 +825,12 @@ public interface FdfCommonServices {
                 FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
 
         // now that we have the state with the rid, get all of the states with the id it contains
-        return getEntityById(entityState, returnedStates.get(0).id);
-
+        if(returnedStates.get(0) != null) {
+            return getEntityById(entityState, returnedStates.get(0).id);
+        }
+        else {
+            return null;
+        }
     }
 
     /**

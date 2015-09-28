@@ -8,9 +8,9 @@ package com.fdflib.model.state;
  */
 public class FdfTenant extends CommonState {
 
-    public String name = "";
-    public String description = "";
-    public String webURL = "";
+    public String name;
+    public String description;
+    public String webURL;
     public Boolean isPrimary;
 
     public FdfTenant() {
