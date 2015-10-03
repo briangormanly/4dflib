@@ -81,21 +81,27 @@ public interface FdfCommonServices {
 
         // check to see if this if an id is assigned (existing vs new entity)
         if(state.id <= 0) {
+            System.out.println("The state was null?");
             // if this is a new entity, get an id for it
             state.id = getNewEnityId(entityState);
+            System.out.println("The Id generated was " + state.id);
         }
 
         // get full entity for state
         FdfEntity<S> thisEntity = getEntityById(entityState, state.id);
 
+
         // check to see if there is an existing entity, if not, create
         if(thisEntity == null) {
+            System.out.println("the entity was null?");
             thisEntity = new FdfEntity<>();
         }
 
+        System.out.println("getEntitybyId gave back " + thisEntity.entityId);
+
         // get the previous current record and move to history
         if(thisEntity.current != null) {
-
+            System.out.println("the current of the entity was not null, moving the current to history");
             S lastCurrentState = thisEntity.current;
 
             // set the end date
