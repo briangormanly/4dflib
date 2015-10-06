@@ -19,6 +19,7 @@ package com.fdflib.model.entity;
 import com.fdflib.model.state.CommonState;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -38,5 +39,43 @@ public class FdfEntity<S extends CommonState> {
         entityId = currentState.id;
         current = currentState;
         history = historyStates;
+    }
+
+    public S getStateByRid(long rid) {
+        S thisState = null;
+
+        if(this.current != null) {
+            if (this.current.rid == rid) {
+                thisState = this.current;
+            }
+        }
+        if(this.history != null && this.history.size() > 0) {
+            for(S historyState : this.history) {
+                if (historyState.rid == rid) {
+                    thisState = historyState;
+                }
+            }
+        }
+
+        return thisState;
+    }
+
+    public S getStateOfEntityAt(Date date) {
+        S thisState = null;
+
+        if(this.current != null) {
+            if (this.current.arsd.before(date) && this.current.ared.after(date)) {
+                thisState = this.current;
+            }
+        }
+        if(this.history != null && this.history.size() > 0) {
+            for(S historyState : this.history) {
+                if (historyState.arsd.before(date) && historyState.ared.after(date)) {
+                    thisState = historyState;
+                }
+            }
+        }
+
+        return thisState;
     }
 }
