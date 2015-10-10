@@ -101,11 +101,16 @@ public class SystemServices implements FdfCommonServices {
     public String hashPassword(String clearTextPassword) {
 
         byte[] digest = null;
+        StringBuffer sb = new StringBuffer();
 
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             md.update(clearTextPassword.getBytes("UTF-8"));
             digest = md.digest();
+
+            for(byte b : digest) {
+                sb.append(String.format("%02x", b));
+            }
 
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
@@ -113,7 +118,7 @@ public class SystemServices implements FdfCommonServices {
             e.printStackTrace();
         }
 
-        return digest.toString();
+        return sb.toString();
     }
 
     /**
