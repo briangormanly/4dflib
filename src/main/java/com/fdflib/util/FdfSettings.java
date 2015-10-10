@@ -46,7 +46,6 @@ public class FdfSettings {
     public static String DB_ROOT_PASSWORD = null;
 
     public static String DEFAULT_TENANT_NAME = "Default FdfTenant";
-    public static String DEFAULT_TENANT_PASSWORD = "4DfPassword";
     public static String DEFAULT_TENANT_DESRIPTION = "Default FdfTenant is created by 4dflib, if you do not intent to use "
             + "built in multi-tenancy or only have one FdfTenant, all data is member of this tenant by "
             + "default";
@@ -56,6 +55,7 @@ public class FdfSettings {
     public static String DEFAULT_SYSTEM_NAME = "Default FdfSystem";
     public static String DEFAULT_SYSTEM_DESCRIPTION = "Default system represents the actual application and not"
             + " a registered external system.";
+    public static String DEFAULT_SYSTEM_PASSWORD = "4DfPassword";
 
     private FdfSettings() {
     }

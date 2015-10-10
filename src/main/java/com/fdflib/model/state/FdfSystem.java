@@ -23,12 +23,14 @@ public class FdfSystem extends CommonState {
 
     public String name;
     public String description;
+    public String sha256EncodedPassword;
 
     public FdfSystem() {
         super();
 
         name = "";
         description = "";
+        sha256EncodedPassword = "";
 
     }
 }

@@ -12,7 +12,6 @@ public class FdfTenant extends CommonState {
     public String description;
     public String webURL;
     public Boolean isPrimary;
-    public String sha256EncodedPassword;
 
     public FdfTenant() {
         super();
@@ -21,7 +20,6 @@ public class FdfTenant extends CommonState {
         description = "";
         webURL = "";
         isPrimary = false;
-        sha256EncodedPassword = "";
 
     }
 
