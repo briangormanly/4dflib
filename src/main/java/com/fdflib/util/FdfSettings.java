@@ -33,17 +33,17 @@ public class FdfSettings {
     static Logger fdfLog = LoggerFactory.getLogger(FdfSettings.class);
 
     public List<Class> modelClasses = new ArrayList<>();
-    public static DatabaseUtil.DatabaseType PERSISTENCE = null;
+    public static DatabaseUtil.DatabaseType PERSISTENCE = DatabaseUtil.DatabaseType.MYSQL;
 
-    public static DatabaseUtil.DatabaseProtocol DB_PROTOCOL = null;
-    public static String DB_HOST = null;
-    public static String DB_NAME = null;
-    public static DatabaseUtil.DatabaseEncoding DB_ENCODING = null;
+    public static DatabaseUtil.DatabaseProtocol DB_PROTOCOL = DatabaseUtil.DatabaseProtocol.JDBC_MYSQL;
+    public static String DB_HOST = "localhost";
+    public static String DB_NAME = "fdfapplication";
+    public static DatabaseUtil.DatabaseEncoding DB_ENCODING = DatabaseUtil.DatabaseEncoding.UTF8;
 
-    public static String DB_USER = null;
-    public static String DB_PASSWORD = null;
-    public static String DB_ROOT_USER = null;
-    public static String DB_ROOT_PASSWORD = null;
+    public static String DB_USER = "fdfUser";
+    public static String DB_PASSWORD = "fdfUserPassword";
+    public static String DB_ROOT_USER = "root";
+    public static String DB_ROOT_PASSWORD = "";
 
     public static String DEFAULT_TENANT_NAME = "Default FdfTenant";
     public static String DEFAULT_TENANT_DESRIPTION = "Default FdfTenant is created by 4dflib, if you do not intent to use "

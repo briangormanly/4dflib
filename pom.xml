@@ -73,18 +73,4 @@
       <url>https://oss.sonatype.org/content/repositories/snapshots</url>
     </snapshotRepository>
   </distributionManagement>
-  <!--
-  <distributionManagement>
-    <repository>
-      <id>my-releases</id>
-      <name>Internal Releases</name>
-      <url>http://10.10.1.46:8081/nexus/content/repositories/releases/</url>
-    </repository>
-    <snapshotRepository>
-      <id>my-snapshots</id>
-      <name>Internal Releases</name>
-      <url>http://10.10.1.46:8081/nexus/content/repositories/snapshots/</url>
-    </snapshotRepository>
-  </distributionManagement>
-  -->
 </project>

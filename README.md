@@ -5,7 +5,7 @@ bgormanly@gmail.com
 4dflib.com
 Copyright &copy; 2015
 
-<h2>Introduction</h2>
+<h2>0. Introduction</h2>
 What is 4DF????
 
 4DF is a Library that manages your applications interaction with the database, providing ORM, database abstraction and
@@ -20,7 +20,7 @@ For more information see the follow blog posts:
 And coming soon: http://4dflib.com
 
 
-<h2>License</h2>
+<h2>1. License</h2>
 
 
 Distributed under the LGPL License (http://www.gnu.org/licenses/lgpl-3.0.en.html)
@@ -40,18 +40,49 @@ Please see license.txt for details.
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-<h2>Logging</h2>
+<h2>2. Logging</h2>
 
 4DFLib using SLF4J for logging for Logging Facade.  You can plug in your
 desired logging framework at deployment time.
 
 
-<h2>Maven Repository Information</h2>
-
-Coming soon, once v1 is stable.
+<h2>3. Maven Repository Information</h2>
+Currently only the development SNAPSHOT is available, once stable versions are released this will be updated.
+```
+    <dependencies>
+        ...
+        <dependency>
+            <groupId>com.fdflib</groupId>
+            <artifactId>4dflib</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        ...
+    </dependencies>
+```
 
 
 <h2>Examples of Usage</h2>
+The easiest way to see how 4DFLib works is to build a very simple application that uses it.  For this example we have
+created an application called "<a href="https://github.com/briangormanly/4dflib-bcs-example">Black Car Service</a>", or BCS for short.  BCS is a simple java application that uses maven
+and run as a jar file on the command line to demonstrate how to setup 4dflib, and give you a sense of the power it can
+yield.
+
+Here is the BCS git repository for reference, you can get the source for the project there and follow along with this
+quick and dirty tutorial <a href="https://github.com/briangormanly/4dflib-bcs-example">https://github.com/briangormanly/4dflib-bcs-example</a>
+
+Taking a basic maven project to add 4DFLib as a dependency just add 4DFLib as shown in section 3 "Maven Repository 
+Information" above.  
+
+Our application is going to be very simple consisting of only a main method in our applications
+
+
+Lets say that we have a small application that only had 2 model objects which are User and Car.
+
+In order to use 4dflib in our application we only have to do the following in code that is run everytime the application
+starts up.  The database will only be created if it does not already exist, the same goes for the default data entries
+in the FdfSystem and FdfTenant 
+
+
 
 The following will initialize 4DFLib to work with your application.
 ```
