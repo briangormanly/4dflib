@@ -178,6 +178,43 @@ public interface FdfCommonServices {
         }
     }
 
+
+    /**
+     * Sets delete flag for all states in an entire entity.  Because all states are marked deleted at the same time
+     * no changes to the cf, or ared (end date) are made to any record, this way to re-instate the entire entity all
+     * that is needed is to do the reverse and remove the df flags on all states.  It is very important that an entity
+     * that is set deleted with setDeleteFlagAllStates is re-instated with removeDeleteFlagAllStates (the latter will
+     * check that all states have a df set to true before allowing the un-delete.  If you want to mark a single state
+     * deleted or un-deleted you must use setDeleteFlagSingleState and removeDeleteFlagSingleState respectively.
+     *
+     * @param entityState The Entity Type to mark deleted
+     * @param id The Id of the entity to mark deleted
+     * @param <S> The parameterized type of the entity
+     */
+    default <S extends CommonState> void setDeleteFlagAllStates(Class<S> entityState, long id) {
+        if(id > -1) {
+
+            // get full entity for state
+            FdfEntity<S> thisEntity = getEntityById(entityState, id);
+
+            // if there is a current state for the entity set it's df flag
+            if(thisEntity.current != null) {
+                thisEntity.current.df = true;
+
+            }
+            // if there is history for the entity mark each one's df flag
+            for(S historicalState: thisEntity.history) {
+                if(historicalState != null) {
+                    historicalState.df = true;
+
+                }
+
+            }
+
+        }
+    }
+
+
     /**
      * Removes a delete flag from the state passed.  Restores the state to current if appropriate and adjusts others
      * states affected by the change if necessary.
@@ -227,6 +264,66 @@ public interface FdfCommonServices {
                 }
             }
         }
+    }
+
+
+    /**
+     * removes delete flag for all states in an entire entity.  Because all states were required to be marked deleted
+     * at the same time, no changes to the cf, or ared (end date) are made to any record, only action is to remove the
+     * df flags on all states.
+     *
+     * This method preforms a screening check on the states of the entity to ensure they are all currently marked with
+     * a df flag of true and will only preform the removal of the df flags of the states if this condition is met. If
+     * the check fails the function returns false
+     *
+     * @param entityState The Entity Type to mark deleted
+     * @param id The Id of the entity to mark deleted
+     * @param <S> The parameterized type of the entity
+     * @return true if successful, false if all states were not in df state of true to start.
+     */
+    default <S extends CommonState> boolean removeDeleteFlagAllStates(Class<S> entityState, long id) {
+
+        // initialize the readyness check
+        boolean ready = true;
+
+        if(id > -1) {
+
+            // get full entity for state
+            FdfEntity<S> thisEntity = getEntityById(entityState, id);
+
+            // if there is a current state for the entity set it's df flag
+            if(thisEntity.current != null) {
+                if( thisEntity.current.df == false) {
+                    ready = false;
+                }
+            }
+            // if there is history for the entity mark each one's df flag
+            for(S historicalState: thisEntity.history) {
+                if(historicalState != null) {
+                    if(historicalState.df == false) {
+                        ready = false;
+                    }
+                }
+
+            }
+
+            // if all states had a df set to true go ahead and preform the removal of the df flags for all states
+            if(ready) {
+                // if there is a current state for the entity set it's df flag
+                if(thisEntity.current != null) {
+                    thisEntity.current.df = false;
+                }
+                // if there is history for the entity mark each one's df flag
+                for(S historicalState: thisEntity.history) {
+                    if(historicalState != null) {
+                        historicalState.df = false;
+                    }
+
+                }
+            }
+
+        }
+        return ready;
     }
 
 
