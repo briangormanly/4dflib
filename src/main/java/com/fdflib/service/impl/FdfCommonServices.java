@@ -74,7 +74,6 @@ public interface FdfCommonServices {
         state.arsd = Calendar.getInstance().getTime();
         state.ared = null;
         state.cf = true;
-        state.df = false;
         state.euid = userId;
         state.esid = systemId;
         state.tid = tenantId;
@@ -86,7 +85,7 @@ public interface FdfCommonServices {
         }
 
         // get full entity for state
-        FdfEntity<S> thisEntity = getEntityById(entityState, state.id);
+        FdfEntity<S> thisEntity = auditEntityById(entityState, state.id);
 
 
         // check to see if there is an existing entity, if not, create
@@ -746,6 +745,41 @@ public interface FdfCommonServices {
         return manageReturnedEntities(returnedStates);
     }
 
+    /**
+     * Retrieves the entity associated with the id passed. Returns current and historical states for the entity
+     * including states that are in a df state.
+     *
+     * Getting an entity by Id is a "FdfTenant Safe" operation and works for multi and single tenant calls.
+     *
+     * @param entityState The entity type to query
+     * @param id The Id of the Entity to retrieve
+     * @param <S> Parameterized type of entity
+     * @return Entity of type passed
+     */
+    default <S extends CommonState> FdfEntity<S> auditEntityById(Class<S> entityState, long id) {
+
+        // create the where statement for the query
+        List<WhereClause> whereStatement = new ArrayList<>();
+
+        // add the id check
+        WhereClause whereId = new WhereClause();
+        whereId.conditional = WhereClause.CONDITIONALS.AND;
+        whereId.name = "id";
+        whereId.operator = WhereClause.Operators.EQUAL;
+        whereId.value = Long.toString(id);
+        whereId.valueDataType = Long.class;
+
+        whereStatement.add(whereId);
+
+        // do the query
+        List<S> returnedStates =
+                FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
+
+        // create a List of entities
+        return manageReturnedEntity(returnedStates);
+
+    }
+
 
     /**
      * Retrieves the entity associated with the id passed. Returns current and historical states for the entity
@@ -827,7 +861,7 @@ public interface FdfCommonServices {
                 FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
 
         // now that we have the state with the rid, get all of the states with the id it contains
-        if(returnedStates.get(0) != null) {
+        if(returnedStates.size() > 0 && returnedStates.get(0) != null) {
             return getEntityById(entityState, returnedStates.get(0).id);
         }
         else {
