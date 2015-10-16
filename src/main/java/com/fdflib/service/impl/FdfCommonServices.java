@@ -118,212 +118,118 @@ public interface FdfCommonServices {
 
 
     /**
-     * Sets the delete flag on an entity state. If the state's df flag is set all other queries should by default
-     * ignore the deleted state unless the query is specifically designed to retrieve all data including states with
-     * the df flag set, usually this would be done for auditing purposes.
+     * Sets delete flag for entity.  In order to record the date, time, user and system requesting the record be marked
+     * deleted, a new current record is created to contain this information (arsd contains the date/time, ared is left
+     * null, as would any current state).  The previous current state is marked as history and ends as of the present
+     * date and time.  Queries on the entity for times before the delete flag was set will return the entity state for
+     * the appropriate time period.
      *
-     * Setting the df flag might require changes to the ared or arsd of prior or post states to fill the time gap left
-     * by the state marked deleted.  All of that logic is handled as part of this method.
-     *
-     * @param entityState The entity type to query
-     * @param state state to set the df flag for
-     * @param <S> The parameterized type of the entity
-     */
-    default <S extends CommonState> void setDeleteFlagSingleState(Class<S> entityState, S state) {
-        if(entityState != null && state != null) {
-
-            // set the delete flag for the state
-            state.df = true;
-
-            // get full entity for state
-            FdfEntity<S> thisEntity = getEntityById(entityState, state.id);
-
-            // find out if this it the current entity
-            if(thisEntity.current.rid == state.rid) {
-
-                // since this was a current record set the ared to the current date
-                state.ared = Calendar.getInstance().getTime();
-                state.cf = false;
-
-                // we just df the current entity so we have to see if there is history and promote the most recent
-                if(thisEntity.history.size() > 0) {
-
-                    // find the historical entry with the most recent endDate
-                    S lastState = null;
-                    for(S historicalState: thisEntity.history) {
-                        if(lastState == null) {
-                            lastState = historicalState;
-                        }
-                        else {
-                            // if the state ared we are looking at is greater then then the last one make it the last
-                            if(historicalState.ared.getTime() > lastState.ared.getTime()) {
-                                // the state being looked at is more recent
-                                lastState = historicalState;
-
-                            }
-                        }
-                    }
-
-                    //promote the historical state to current
-                    lastState.cf = true;
-                    lastState.ared = null;
-
-                    FdfPersistence.getInstance().update(entityState, lastState);
-                }
-            }
-
-            // save the df state
-            FdfPersistence.getInstance().update(entityState, state);
-
-        }
-    }
-
-
-    /**
-     * Sets delete flag for all states in an entire entity.  Because all states are marked deleted at the same time
-     * no changes to the cf, or ared (end date) are made to any record, this way to re-instate the entire entity all
-     * that is needed is to do the reverse and remove the df flags on all states.  It is very important that an entity
-     * that is set deleted with setDeleteFlagAllStates is re-instated with removeDeleteFlagAllStates (the latter will
-     * check that all states have a df set to true before allowing the un-delete.  If you want to mark a single state
-     * deleted or un-deleted you must use setDeleteFlagSingleState and removeDeleteFlagSingleState respectively.
+     * Use this method for non multi-tenant systems.
      *
      * @param entityState The Entity Type to mark deleted
      * @param id The Id of the entity to mark deleted
+     * @param userId the userId of the user making the change
+     * @param systemId the systemId of the system makeing the change
      * @param <S> The parameterized type of the entity
      */
-    default <S extends CommonState> void setDeleteFlagAllStates(Class<S> entityState, long id) {
+    default <S extends CommonState> void setDeleteFlag(Class<S> entityState, long id, long userId,
+                                                                long systemId) {
+        setDeleteFlag(entityState, id, userId, systemId, 1);
+    }
+
+    /**
+     * Sets delete flag for entity.  In order to record the date, time, user and system requesting the record be marked
+     * deleted, a new current record is created to contain this information (arsd contains the date/time, ared is left
+     * null, as would any current state).  The previous current state is marked as history and ends as of the present
+     * date and time.  Queries on the entity for times before the delete flag was set will return the entity state for
+     * the appropriate time period.
+     *
+     * Use this method for multi-tenant systems.
+     *
+     * @param entityState The Entity Type to mark deleted
+     * @param id The Id of the entity to mark deleted
+     * @param userId the userId of the user making the change
+     * @param systemId the systemId of the system makeing the change
+     * @param tenantId the tenantId of the tenant making the change (if multi tenant)
+     * @param <S> The parameterized type of the entity
+     */
+    default <S extends CommonState> void setDeleteFlag(Class<S> entityState, long id, long userId,
+                                                                long systemId, long tenantId) {
         if(id > -1) {
 
             // get full entity for state
             FdfEntity<S> thisEntity = getEntityById(entityState, id);
 
-            // if there is a current state for the entity set it's df flag
-            if(thisEntity.current != null) {
-                thisEntity.current.df = true;
+            // create the new state that will maintain the deletion records from the most recent state available
+            S deletedState = thisEntity.getMostRecentState();
 
-            }
-            // if there is history for the entity mark each one's df flag
-            for(S historicalState: thisEntity.history) {
-                if(historicalState != null) {
-                    historicalState.df = true;
+            // mark the state deleted
+            deletedState.df = true;
 
-                }
-
-            }
+            // save the state
+            save(entityState, deletedState, userId, systemId, tenantId);
 
         }
     }
 
 
     /**
-     * Removes a delete flag from the state passed.  Restores the state to current if appropriate and adjusts others
-     * states affected by the change if necessary.
+     * Removes delete flag for entity.  In order to record the date, time, user and system the record be marked
+     * deleted, a new current record is created to contain this information (arsd contains the date/time, ared is left
+     * null, as would any current state).  The previous current state is marked as history maintaining it's df flag of
+     * true which tracks the time that the entity was marked deleted.  Queries on the entity for times when the delete
+     * flag was set will not return a current state for the entity, only history, queries on the entity after the
+     * delete flag was removed will have a current record and a gap in history during the time the entity was marked
+     * as deleted.
      *
-     * @param entityState
-     * @param state
-     * @param <S>
-     */
-    default <S extends CommonState> void removeDeleteFlagSingleState(Class<S> entityState, S state) {
-        if(entityState != null && state != null) {
-
-            // get full entity for state
-            FdfEntity<S> thisEntity = getEntityById(entityState, state.id);
-
-            // check to see if there is no current row, if not, then promote deleted row back to current
-            if(thisEntity.current == null) {
-                state.df = false;
-                state.cf = true;
-                state.ared = null;
-
-                // update the df row
-                FdfPersistence.getInstance().update(entityState, state);
-            }
-            else {
-                // there was a current row, check to see if the deleted row had the greatest arsd, if it did it should
-                // be promoted back to the current row.
-                if(thisEntity.current.arsd.getTime() < state.arsd.getTime()) {
-                    state.df = false;
-                    state.cf = true;
-                    state.ared = null;
-
-                    // demote the current, current row
-                    thisEntity.current.cf = false;
-                    thisEntity.current.ared = state.arsd;
-
-                    FdfPersistence.getInstance().update(entityState, thisEntity.current);
-
-                    // update the df row
-                    FdfPersistence.getInstance().update(entityState, state);
-                }
-                else {
-                    // the arsd does not indicate the deleted row should be current, just remove deleted status
-                    state.df = false;
-
-                    // update the df row
-                    FdfPersistence.getInstance().update(entityState, state);
-                }
-            }
-        }
-    }
-
-
-    /**
-     * removes delete flag for all states in an entire entity.  Because all states were required to be marked deleted
-     * at the same time, no changes to the cf, or ared (end date) are made to any record, only action is to remove the
-     * df flags on all states.
-     *
-     * This method preforms a screening check on the states of the entity to ensure they are all currently marked with
-     * a df flag of true and will only preform the removal of the df flags of the states if this condition is met. If
-     * the check fails the function returns false
+     * Use this method for non multi-tenant systems
      *
      * @param entityState The Entity Type to mark deleted
      * @param id The Id of the entity to mark deleted
+     * @param userId the userId of the user making the change
+     * @param systemId the systemId of the system makeing the change
      * @param <S> The parameterized type of the entity
-     * @return true if successful, false if all states were not in df state of true to start.
      */
-    default <S extends CommonState> boolean removeDeleteFlagAllStates(Class<S> entityState, long id) {
+    default <S extends CommonState> void removeDeleteFlag(Class<S> entityState, long id, long userId,
+                                                       long systemId) {
+        removeDeleteFlag(entityState, id, userId, systemId, 1);
+    }
 
-        // initialize the readyness check
-        boolean ready = true;
-
+    /**
+     * Removes delete flag for entity.  In order to record the date, time, user and system the record be marked
+     * deleted, a new current record is created to contain this information (arsd contains the date/time, ared is left
+     * null, as would any current state).  The previous current state is marked as history maintaining it's df flag of
+     * true which tracks the time that the entity was marked deleted.  Queries on the entity for times when the delete
+     * flag was set will not return a current state for the entity, only history, queries on the entity after the
+     * delete flag was removed will have a current record and a gap in history during the time the entity was marked
+     * as deleted.
+     *
+     * Use this method for multi-tenant systems
+     *
+     * @param entityState The Entity Type to mark deleted
+     * @param id The Id of the entity to mark deleted
+     * @param userId the userId of the user making the change
+     * @param systemId the systemId of the system makeing the change
+     * @param tenantId the tenantId of the tenant making the change (if multi tenant)
+     * @param <S> The parameterized type of the entity
+     */
+    default <S extends CommonState> void removeDeleteFlag(Class<S> entityState, long id, long userId,
+                                                       long systemId, long tenantId) {
         if(id > -1) {
 
             // get full entity for state
             FdfEntity<S> thisEntity = getEntityById(entityState, id);
 
-            // if there is a current state for the entity set it's df flag
-            if(thisEntity.current != null) {
-                if( thisEntity.current.df == false) {
-                    ready = false;
-                }
-            }
-            // if there is history for the entity mark each one's df flag
-            for(S historicalState: thisEntity.history) {
-                if(historicalState != null) {
-                    if(historicalState.df == false) {
-                        ready = false;
-                    }
-                }
+            // create the new state that will maintain the deletion records from the most recent state available
+            S deletedState = thisEntity.getMostRecentState();
 
-            }
+            // mark the state deleted
+            deletedState.df = false;
 
-            // if all states had a df set to true go ahead and preform the removal of the df flags for all states
-            if(ready) {
-                // if there is a current state for the entity set it's df flag
-                if(thisEntity.current != null) {
-                    thisEntity.current.df = false;
-                }
-                // if there is history for the entity mark each one's df flag
-                for(S historicalState: thisEntity.history) {
-                    if(historicalState != null) {
-                        historicalState.df = false;
-                    }
-
-                }
-            }
+            // save the state
+            save(entityState, deletedState, userId, systemId, tenantId);
 
         }
-        return ready;
     }
 
 

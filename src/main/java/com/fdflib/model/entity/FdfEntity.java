@@ -60,6 +60,41 @@ public class FdfEntity<S extends CommonState> {
         return thisState;
     }
 
+    /**
+     * Returns the most recent state for the entity if there is a current state it will be returned, otherwise the
+     * newest historical state will be returned.
+     *
+     * @return the most recent state for the entity
+     */
+    public S getMostRecentState() {
+
+        if(this.current != null) {
+            return this.current;
+        }
+        else {
+            // there was no current state, see if we can get a state from history
+            if(this.history != null && this.history.size() > 0) {
+                // find the historical entry with the most recent endDate
+                S lastState = null;
+                for(S historicalState: this.history) {
+                    if(lastState == null) {
+                        lastState = historicalState;
+                    }
+                    else {
+                        // if the state ared we are looking at is greater then then the last one make it the last
+                        if(historicalState.ared.getTime() > lastState.ared.getTime()) {
+                            // the state being looked at is more recent
+                            lastState = historicalState;
+
+                        }
+                    }
+                }
+                return lastState;
+            }
+        }
+        return null;
+    }
+
     public S getStateOfEntityAt(Date date) {
         S thisState = null;
 
