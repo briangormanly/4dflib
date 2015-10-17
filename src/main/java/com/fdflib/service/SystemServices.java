@@ -2,7 +2,6 @@ package com.fdflib.service;
 
 import com.fdflib.model.entity.FdfEntity;
 import com.fdflib.model.state.FdfSystem;
-import com.fdflib.model.state.FdfTenant;
 import com.fdflib.model.util.WhereClause;
 import com.fdflib.persistence.FdfPersistence;
 import com.fdflib.service.impl.FdfCommonServices;
@@ -18,11 +17,42 @@ import java.util.List;
  */
 public class SystemServices implements FdfCommonServices {
 
-    public List<FdfEntity<FdfSystem>> getAllSystems() {
+    public List<FdfSystem> getAllSystems() {
+        List<FdfSystem> currentSystems = new ArrayList<>();
+
+        for(FdfEntity<FdfSystem> system: getAllSystemsWithHistory()) {
+            if(system != null && system.current != null) {
+                currentSystems.add(system.current);
+            }
+        }
+
+        return currentSystems;
+    }
+
+    public List<FdfEntity<FdfSystem>> getAllSystemsWithHistory() {
+
         return this.getAll(FdfSystem.class);
     }
 
-    public FdfEntity<FdfSystem> getDefaultSystem() {
+    public FdfSystem getSystemById(long systemId) {
+        return getSystemByIdWithHistory(systemId).current;
+    }
+
+    public FdfEntity<FdfSystem> getSystemByIdWithHistory(long systemId) {
+
+        // get the system
+        if(systemId > 0) {
+            return getEntityById(FdfSystem.class, systemId);
+        }
+
+        return null;
+    }
+
+    public FdfSystem getDefaultSystem() {
+        return getDefaultSystemWithHistory().current;
+    }
+
+    public FdfEntity<FdfSystem> getDefaultSystemWithHistory() {
         // create the where statement for the query
         List<WhereClause> whereStatement = new ArrayList<>();
 
@@ -52,7 +82,19 @@ public class SystemServices implements FdfCommonServices {
         return manageReturnedEntity(returnedService);
     }
 
-    public List<FdfEntity<FdfSystem>> getSystemsByName(String name) {
+    public List<FdfSystem> getSystemsByName(String name) {
+        List<FdfSystem> currentSystems = new ArrayList<>();
+
+        for(FdfEntity<FdfSystem> system: getSystemsByNameWithHistory(name)) {
+            if(system != null && system.current != null) {
+                currentSystems.add(system.current);
+            }
+        }
+
+        return currentSystems;
+    }
+
+    public List<FdfEntity<FdfSystem>> getSystemsByNameWithHistory(String name) {
         // create the where statement for the query
         List<WhereClause> whereStatement = new ArrayList<>();
 
