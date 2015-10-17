@@ -18,9 +18,13 @@ import java.util.List;
 public class SystemServices implements FdfCommonServices {
 
     public List<FdfSystem> getAllSystems() {
+        return getAllSystems(1);
+    }
+
+    public List<FdfSystem> getAllSystems(long tenantId) {
         List<FdfSystem> currentSystems = new ArrayList<>();
 
-        for(FdfEntity<FdfSystem> system: getAllSystemsWithHistory()) {
+        for(FdfEntity<FdfSystem> system: getAllSystemsWithHistory(tenantId)) {
             if(system != null && system.current != null) {
                 currentSystems.add(system.current);
             }
@@ -30,8 +34,12 @@ public class SystemServices implements FdfCommonServices {
     }
 
     public List<FdfEntity<FdfSystem>> getAllSystemsWithHistory() {
+        return getAllSystemsWithHistory(1);
+    }
 
-        return this.getAll(FdfSystem.class);
+    public List<FdfEntity<FdfSystem>> getAllSystemsWithHistory(long tenantId) {
+
+        return this.getAll(FdfSystem.class, tenantId);
     }
 
     public FdfSystem getSystemById(long systemId) {
@@ -164,18 +172,18 @@ public class SystemServices implements FdfCommonServices {
     }
 
     /**
-     * Checks the passed FfdTenant Id and SHA-256 hashed password against the FdfTenant record, returns a true
+     * Checks the passed system Id and SHA-256 hashed password against the system record, returns a true
      * if the credentials are correct and false otherwise.
      *
-     * @param fdfTenantId Tenant ID to check authentication for
+     * @param systemId System ID to check authentication for
      * @param sha256EncryptedPassword Tenant password (must be SHA-256 hashed) to check authentication for
      * @return True if authentication attempt is successful, false otherwise.
      */
-    public Boolean authenticateTenant(long fdfTenantId, String sha256EncryptedPassword) {
+    public Boolean authenticateSystem(long systemId, String sha256EncryptedPassword) {
         Boolean isValid = false;
 
         // get the tenant
-        FdfEntity<FdfSystem> system = getEntityById(FdfSystem.class, fdfTenantId);
+        FdfEntity<FdfSystem> system = getEntityById(FdfSystem.class, systemId);
 
         // compare the password hashes
         if(system.current.sha256EncodedPassword.equals(sha256EncryptedPassword)) {
