@@ -37,7 +37,7 @@ import java.util.List;
 @SuppressWarnings("unused")
 public interface FdfCommonServices {
 
-    static org.slf4j.Logger fdfLog = LoggerFactory.getLogger(CommonState.class);
+    org.slf4j.Logger fdfLog = LoggerFactory.getLogger(CommonState.class);
 
 
     /**

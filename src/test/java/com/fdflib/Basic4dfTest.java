@@ -3,8 +3,8 @@ package com.fdflib;
 import com.fdflib.model.entity.FdfEntity;
 import com.fdflib.model.state.FdfSystem;
 import com.fdflib.persistence.database.DatabaseUtil;
-import com.fdflib.service.CommonServices;
-import com.fdflib.service.SystemServices;
+import com.fdflib.service.FdfServices;
+import com.fdflib.service.FdfSystemServices;
 import com.fdflib.util.FdfSettings;
 import org.junit.Test;
 
@@ -41,15 +41,15 @@ public class Basic4dfTest {
         fdfSettings.DB_ROOT_PASSWORD = "";
 
         // call the initialization of library!
-        CommonServices.initializeFdfDataModel(myModel);
+        FdfServices.initializeFdfDataModel(myModel);
 
         // check that the database exists and that we can query the default system.
-        SystemServices ss = new SystemServices();
-        List<FdfEntity<FdfSystem>> systems = ss.getAllSystems();
+        FdfSystemServices ss = new FdfSystemServices();
+        List<FdfSystem> systems = ss.getAllSystems();
         //Assert.assertEquals("Number of systems is 0", 1, systems.size());
         if(systems.size() < 1) {
             // get the default system
-            FdfEntity<FdfSystem> defaultSystem = ss.getDefaultSystem();
+            FdfSystem defaultSystem = ss.getDefaultSystem();
 
             // create a new system called "Unit Test Syste"
             FdfSystem uts = new FdfSystem();
@@ -57,7 +57,7 @@ public class Basic4dfTest {
             uts.description = "This is the first description from the basicSystemTest unit test";
 
             // add the new system
-            FdfEntity<FdfSystem> dbUts1 = ss.save(FdfSystem.class, uts, 1, defaultSystem.current.id);
+            FdfEntity<FdfSystem> dbUts1 = ss.save(FdfSystem.class, uts, 1, defaultSystem.id);
 
             // do an update to the "Unit Test Syste" record change description
             dbUts1.current.description = "This is the changed description";
@@ -70,7 +70,7 @@ public class Basic4dfTest {
             }
 
             // save the new description
-            FdfEntity<FdfSystem> dbUts2 = ss.save(FdfSystem.class, dbUts1.current, 1, defaultSystem.current.id);
+            FdfEntity<FdfSystem> dbUts2 = ss.save(FdfSystem.class, dbUts1.current, 1, defaultSystem.id);
 
             // make a third change to the description
             dbUts2.current.description = "This is the third description";
@@ -83,7 +83,7 @@ public class Basic4dfTest {
             }
 
             // save the new description
-            FdfEntity<FdfSystem> dbUts3 = ss.save(FdfSystem.class, dbUts2.current, 1, defaultSystem.current.id);
+            FdfEntity<FdfSystem> dbUts3 = ss.save(FdfSystem.class, dbUts2.current, 1, defaultSystem.id);
 
             if(dbUts3.current == null) {
                 java.lang.System.out.println("~~~~ it was null!~");
@@ -101,7 +101,7 @@ public class Basic4dfTest {
             }
 
             // save the new description
-            FdfEntity<FdfSystem> dbUts4 = ss.save(FdfSystem.class, dbUts3.current, 1, defaultSystem.current.id);
+            FdfEntity<FdfSystem> dbUts4 = ss.save(FdfSystem.class, dbUts3.current, 1, defaultSystem.id);
 
             // sleep for almost a couple of seconds
             try {
@@ -111,7 +111,7 @@ public class Basic4dfTest {
             }
 
             // opps... that was bad mark this record as being in error
-            ss.setDeleteFlagSingleState(FdfSystem.class, dbUts4.current);
+            ss.setDeleteFlag(FdfSystem.class, dbUts4.entityId, 1, defaultSystem.id);
 
             // sleep for almost a couple of seconds
             try {
@@ -121,7 +121,7 @@ public class Basic4dfTest {
             }
 
             //now that we deleted the row, put it back!!!!
-            ss.removeDeleteFlagSingleState(FdfSystem.class, dbUts4.current);
+            ss.removeDeleteFlag(FdfSystem.class, dbUts4.entityId, 1, defaultSystem.id);
         }
 
 

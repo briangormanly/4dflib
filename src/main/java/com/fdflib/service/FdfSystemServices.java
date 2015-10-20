@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * Created by brian.gormanly on 8/22/15.
  */
-public class SystemServices implements FdfCommonServices {
+public class FdfSystemServices implements FdfCommonServices {
 
     public List<FdfSystem> getAllSystems() {
         return getAllSystems(1);
@@ -186,7 +186,8 @@ public class SystemServices implements FdfCommonServices {
         FdfEntity<FdfSystem> system = getEntityById(FdfSystem.class, systemId);
 
         // compare the password hashes
-        if(system.current.sha256EncodedPassword.equals(sha256EncryptedPassword)) {
+        if(system != null && system.current != null
+                && system.current.sha256EncodedPassword.equals(sha256EncryptedPassword)) {
             isValid = true;
         }
 

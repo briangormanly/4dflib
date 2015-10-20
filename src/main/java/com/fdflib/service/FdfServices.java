@@ -37,9 +37,9 @@ import java.util.List;
  * Created on 8/21/15.
  * @author brian.gormanly
  */
-public class CommonServices {
+public class FdfServices {
 
-    static Logger fdfLog = LoggerFactory.getLogger(CommonServices.class);
+    static Logger fdfLog = LoggerFactory.getLogger(FdfServices.class);
     static FdfSettings settings = FdfSettings.getInstance();
 
     public static void initializeFdfDataModel(List<Class> passedClasses) {
