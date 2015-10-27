@@ -1,8 +1,10 @@
 .DS_Store
+.gradle
 logs
 project/project
 project/target
 target
+build
 tmp
 .history
 dist
