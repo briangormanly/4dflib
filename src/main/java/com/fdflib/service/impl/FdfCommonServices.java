@@ -55,6 +55,22 @@ public interface FdfCommonServices {
         return save(entityState, state, userId, systemId, 1);
     }
 
+    /**
+     * Save an Entities State to persistence internally manages all insert, update and actions associated with
+     * maintaining the correct state of the data in persistence.  Includes specified tenant (when using multi-tenant)
+     *
+     * This method signature assumes that the object contains the userId, systemId and tenantId saving the data in the
+     * euid, esid, and tid respectively.
+     *
+     * @param entityState State Type to save
+     * @param state state to save
+     * @param <S> parameterized type of entity state
+     * @return
+     */
+    default <S extends CommonState> FdfEntity<S> save(Class<S> entityState, S state) {
+        return save(entityState,state, state.euid, state.esid, state.tid);
+    }
+
 
     /**
      * Save an Entities State to persistence internally manages all insert, update and actions associated with
