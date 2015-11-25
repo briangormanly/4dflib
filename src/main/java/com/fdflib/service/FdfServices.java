@@ -108,6 +108,7 @@ public class FdfServices {
             try {
                 FdfPersistence.getInstance().checkDatabase();
                 FdfPersistence.getInstance().checkTables();
+                FdfPersistence.getInstance().checkFields();
                 FdfPersistence.getInstance().checkDefaultEntries();
             } catch (SQLException e) {
                 e.printStackTrace();
