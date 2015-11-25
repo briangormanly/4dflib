@@ -106,7 +106,10 @@ public class FdfServices {
             fdfLog.info("Database schema name: {}", settings.DB_NAME);
             fdfLog.info("------------------------------------------------------------------");
             try {
-                FdfPersistence.getInstance().createDatabase();
+                FdfPersistence.getInstance().checkDatabase();
+                FdfPersistence.getInstance().checkTables();
+                FdfPersistence.getInstance().checkFields();
+                FdfPersistence.getInstance().checkDefaultEntries();
             } catch (SQLException e) {
                 e.printStackTrace();
             }

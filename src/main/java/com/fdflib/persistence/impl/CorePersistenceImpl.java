@@ -28,8 +28,11 @@ import java.util.List;
 
 
 public interface CorePersistenceImpl {
-    void createDatabase() throws SQLException;
-    void createTable(Class c) throws SQLException;
+    void checkDatabase() throws SQLException;
+    void checkTables() throws SQLException;
+    void checkFields() throws SQLException;
+    void checkDefaultEntries() throws SQLException;
+
     <S extends CommonState> List<S> selectQuery(Class c, List<String> select, List<WhereClause> where);
     <S> Long insert(Class<S> entityState, S state);
     <S> void update(Class<S> c, S state);
