@@ -44,8 +44,6 @@ public class FdfServices {
 
     public static void initializeFdfDataModel(List<Class> passedClasses) {
 
-        fdfLog.info("This is the GRADLE Build!!!!!!!!!!!!!!!!!!!!!!!!");
-
         // check to see if the necessary settings are in place
         int flag = 0;
         if(settings.DB_HOST == null) {
