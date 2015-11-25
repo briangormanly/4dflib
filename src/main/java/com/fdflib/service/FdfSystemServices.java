@@ -90,6 +90,40 @@ public class FdfSystemServices implements FdfCommonServices {
         return manageReturnedEntity(returnedService);
     }
 
+    public FdfSystem getTestSystem() {
+        return getTestSystemWithHistory().current;
+    }
+
+    public FdfEntity<FdfSystem> getTestSystemWithHistory() {
+        // create the where statement for the query
+        List<WhereClause> whereStatement = new ArrayList<>();
+
+        // check that deleted records are not returned
+        WhereClause whereDf = new WhereClause();
+        whereDf.name = "df";
+        whereDf.operator = WhereClause.Operators.NOT_EQUAL;
+        whereDf.value = "1";
+        whereDf.valueDataType = Integer.class;
+
+        // add the id check
+        WhereClause whereId = new WhereClause();
+        whereId.conditional = WhereClause.CONDITIONALS.AND;
+        whereId.name = "id";
+        whereId.operator = WhereClause.Operators.EQUAL;
+        whereId.value = "2";
+        whereId.valueDataType = Long.class;
+
+        whereStatement.add(whereDf);
+        whereStatement.add(whereId);
+
+        // do the query
+        List<FdfSystem> returnedService =
+                FdfPersistence.getInstance().selectQuery(FdfSystem.class, null, whereStatement);
+
+        // create a List of entities
+        return manageReturnedEntity(returnedService);
+    }
+
     public List<FdfSystem> getSystemsByName(String name) {
         List<FdfSystem> currentSystems = new ArrayList<>();
 

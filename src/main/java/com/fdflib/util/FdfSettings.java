@@ -57,6 +57,10 @@ public class FdfSettings {
             + " a registered external system.";
     public static String DEFAULT_SYSTEM_PASSWORD = "4DfPassword";
 
+    public static String TEST_SYSTEM_NAME = "Default Test System";
+    public static String TEST_SYSTEM_DESCRIPTION = "Default test system for use connecting to the system for testing";
+    public static String TEST_SYSTEM_PASSWORD = "testSystemPassword";
+
     private FdfSettings() {
     }
 
