@@ -19,6 +19,7 @@ package com.fdflib.persistence;
 import com.fdflib.model.state.CommonState;
 import com.fdflib.model.util.WhereClause;
 import com.fdflib.persistence.connection.DbConnectionManager;
+import com.fdflib.persistence.impl.CorePersistenceImpl;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -26,7 +27,7 @@ import java.util.List;
 /**
  * Created by brian.gormanly on 6/10/15.
  */
-public class FdfPersistence extends DbConnectionManager {
+public class FdfPersistence extends DbConnectionManager implements CorePersistenceImpl {
 
     private static final FdfPersistence INSTANCE = new FdfPersistence();
 
@@ -37,13 +38,23 @@ public class FdfPersistence extends DbConnectionManager {
     }
 
     @Override
-    public void createDatabase() throws SQLException {
-        persistence.createDatabase();
+    public void checkDatabase() throws SQLException {
+        persistence.checkDatabase();
     }
 
     @Override
-    public void createTable(Class c) throws SQLException {
-        persistence.createTable(c);
+    public void checkTables() throws SQLException {
+        persistence.checkTables();
+    }
+
+    @Override
+    public void checkFields() throws SQLException {
+        persistence.checkFields();
+    }
+
+    @Override
+    public void checkDefaultEntries() throws SQLException {
+        persistence.checkDefaultEntries();
     }
 
     @Override
