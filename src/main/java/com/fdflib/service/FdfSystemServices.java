@@ -132,13 +132,8 @@ public class FdfSystemServices implements FdfCommonServices {
         return manageReturnedEntities(returnedService);
     }
 
-    public FdfEntity<FdfSystem> saveSystem(FdfSystem systemState, long userId, long systemId) {
-        return save(FdfSystem.class, systemState, userId, systemId);
-    }
-
-    public void createDefaultService(FdfSystem state) {
-
-        this.save(FdfSystem.class, state, 1, 1);
+    public FdfEntity<FdfSystem> saveSystem(FdfSystem systemState) {
+        return save(FdfSystem.class, systemState);
     }
 
     /**

@@ -115,25 +115,11 @@ public class FdfTenantServices implements FdfCommonServices {
 
     /**
      * Save FdfTenant
-     * @param tenantState
-     * @param userId
-     * @param systemId
+     * @param tenant
      * @return
      */
-    public FdfEntity<FdfTenant> saveTenant(FdfTenant tenantState, long userId, long systemId) {
-        return this.save(FdfTenant.class, tenantState, userId, systemId);
+    public FdfEntity<FdfTenant> saveTenant(FdfTenant tenant) {
+        return this.save(FdfTenant.class, tenant);
     }
 
-    /**
-     *
-     * @param tenantState
-     * @param userId
-     * @param systemId
-     * @param tenantId
-     * @return
-     */
-    public FdfEntity<FdfTenant> saveTenant(FdfTenant tenantState, long userId, long systemId,
-                                           long tenantId) {
-        return this.save(FdfTenant.class, tenantState, userId, systemId, tenantId);
-    }
 }
