@@ -42,6 +42,6 @@ public class CommonState {
         this.ared = null;
         this.esid = -1;
         this.euid = -1;
-        this.tid = -1;
+        this.tid = 1;
     }
 }

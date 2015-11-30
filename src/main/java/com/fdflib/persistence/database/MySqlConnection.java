@@ -54,8 +54,6 @@ public class MySqlConnection {
         }
 
         try {
-            fdfLog.debug("connection string\n{}\nUser: {}, Password {}", FdfSettings.returnDBConnectionString()
-                    , FdfSettings.DB_USER, FdfSettings.DB_PASSWORD);
             connection = DriverManager.getConnection(FdfSettings.returnDBConnectionString(), FdfSettings.DB_USER
                     , FdfSettings.DB_PASSWORD);
         } catch (SQLException e) {
@@ -81,8 +79,6 @@ public class MySqlConnection {
         }
 
         try {
-            fdfLog.debug("connection string\n{}\nUser: {}, Password {}", FdfSettings.returnDBConnectionString()
-                    , FdfSettings.DB_USER, FdfSettings.DB_PASSWORD);
             connection = DriverManager.getConnection(FdfSettings.returnDBConnectionStringWithoutDatabase(),
                     FdfSettings.DB_ROOT_USER, FdfSettings.DB_ROOT_PASSWORD);
         } catch (SQLException e) {
