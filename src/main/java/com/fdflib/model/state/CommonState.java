@@ -17,6 +17,7 @@
 package com.fdflib.model.state;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * Created by brian.gormanly on 3/9/15.
@@ -32,6 +33,8 @@ public class CommonState {
     public long euid;
     public long esid;
     public long tid;    // tenantId
+
+    public List<FdfRelationship> relationships;
 
     public CommonState() {
         this.rid = -1;
