@@ -35,7 +35,7 @@ public class CommonState {
     public long esid;
     public long tid;    // tenantId
 
-    public List<FdfRelationship> relationships = new ArrayList<>();
+    public List<FdfRelationship> relationships;
 
     public CommonState() {
         this.rid = -1;
@@ -47,5 +47,7 @@ public class CommonState {
         this.esid = -1;
         this.euid = -1;
         this.tid = 1;
+
+        relationships = new ArrayList<>();
     }
 }
