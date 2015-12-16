@@ -74,19 +74,12 @@ public class FdfTenantServices implements FdfCommonServices {
 
     }
     
-    public List<FdfTenant> getTenantsByName(String tenantName) {
-        List<FdfTenant> currentTenants = new ArrayList<>();
+    public FdfTenant getTenantByName(String tenantName) {
 
-        for(FdfEntity<FdfTenant> tenant: getTenantsByNameWithHistory(tenantName)) {
-            if(tenant != null && tenant.current != null) {
-                currentTenants.add(tenant.current);
-            }
-        }
-
-        return currentTenants;
+        return getTenantByNameWithHistory(tenantName).current;
     }
 
-    public List<FdfEntity<FdfTenant>> getTenantsByNameWithHistory(String tenantName) {
+    public FdfEntity<FdfTenant> getTenantByNameWithHistory(String tenantName) {
         // create the where statement for the query
         List<WhereClause> whereStatement = new ArrayList<>();
 
@@ -107,19 +100,32 @@ public class FdfTenantServices implements FdfCommonServices {
         whereStatement.add(nameLike);
 
         // do the query
-        List<FdfTenant> returnedStates = FdfPersistence.getInstance().selectQuery(FdfTenant.class, null, whereStatement);
-        List<FdfEntity<FdfTenant>> tenantList = this.manageReturnedEntities(returnedStates);
+        return this.manageReturnedEntity(FdfPersistence.getInstance().selectQuery(FdfTenant.class, null, whereStatement));
 
-        return tenantList;
+        //return tenantList;
     }
 
     /**
      * Save FdfTenant
+     * Save FdfTenant, checks to see if there is already a tenant with the same name as names are unique. If the name
+     * already exists, it is treated as an update, not a insert.
      * @param tenant
      * @return
      */
     public FdfEntity<FdfTenant> saveTenant(FdfTenant tenant) {
-        return this.save(FdfTenant.class, tenant);
+
+
+        FdfEntity<FdfTenant> returnEntity = null;
+        if(tenant != null) {
+            // check to see if there is a user with the passed users id and or username
+            FdfTenant existingTenant = this.getTenantByName(tenant.name);
+            if(existingTenant != null) {
+                tenant.id = existingTenant.id;
+            }
+            returnEntity = this.save(FdfTenant.class, tenant);
+        }
+
+        return returnEntity;
     }
 
 }
