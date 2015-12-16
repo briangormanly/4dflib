@@ -107,6 +107,8 @@ public class FdfTenantServices implements FdfCommonServices {
 
     /**
      * Save FdfTenant
+     * Save FdfTenant, checks to see if there is already a tenant with the same name as names are unique. If the name
+     * already exists, it is treated as an update, not a insert.
      * @param tenant
      * @return
      */
