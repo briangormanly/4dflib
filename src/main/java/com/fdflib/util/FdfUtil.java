@@ -28,4 +28,13 @@ public class FdfUtil {
 
         return className;
     }
+
+    public static Class getClassByFullyQualifiedName(String className) {
+        try {
+            return Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }
