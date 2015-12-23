@@ -9,6 +9,17 @@ public class FdfUtil {
 
     private static final String TYPE_NAME_PREFIX = "class ";
 
+    public static String getClassName(Class className) {
+
+        String classString = className.toString();
+
+        if (classString.startsWith(TYPE_NAME_PREFIX)) {
+            return classString.substring(TYPE_NAME_PREFIX.length());
+        }
+
+        return classString;
+    }
+
     public static String getClassName(String className) {
 
         if (className.startsWith(TYPE_NAME_PREFIX)) {
