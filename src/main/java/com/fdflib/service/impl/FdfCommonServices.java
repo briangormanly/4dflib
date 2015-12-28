@@ -308,7 +308,7 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    default <S extends CommonState> List<FdfEntity<S>> getAllCurrent(Class<S> entityState) {
+    default <S extends CommonState> List<S> getAllCurrent(Class<S> entityState) {
 
         return getAllCurrent(entityState, 1);
 
@@ -323,7 +323,7 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    default <S extends CommonState> List<FdfEntity<S>> getAllCurrent(Class<S> entityState, long tenantId) {
+    default <S extends CommonState> List<S> getAllCurrent(Class<S> entityState, long tenantId) {
 
         // create the where statement for the statement
         List<WhereClause> whereStatement = new ArrayList<>();
@@ -355,7 +355,15 @@ public interface FdfCommonServices {
         List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
 
         // organize the results
-        return manageReturnedEntities(returnedStates);
+        List<FdfEntity<S>> returnedList = manageReturnedEntities(returnedStates);
+        if(returnedList != null) {
+            List<S> entities = new ArrayList<>();
+            for(FdfEntity<S> returnedEntity: returnedList) {
+                entities.add(returnedEntity.current);
+            }
+            return entities;
+        }
+        return null;
 
     }
 
