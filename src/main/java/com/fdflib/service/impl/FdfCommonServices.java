@@ -1093,22 +1093,6 @@ public interface FdfCommonServices {
         return manageReturnedEntity(returnedStates);
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     /**
      * Retrieves the entity associated that contains the value passed for the field passed.  Returns current and
      * historical states for the entity
@@ -1201,20 +1185,6 @@ public interface FdfCommonServices {
         return null;
 
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     /**
      * Retrieves entity of the passed type from persistence as it existed at the date passed. Only states
