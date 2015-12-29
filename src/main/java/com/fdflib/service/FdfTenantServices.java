@@ -26,6 +26,20 @@ public class FdfTenantServices implements FdfCommonServices {
         return currentTenants;
     }
 
+    public FdfEntity<FdfTenant> deleteTenant(long userId, long tenantId, long callingUserId, long callingSystemId) {
+        // get all with history
+        GenericService gs = new GenericService();
+        return gs.setDeleteFlag(FdfTenant.class, userId, callingUserId, callingSystemId, tenantId);
+
+    }
+
+    public FdfEntity<FdfTenant> unDeleteTenant(long userId, long tenantId, long callingUserId, long callingSystemId) {
+        // get all with history
+        GenericService gs = new GenericService();
+        return gs.removeDeleteFlag(FdfTenant.class, userId, callingUserId, callingSystemId, tenantId);
+
+    }
+
     public List<FdfEntity<FdfTenant>> getAllTenantsWithHistory() {
 
         return this.getAll(FdfTenant.class);

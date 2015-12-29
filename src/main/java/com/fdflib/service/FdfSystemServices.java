@@ -17,6 +17,24 @@ import java.util.List;
  */
 public class FdfSystemServices implements FdfCommonServices {
 
+    public FdfEntity<FdfSystem> saveSystem(FdfSystem systemState) {
+        return save(FdfSystem.class, systemState);
+    }
+
+    public FdfEntity<FdfSystem> deleteSystem(long userId, long tenantId, long callingUserId, long callingSystemId) {
+        // get all with history
+        GenericService gs = new GenericService();
+        return gs.setDeleteFlag(FdfSystem.class, userId, callingUserId, callingSystemId, tenantId);
+
+    }
+
+    public FdfEntity<FdfSystem> unDeleteSystem(long userId, long tenantId, long callingUserId, long callingSystemId) {
+        // get all with history
+        GenericService gs = new GenericService();
+        return gs.removeDeleteFlag(FdfSystem.class, userId, callingUserId, callingSystemId, tenantId);
+
+    }
+
     public List<FdfSystem> getAllSystems() {
         return getAllSystems(1);
     }
@@ -164,10 +182,6 @@ public class FdfSystemServices implements FdfCommonServices {
 
         // create a List of entities
         return manageReturnedEntities(returnedService);
-    }
-
-    public FdfEntity<FdfSystem> saveSystem(FdfSystem systemState) {
-        return save(FdfSystem.class, systemState);
     }
 
     /**
