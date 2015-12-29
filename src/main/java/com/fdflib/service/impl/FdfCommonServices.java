@@ -147,9 +147,9 @@ public interface FdfCommonServices {
      * @param systemId the systemId of the system makeing the change
      * @param <S> The parameterized type of the entity
      */
-    default <S extends CommonState> void setDeleteFlag(Class<S> entityState, long id, long userId,
+    default <S extends CommonState> FdfEntity<S> setDeleteFlag(Class<S> entityState, long id, long userId,
                                                                 long systemId) {
-        setDeleteFlag(entityState, id, userId, systemId, 1);
+        return setDeleteFlag(entityState, id, userId, systemId, 1);
     }
 
     /**
@@ -168,7 +168,7 @@ public interface FdfCommonServices {
      * @param tenantId the tenantId of the tenant making the change (if multi tenant)
      * @param <S> The parameterized type of the entity
      */
-    default <S extends CommonState> void setDeleteFlag(Class<S> entityState, long id, long userId,
+    default <S extends CommonState> FdfEntity<S> setDeleteFlag(Class<S> entityState, long id, long userId,
                                                                 long systemId, long tenantId) {
         if(id > -1) {
 
@@ -182,9 +182,10 @@ public interface FdfCommonServices {
             deletedState.df = true;
 
             // save the state
-            save(entityState, deletedState, userId, systemId, tenantId);
+            return save(entityState, deletedState, userId, systemId, tenantId);
 
         }
+        return null;
     }
 
 
@@ -205,9 +206,9 @@ public interface FdfCommonServices {
      * @param systemId the systemId of the system makeing the change
      * @param <S> The parameterized type of the entity
      */
-    default <S extends CommonState> void removeDeleteFlag(Class<S> entityState, long id, long userId,
+    default <S extends CommonState> FdfEntity<S> removeDeleteFlag(Class<S> entityState, long id, long userId,
                                                        long systemId) {
-        removeDeleteFlag(entityState, id, userId, systemId, 1);
+        return removeDeleteFlag(entityState, id, userId, systemId, 1);
     }
 
     /**
@@ -228,7 +229,7 @@ public interface FdfCommonServices {
      * @param tenantId the tenantId of the tenant making the change (if multi tenant)
      * @param <S> The parameterized type of the entity
      */
-    default <S extends CommonState> void removeDeleteFlag(Class<S> entityState, long id, long userId,
+    default <S extends CommonState> FdfEntity<S> removeDeleteFlag(Class<S> entityState, long id, long userId,
                                                        long systemId, long tenantId) {
         if(id > -1) {
 
@@ -242,9 +243,10 @@ public interface FdfCommonServices {
             deletedState.df = false;
 
             // save the state
-            save(entityState, deletedState, userId, systemId, tenantId);
+            return save(entityState, deletedState, userId, systemId, tenantId);
 
         }
+        return null;
     }
 
 
