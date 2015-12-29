@@ -23,6 +23,8 @@ import com.fdflib.persistence.FdfPersistence;
 import com.fdflib.util.GeneralConstants;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -1089,6 +1091,99 @@ public interface FdfCommonServices {
 
         // create a List of entities
         return manageReturnedEntity(returnedStates);
+    }
+
+    /**
+     * Retrieves the entity associated that contains the value passed for the field passed.  Returns current and
+     * historical states for the entity
+     *
+     * Uses the Default FdfTenant (when not using multi-tenant)
+     *
+     * @param entityState The entity type to query
+     * @param fieldName The Field of that is being checked for the passed value
+     * @param value The value that we are checking in the field passed for.
+     * @param <S> Parameterized type of entity
+     * @return Entity of type passed
+     */
+    default <S extends CommonState> List<FdfEntity<S>> getEntitiesByValueForPassedField(Class<S> entityState,
+                                                                                        String fieldName,
+                                                                                        String value) {
+
+        return getEntitiesByValueForPassedField(entityState, fieldName, value, 1);
+    }
+
+    /**
+     * Retrieves the entity associated that contains the value passed for the field passed.  Returns current and
+     * historical states for the entity
+     *
+     * Includes specified tenant (when using multi-tenant)
+     *
+     * @param entityState The entity type to query
+     * @param fieldName The Field of that is being checked for the passed value
+     * @param value The value that we are checking in the field passed for.
+     * @param tenantId Id of the tenant to retrieve for (Multi-FdfTenant mode)
+     * @param <S> Parameterized type of entity
+     * @return Entity of type passed
+     */
+    default <S extends CommonState> List<FdfEntity<S>> getEntitiesByValueForPassedField(Class<S> entityState,
+                                                                                        String fieldName, String value,
+                                                                                        long tenantId) {
+
+        Field passedField = null;
+        Type passedFieldType = null;
+
+        // check to see if the class has the field
+        try {
+            passedField = entityState.getField(fieldName);
+
+        } catch (NoSuchFieldException e) {
+            // intentionally ignored
+        }
+
+        // try to get the type of the passed field
+        if(passedField != null) {
+            passedFieldType = passedField.getGenericType();
+        }
+
+        if(passedField != null && passedFieldType != null && value != null && tenantId > 0) {
+            // create the where statement for the query
+            List<WhereClause> whereStatement = new ArrayList<>();
+
+            // check that deleted records are not returned
+            WhereClause whereDf = new WhereClause();
+            whereDf.name = "df";
+            whereDf.operator = WhereClause.Operators.NOT_EQUAL;
+            whereDf.value = "1";
+            whereDf.valueDataType = Integer.class;
+
+            // add the id check
+            WhereClause whereId = new WhereClause();
+            whereId.conditional = WhereClause.CONDITIONALS.AND;
+            whereId.name = fieldName;
+            whereId.operator = WhereClause.Operators.EQUAL;
+            whereId.value = value;
+            whereId.valueDataType = passedFieldType;
+
+            WhereClause whereTid = new WhereClause();
+            whereTid.name = "tid";
+            whereTid.operator = WhereClause.Operators.EQUAL;
+            whereTid.value = Long.toString(tenantId);
+            whereTid.valueDataType = Long.class;
+
+            whereStatement.add(whereDf);
+            whereStatement.add(whereId);
+            whereStatement.add(whereTid);
+
+            // do the query
+            List<S> returnedStates =
+                    FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
+
+            // create a List of entities
+            return manageReturnedEntities(returnedStates);
+        }
+
+        return null;
+
     }
 
     /**
