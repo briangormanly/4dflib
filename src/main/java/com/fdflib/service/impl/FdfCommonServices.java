@@ -25,10 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * Universal implementation of the 4DF API, allows querying across all Entity states that extend CommonState.
@@ -1173,6 +1170,111 @@ public interface FdfCommonServices {
             whereStatement.add(whereDf);
             whereStatement.add(whereId);
             whereStatement.add(whereTid);
+
+            // do the query
+            List<S> returnedStates =
+                    FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
+
+            // create a List of entities
+            return manageReturnedEntities(returnedStates);
+        }
+
+        return null;
+
+    }
+
+
+
+
+
+
+
+
+    /**
+     * Retrieves the entity associated that contains the value passed for the field passed.  Returns current and
+     * historical states for the entity
+     *
+     * Uses the Default FdfTenant (when not using multi-tenant)
+     *
+     * @param entityState The entity type to query
+     * @param fieldsAndValues HashMap that contains Key: Field and Value: value pairs to query by
+     * @param <S> Parameterized type of entity
+     * @return Entity of type passed
+     */
+    default <S extends CommonState> List<FdfEntity<S>> getEntitiesByValuesForPassedFields(Class<S> entityState,
+                                                                                          HashMap<String, String>
+                                                                                                  fieldsAndValues) {
+
+        return getEntitiesByValuesForPassedFields(entityState, fieldsAndValues, 1);
+    }
+
+    /**
+     * Retrieves the entity associated that contains the value passed for the field passed.  Returns current and
+     * historical states for the entity
+     *
+     * Includes specified tenant (when using multi-tenant)
+     *
+     * @param entityState The entity type to query
+     * @param fieldsAndValues HashMap that contains Key: Field and Value: value pairs to query by
+     * @param tenantId Id of the tenant to retrieve for (Multi-FdfTenant mode)
+     * @param <S> Parameterized type of entity
+     * @return Entity of type passed
+     */
+    default <S extends CommonState> List<FdfEntity<S>> getEntitiesByValuesForPassedFields(Class<S> entityState,
+                                                                                          HashMap<String, String>
+                                                                                                  fieldsAndValues,
+                                                                                          long tenantId) {
+
+        // check that at least one field/value pair was passed
+        if(fieldsAndValues != null && fieldsAndValues.size() > 0 && tenantId > 0) {
+            // create the where statement for the query
+            List<WhereClause> whereStatement = new ArrayList<>();
+
+            // check that deleted records are not returned
+            WhereClause whereDf = new WhereClause();
+            whereDf.name = "df";
+            whereDf.operator = WhereClause.Operators.NOT_EQUAL;
+            whereDf.value = "1";
+            whereDf.valueDataType = Integer.class;
+
+            WhereClause whereTid = new WhereClause();
+            whereTid.name = "tid";
+            whereTid.operator = WhereClause.Operators.EQUAL;
+            whereTid.value = Long.toString(tenantId);
+            whereTid.valueDataType = Long.class;
+
+            whereStatement.add(whereDf);
+            whereStatement.add(whereTid);
+
+            // add the Field / Value pairs to query by
+            for(Map.Entry<String, String> fieldValuePair: fieldsAndValues.entrySet()) {
+
+                Field passedField = null;
+                Type passedFieldType = null;
+
+                // check to see if the class has the field
+                try {
+                    passedField = entityState.getField(fieldValuePair.getKey());
+
+                } catch (NoSuchFieldException e) {
+                    // intentionally ignored
+                }
+
+                // try to get the type of the passed field
+                if(passedField != null) {
+                    passedFieldType = passedField.getGenericType();
+                }
+
+                // add the id check
+                WhereClause whereFieldValue = new WhereClause();
+                whereFieldValue.conditional = WhereClause.CONDITIONALS.AND;
+                whereFieldValue.name = fieldValuePair.getKey();
+                whereFieldValue.operator = WhereClause.Operators.EQUAL;
+                whereFieldValue.value = fieldValuePair.getValue();
+                whereFieldValue.valueDataType = passedFieldType;
+
+                whereStatement.add(whereFieldValue);
+            }
 
             // do the query
             List<S> returnedStates =
