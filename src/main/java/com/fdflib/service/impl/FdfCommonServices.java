@@ -38,7 +38,6 @@ public interface FdfCommonServices {
 
     org.slf4j.Logger fdfLog = LoggerFactory.getLogger(CommonState.class);
 
-
     /**
      * Save an Entities State to persistence internally manages all insert, update and actions associated with
      * maintaining the correct state of the data in persistence.  Uses the Default FdfTenant (when not using multi-tenant)
@@ -187,7 +186,6 @@ public interface FdfCommonServices {
         return null;
     }
 
-
     /**
      * Removes delete flag for entity.  In order to record the date, time, user and system the record be marked
      * deleted, a new current record is created to contain this information (arsd contains the date/time, ared is left
@@ -247,7 +245,6 @@ public interface FdfCommonServices {
         }
         return null;
     }
-
 
     /**
      * Retrieves all entities of type passed from persistence. Includes all current and historical data for
@@ -368,7 +365,6 @@ public interface FdfCommonServices {
 
     }
 
-
     /**
      * Retrieves all entities of type passed from persistence, only returning the historical data in the entity,
      * no current data is included.  Uses the Default FdfTenant (when not using multi-tenant)
@@ -382,7 +378,6 @@ public interface FdfCommonServices {
         return getAllHistory(entityState, 1);
 
     }
-
 
     /**
      * Retrieves all entities of type passed from persistence, only returning the historical data in the entity,
@@ -524,7 +519,6 @@ public interface FdfCommonServices {
         return manageReturnedEntities(returnedStates);
     }
 
-
     /**
      * Retrieves all entities that have states active starting at or after the date passed into the method.  Will
      * return current and historical data for the entity equal to or newer then the passed date, but no history
@@ -543,7 +537,6 @@ public interface FdfCommonServices {
         return getAllFromDate(entityState, date, 1);
 
     }
-
 
     /**
      * Retrieves all entities that have states active starting at or after the date passed into the method.  Will
@@ -623,7 +616,6 @@ public interface FdfCommonServices {
 
     }
 
-
     /**
      * Retrieves all entities that have states active starting at or before at the date passed into the method.
      * Will return current and historical data for the entity existing prior to the passed date, but no history
@@ -696,7 +688,6 @@ public interface FdfCommonServices {
         return getAllBetweenDates(entityState, startDate, endDate, 1);
 
     }
-
 
     /**
      * Retrieves all entities that have states active starting at or before at the startDate passed into the method
@@ -1183,13 +1174,6 @@ public interface FdfCommonServices {
 
     }
 
-
-
-
-
-
-
-
     /**
      * Retrieves the entity associated that contains the value passed for the field passed.  Returns current and
      * historical states for the entity
@@ -1670,7 +1654,6 @@ public interface FdfCommonServices {
         return manageReturnedEntity(returnedStates);
     }
 
-
     /**
      * Takes a list of raw states returned by a query and organizes them into separate entities of type passed.
      * @param rawStates : List of states to organize into entities
@@ -1709,7 +1692,6 @@ public interface FdfCommonServices {
         }
         return allEntities;
     }
-
 
     /**
      * Takes a list of raw states returned by a query and organizes them into separate entities of type passed.
