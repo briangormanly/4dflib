@@ -16,12 +16,13 @@
 
 package com.fdflib.model.state;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
  * Created by brian.gormanly on 3/9/15.
  */
-public class CommonState {
+public class CommonState implements Serializable {
 
     public long rid;
     public long id;
