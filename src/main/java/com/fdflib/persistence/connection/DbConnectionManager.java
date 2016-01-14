@@ -19,6 +19,7 @@ package com.fdflib.persistence.connection;
 import com.fdflib.persistence.database.DatabaseUtil;
 import com.fdflib.persistence.impl.CorePersistenceImpl;
 import com.fdflib.persistence.queries.CoreMySqlQueries;
+import com.fdflib.persistence.queries.CorePostgreSqlQueries;
 import com.fdflib.util.FdfSettings;
 
 /**
