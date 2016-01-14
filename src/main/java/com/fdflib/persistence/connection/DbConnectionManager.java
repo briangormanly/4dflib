@@ -34,5 +34,10 @@ public abstract class DbConnectionManager implements CorePersistenceImpl {
             persistence = CoreMySqlQueries.getInstance();
 
         }
+
+        if(FdfSettings.getInstance().PERSISTENCE == DatabaseUtil.DatabaseType.POSTGRES) {
+            persistence = CorePostgreSqlQueries.getInstance();
+
+        }
     }
 }
