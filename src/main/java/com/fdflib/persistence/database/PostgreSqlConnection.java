@@ -13,7 +13,7 @@ import java.sql.SQLException;
  */
 public class PostgreSqlConnection {
     private static final PostgreSqlConnection INSTANCE = new PostgreSqlConnection();
-    static Logger fdfLog = LoggerFactory.getLogger(MySqlConnection.class);
+    static Logger fdfLog = LoggerFactory.getLogger(PostgreSqlConnection.class);
 
     private PostgreSqlConnection() {
 

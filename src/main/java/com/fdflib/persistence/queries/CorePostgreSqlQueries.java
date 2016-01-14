@@ -5,6 +5,7 @@ import com.fdflib.model.state.FdfSystem;
 import com.fdflib.model.state.FdfTenant;
 import com.fdflib.model.util.WhereClause;
 import com.fdflib.persistence.connection.DbConnectionManager;
+import com.fdflib.persistence.database.DatabaseUtil;
 import com.fdflib.persistence.database.PostgreSqlConnection;
 import com.fdflib.persistence.impl.CorePersistenceImpl;
 import com.fdflib.service.FdfSystemServices;
@@ -37,7 +38,7 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
 
     public void checkDatabase() throws SQLException {
         // create database
-        String dbexists = "select * from information_schema.SCHEMATA where SCHEMA_NAME = '" + FdfSettings.DB_NAME + "';";
+        String dbexists = "SELECT * FROM pg_database WHERE datname= '" + FdfSettings.DB_NAME.toLowerCase() + "';";
 
         Statement ps;
         ResultSet rs = null;
@@ -51,15 +52,24 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
             if(rs != null) {
                 if(!rs.next()) {
                     // Database does not exist, create
-                    String sqlCreate = "CREATE DATABASE IF NOT EXISTS " + FdfSettings.DB_NAME + " CHARACTER SET UTF8;";
-                    String sqlUserGrant = "GRANT ALL ON " + FdfSettings.DB_NAME + ".* to '" + FdfSettings.DB_USER + "'@'"
-                            + FdfSettings.DB_HOST + "' IDENTIFIED BY '" + FdfSettings.DB_PASSWORD + "'";
+                    String sqlCreate = "CREATE DATABASE " +  "\"" + FdfSettings.DB_NAME.toLowerCase() + "\""
+                            +  " ENCODING '" + FdfSettings.DB_ENCODING.UTF8 + "';";
+
+                    String sqlCreateUser = "CREATE USER " +  "\"" +  FdfSettings.DB_USER.toLowerCase() + "\""
+                            +  " WITH PASSWORD '" + FdfSettings.DB_PASSWORD + "';";
+                    String sqlUserGrant = "GRANT ALL PRIVILEGES ON DATABASE " + "\"" + FdfSettings.DB_NAME + "\""
+                            + " to " + "\"" +  FdfSettings.DB_USER.toLowerCase() + "\"" +  ";";
+
+                    System.out.println("Issueing:: " + sqlCreate);
+                    System.out.println("Issueing:: " + sqlCreateUser);
+                    System.out.println("Issueing:: " + sqlUserGrant);
 
 
                     ps = PostgreSqlConnection.getInstance().getNoDBSession().createStatement();
 
                     if(ps != null) {
                         ps.executeUpdate(sqlCreate);
+                        ps.executeUpdate(sqlCreateUser);
                         ps.executeUpdate(sqlUserGrant);
                         fdfLog.info("******************************************************************");
                         fdfLog.info("4DFLib Database did not exist, attempting to create.");
@@ -95,8 +105,9 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
         for(Class c: classList) {
 
             // check to see if the table already exists
-            String tableTest = "select * from information_schema.TABLES where TABLE_SCHEMA = '"
-                    + FdfSettings.DB_NAME + "' and TABLE_NAME = '" + c.getSimpleName() + "';";
+            String tableTest = "select * from information_schema.TABLES where table_catalog = '"
+                    + FdfSettings.DB_NAME.toLowerCase() +  "' and table_name = '"
+                    +  c.getSimpleName().toLowerCase() +  "';";
 
             Statement ps = null;
             ResultSet rs = null;
@@ -111,10 +122,11 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                 if(rs != null) {
                     if (!rs.next()) {
                         // Table does not exist, create
-                        fdfLog.debug("creating table: {}", c.getSimpleName());
+                        fdfLog.debug("creating table: {}", c.getSimpleName().toLowerCase());
                         // check there there is at lease one field
                         if(c.getFields().length > 0) {
-                            String sql = "CREATE TABLE IF NOT EXISTS " + FdfSettings.DB_NAME + "." + c.getSimpleName() + " ( ";
+                            String sql = "CREATE TABLE " + "\"" +  c.getSimpleName().toLowerCase()
+                                    + "\"" +  " ( ";
                             int fieldCounter = 0;
 
                             for (Field field : c.getFields()) {
@@ -128,14 +140,14 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                             }
                             sql += ");";
 
-                            fdfLog.debug("Table sql {} : {}", c.getSimpleName(), sql);
+                            fdfLog.info("Table sql {} : {}", c.getSimpleName().toLowerCase(), sql);
 
                             if(ps != null) {
                                 ps.executeUpdate(sql);
                             }
                         }
                         else {
-                            fdfLog.info("No table created for model object {} class had no valid data members", c.getSimpleName());
+                            fdfLog.info("No table created for model object {} class had no valid data members", c.getSimpleName().toLowerCase());
                         }
                     }
                 }
@@ -179,10 +191,12 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
 
                         // query for the field in the database
                         // check to see if the table already exists
-                        String fieldTest = "select * from information_schema.COLUMNS where TABLE_SCHEMA = '"
-                                + FdfSettings.DB_NAME + "' and TABLE_NAME = '" + c.getSimpleName()
-                                + "' and COLUMN_NAME= '" + field.getName() +"';";
+                        String fieldTest = "select * from information_schema.columns where table_catalog= '"
+                                +  FdfSettings.DB_NAME.toLowerCase() +  "' and table_name= '"
+                                +  c.getSimpleName().toLowerCase() +  "' and column_name= '"
+                                +  field.getName().toLowerCase() + "';";
 
+                        System.out.println("checking sql---------------> " + fieldTest);
                         if (ps != null) {
                             rs = ps.executeQuery(fieldTest);
                         }
@@ -190,12 +204,13 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                         if (rs != null) {
                             if (!rs.next()) {
                                 // the field did not exist,
-                                fdfLog.info("creating field: {} in table: {}", field.getName(), c.getSimpleName());
+                                fdfLog.info("creating field: {} in table: {}", field.getName().toLowerCase(),
+                                        c.getSimpleName().toLowerCase());
 
-                                String alterSql = "alter table " + c.getSimpleName() + " add column "
-                                        + this.getFieldNameAndDataType(field) + ";";
+                                String alterSql = "alter table " + "\"" +  c.getSimpleName() + "\"" +  " add column "
+                                        + "\"" +  this.getFieldNameAndDataType(field) + "\"" +  ";";
 
-                                fdfLog.debug("Add field sql {} : {}", c.getSimpleName(), alterSql);
+                                fdfLog.info("Add field sql {} : {}", c.getSimpleName().toLowerCase(), alterSql);
 
                                 if(ps != null) {
                                     ps.executeUpdate(alterSql);
@@ -276,15 +291,15 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
     public <S> void update(Class<S> c, S state) {
 
         // Start the sql statement
-        String sql = "update " + c.getSimpleName() + " set";
+        String sql = "update " + "\"" +  c.getSimpleName().toLowerCase() + "\"" +  " set";
 
         int fieldCounter = 0;
 
 
         for(Field field: c.getFields()) {
             fieldCounter++;
-            if(!field.getName().equals("rid")) {
-                sql += " " + field.getName() + " = ?";
+            if(!field.getName().toLowerCase().equals("rid")) {
+                sql += " " + field.getName().toLowerCase() + " = ?";
                 if (c.getFields().length > fieldCounter) sql += ",";
             }
         }
@@ -308,24 +323,24 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                     }
 
                     else if(field.getType() == int.class || field.getType() == Integer.class) {
-                        if(!field.getName().equals("rid")) {
+                        if(!field.getName().toLowerCase().equals("rid")) {
                             preparedStmt.setInt(fieldCounter3, (int) field.get(state));
 
                         }
                     }
                     else if(field.getType() == Long.class || field.getType() == long.class) {
-                        if(!field.getName().equals("rid")) {
+                        if(!field.getName().toLowerCase().equals("rid")) {
                             preparedStmt.setLong(fieldCounter3, (long) field.get(state));
 
                         }
                     }
                     else if(field.getType() == Double.class || field.getType() == double.class) {
-                        if(!field.getName().equals("rid")) {
+                        if(!field.getName().toLowerCase().equals("rid")) {
                             preparedStmt.setDouble(fieldCounter3, (double) field.get(state));
 
                         }
                     }else if(field.getType() == Float.class || field.getType() == float.class) {
-                        if(!field.getName().equals("rid")) {
+                        if(!field.getName().toLowerCase().equals("rid")) {
                             preparedStmt.setFloat(fieldCounter3, (float) field.get(state));
 
                         }
@@ -384,14 +399,14 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                         }
                     }
 
-                    if(!field.getName().equals("rid")) fieldCounter3++;
+                    if(!field.getName().toLowerCase().equals("rid")) fieldCounter3++;
 
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
                 }
             }
 
-            fdfLog.debug("update sql : {}", preparedStmt);
+            fdfLog.info("update sql : {}", preparedStmt);
 
             preparedStmt.execute();
 
@@ -417,13 +432,13 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
         long newId = -1L;
 
         // Start the sql statement
-        String sql = "insert into " + c.getSimpleName() + " (";
+        String sql = "insert into " + "\"" +  c.getSimpleName().toLowerCase() + "\"" +  " (";
 
         int fieldCounter = 0;
         for(Field field: c.getFields()) {
             fieldCounter++;
-            if(!field.getName().equals("rid")) {
-                sql += " " + field.getName();
+            if(!field.getName().toLowerCase().equals("rid")) {
+                sql += " " + field.getName().toLowerCase();
                 if (c.getFields().length > fieldCounter) sql += ",";
             }
         }
@@ -434,7 +449,7 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
         int fieldCounter2 = 0;
         for(Field field: c.getFields()) {
             fieldCounter2++;
-            if(!field.getName().equals("rid")) {
+            if(!field.getName().toLowerCase().equals("rid")) {
                 sql += " ?";
                 if (c.getFields().length > fieldCounter2) sql += ",";
             }
@@ -461,7 +476,7 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
 
                     else if(field.getType() == int.class || field.getType() == Integer.class) {
                         if(field.get(state) != null) {
-                            if(!field.getName().equals("rid")) {
+                            if(!field.getName().toLowerCase().equals("rid")) {
                                 preparedStmt.setInt(fieldCounter3, (int) field.get(state));
                             }
                         }
@@ -471,7 +486,7 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                     }
                     else if(field.getType() == Long.class || field.getType() == long.class) {
                         if(field.get(state) != null) {
-                            if(!field.getName().equals("rid")) {
+                            if(!field.getName().toLowerCase().equals("rid")) {
                                 preparedStmt.setLong(fieldCounter3, (long) field.get(state));
                             }
                         }
@@ -481,7 +496,7 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                     }
                     else if(field.getType() == Double.class || field.getType() == double.class) {
                         if(field.get(state) != null) {
-                            if(!field.getName().equals("rid")) {
+                            if(!field.getName().toLowerCase().equals("rid")) {
                                 preparedStmt.setDouble(fieldCounter3, (double) field.get(state));
                             }
                         }
@@ -490,7 +505,7 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                         }
                     }else if(field.getType() == Float.class || field.getType() == float.class) {
                         if(field.get(state) != null) {
-                            if (!field.getName().equals("rid")) {
+                            if (!field.getName().toLowerCase().equals("rid")) {
                                 preparedStmt.setFloat(fieldCounter3, (float) field.get(state));
                             }
                         }
@@ -571,7 +586,7 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                         }
                     }
 
-                    if(!field.getName().equals("rid")) fieldCounter3++;
+                    if(!field.getName().toLowerCase().equals("rid")) fieldCounter3++;
 
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
@@ -579,7 +594,7 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
 
             }
 
-            fdfLog.debug("insert sql : {}", preparedStmt);
+            fdfLog.info("insert sql : {}", preparedStmt);
 
             preparedStmt.execute();
             ResultSet rs = preparedStmt.getGeneratedKeys();
@@ -636,13 +651,13 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
             sql += " *";
         }
 
-        sql += " from " + c.getSimpleName();
+        sql += " from " + "\"" +  c.getSimpleName().toLowerCase() +  "\"";
 
         sql += parseWhere(where);
 
         sql += ";";
 
-        fdfLog.debug("select sql: {}", sql);
+        fdfLog.info("select sql: {}", sql);
 
         List<S> everything = new ArrayList<>();
 
@@ -666,13 +681,13 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                         if(field.getType() == String.class) {
                             try {
                                 field.setAccessible(true);
-                                field.set(thisObject, rs.getString(field.getName()));
+                                field.set(thisObject, rs.getString(field.getName().toLowerCase()));
                             } catch (SQLException e) {
                                 if(e.getSQLState().equals("S0022")) {
                                     // Invalid column name, thrown if select statement does not include column
                                     fdfLog.debug("Select statement had sql state S0022 (Invalid column name) on column"
                                             + "{}, This is usually because select statement did not include column and "
-                                            + "can be ignored. Message is {}", field.getName(), e.getMessage());
+                                            + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
                                 } else {
                                     fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                             ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -682,13 +697,13 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                         else if(field.getType() == int.class || field.getType() == Integer.class) {
                             try {
                                 field.setAccessible(true);
-                                field.set(thisObject, rs.getInt(field.getName()));
+                                field.set(thisObject, rs.getInt(field.getName().toLowerCase()));
                             } catch (SQLException e) {
                                 if(e.getSQLState().equals("S0022")) {
                                     // Invalid column name, thrown if select statement does not include column
                                     fdfLog.debug("Select statement had sql state S0022 (Invalid column name) on column"
                                             + "{}, This is usually because select statement did not include column and "
-                                            + "can be ignored. Message is {}", field.getName(), e.getMessage());
+                                            + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
                                 } else {
                                     fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                             ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -698,13 +713,14 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                         else if(field.getType() == long.class || field.getType() == Long.class) {
                             try {
                                 field.setAccessible(true);
-                                field.set(thisObject, rs.getLong(field.getName()));
+                                field.set(thisObject, rs.getLong(field.getName().toLowerCase()));
                             } catch (SQLException e) {
                                 if(e.getSQLState().equals("S0022")) {
                                     // Invalid column name, thrown if select statement does not include column
                                     fdfLog.debug("Select statement had sql state S0022 (Invalid column name) on column"
                                             + "{}, This is usually because select statement did not include column and "
-                                            + "can be ignored. Message is {}", field.getName(), e.getMessage());
+                                            + "can be ignored. Message is {}", field.getName().toLowerCase(),
+                                            e.getMessage());
                                 } else {
                                     fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                             ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -714,13 +730,13 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                         else if(field.getType() == double.class || field.getType() == Double.class) {
                             try {
                                 field.setAccessible(true);
-                                field.set(thisObject, rs.getDouble(field.getName()));
+                                field.set(thisObject, rs.getDouble(field.getName().toLowerCase()));
                             } catch (SQLException e) {
                                 if(e.getSQLState().equals("S0022")) {
                                     // Invalid column name, thrown if select statement does not include column
                                     fdfLog.debug("Select statement had sql state S0022 (Invalid column name) on column"
                                             + "{}, This is usually because select statement did not include column and "
-                                            + "can be ignored. Message is {}", field.getName(), e.getMessage());
+                                            + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
                                 } else {
                                     fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                             ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -730,13 +746,13 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                         else if(field.getType() == float.class || field.getType() == Float.class) {
                             try {
                                 field.setAccessible(true);
-                                field.set(thisObject, rs.getFloat(field.getName()));
+                                field.set(thisObject, rs.getFloat(field.getName().toLowerCase()));
                             } catch (SQLException e) {
                                 if(e.getSQLState().equals("S0022")) {
                                     // Invalid column name, thrown if select statement does not include column
                                     fdfLog.debug("Select statement had sql state S0022 (Invalid column name) on column"
                                             + "{}, This is usually because select statement did not include column and "
-                                            + "can be ignored. Message is {}", field.getName(), e.getMessage());
+                                            + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
                                 } else {
                                     fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                             ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -746,13 +762,13 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                         else if(field.getType() == int.class || field.getType() == Integer.class) {
                             try {
                                 field.setAccessible(true);
-                                field.set(thisObject, rs.getInt(field.getName()));
+                                field.set(thisObject, rs.getInt(field.getName().toLowerCase()));
                             } catch (SQLException e) {
                                 if(e.getSQLState().equals("S0022")) {
                                     // Invalid column name, thrown if select statement does not include column
                                     fdfLog.debug("Select statement had sql state S0022 (Invalid column name) on column"
                                             + "{}, This is usually because select statement did not include column and "
-                                            + "can be ignored. Message is {}", field.getName(), e.getMessage());
+                                            + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
                                 } else {
                                     fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                             ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -763,14 +779,14 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                             try {
                                 field.setAccessible(true);
                                 if(rs.getString(field.getName()) != null && rs.getString(field.getName()).length() > 0) {
-                                    field.set(thisObject, rs.getString(field.getName()).charAt(0));
+                                    field.set(thisObject, rs.getString(field.getName().toLowerCase()).charAt(0));
                                 }
                             } catch (SQLException e) {
                                 if(e.getSQLState().equals("S0022")) {
                                     // Invalid column name, thrown if select statement does not include column
                                     fdfLog.debug("Select statement had sql state S0022 (Invalid column name) on column"
                                             + "{}, This is usually because select statement did not include column and "
-                                            + "can be ignored. Message is {}", field.getName(), e.getMessage());
+                                            + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
                                 } else {
                                     fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                             ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -780,13 +796,13 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                         else if(field.getType() == Date.class) {
                             try {
                                 field.setAccessible(true);
-                                field.set(thisObject, rs.getTimestamp(field.getName()));
+                                field.set(thisObject, rs.getTimestamp(field.getName().toLowerCase()));
                             } catch (SQLException e) {
                                 if(e.getSQLState().equals("S0022")) {
                                     // Invalid column name, thrown if select statement does not include column
                                     fdfLog.debug("Select statement had sql state S0022 (Invalid column name) on column"
                                             + "{}, This is usually because select statement did not include column and "
-                                            + "can be ignored. Message is {}", field.getName(), e.getMessage());
+                                            + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
                                 } else {
                                     fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                             ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -795,19 +811,19 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                             catch (NullPointerException npe) {
                                 // Nullpointer in timestap
                                 fdfLog.debug("NullPointer on timestamp column {}, This is usually because select"
-                                        + "statement did not include column", field.getName(), npe.getMessage());
+                                        + "statement did not include column", field.getName().toLowerCase(), npe.getMessage());
                             }
                         }
                         else if(field.getType() == boolean.class) {
                             try {
                                 field.setAccessible(true);
-                                field.set(thisObject, rs.getBoolean(field.getName()));
+                                field.set(thisObject, rs.getBoolean(field.getName().toLowerCase()));
                             } catch (SQLException e) {
                                 if(e.getSQLState().equals("S0022")) {
                                     // Invalid column name, thrown if select statement does not include column
                                     fdfLog.debug("Select statement had sql state S0022 (Invalid column name) on column"
                                             + "{}, This is usually because select statement did not include column and "
-                                            + "can be ignored. Message is {}", field.getName(), e.getMessage());
+                                            + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
                                 } else {
                                     fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                             ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -817,13 +833,13 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                         else if(field.getType() == Boolean.class) {
                             try {
                                 field.setAccessible(true);
-                                field.set(thisObject, rs.getBoolean(field.getName()));
+                                field.set(thisObject, rs.getBoolean(field.getName().toLowerCase()));
                             } catch (SQLException e) {
                                 if(e.getSQLState().equals("S0022")) {
                                     // Invalid column name, thrown if select statement does not include column
                                     fdfLog.debug("Select statement had sql state S0022 (Invalid column name) on column"
                                             + "{}, This is usually because select statement did not include column and "
-                                            + "can be ignored. Message is {}", field.getName(), e.getMessage());
+                                            + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
                                 } else {
                                     fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                             ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -834,13 +850,13 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                             try {
                                 field.setAccessible(true);
                                 field.set(thisObject, Enum.valueOf((Class<Enum>) field.getType(),
-                                        rs.getString(field.getName())));
+                                        rs.getString(field.getName().toLowerCase())));
                             } catch (SQLException e) {
                                 if(e.getSQLState().equals("S0022")) {
                                     // Invalid column name, thrown if select statement does not include column
                                     fdfLog.debug("Select statement had sql state S0022 (Invalid column name) on column"
                                             + "{}, This is usually because select statement did not include column and "
-                                            + "can be ignored. Message is {}", field.getName(), e.getMessage());
+                                            + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
                                 } else {
                                     fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                             ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -851,13 +867,14 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                             try {
                                 field.setAccessible(true);
                                 field.set(thisObject,
-                                        FdfUtil.getClassByFullyQualifiedName(rs.getString(field.getName())));
+                                        FdfUtil.getClassByFullyQualifiedName(
+                                                rs.getString(field.getName().toLowerCase())));
                             } catch (SQLException e) {
                                 if(e.getSQLState().equals("S0022")) {
                                     // Invalid column name, thrown if select statement does not include column
                                     fdfLog.debug("Select statement had sql state S0022 (Invalid column name) on column"
                                             + "{}, This is usually because select statement did not include column and "
-                                            + "can be ignored. Message is {}", field.getName(), e.getMessage());
+                                            + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
                                 } else {
                                     fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                             ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -869,7 +886,7 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                             try {
                                 field.setAccessible(true);
 
-                                byte [] data = Base64.getDecoder().decode(rs.getString(field.getName()));
+                                byte [] data = Base64.getDecoder().decode(rs.getString(field.getName().toLowerCase()));
                                 ObjectInputStream ois = new ObjectInputStream(
                                         new ByteArrayInputStream(  data ) );
                                 Object o  = ois.readObject();
@@ -881,7 +898,7 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                     // Invalid column name, thrown if select statement does not include column
                                     fdfLog.debug("Select statement had sql state S0022 (Invalid column name) on column"
                                             + "{}, This is usually because select statement did not include column and "
-                                            + "can be ignored. Message is {}", field.getName(), e.getMessage());
+                                            + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
                                 } else {
                                     fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                             ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -913,41 +930,44 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
     static String getFieldNameAndDataType(Field field) {
         String sql = "";
 
-        fdfLog.debug("checking field: {} of type: {} ", field.getName(), field.getType());
+        fdfLog.debug("checking field: {} of type: {} ", field.getName().toLowerCase(), field.getType());
 
         if (field.getType() == String.class) {
-            sql += field.getName() + " TEXT";
+            sql += field.getName().toLowerCase()+ " TEXT";
         } else if (field.getType() == int.class || field.getType() == Integer.class) {
-            sql += field.getName() + " INT";
+            sql += field.getName().toLowerCase()+ " INT";
         } else if (field.getType() == Long.class || field.getType() == long.class) {
-            sql += field.getName() + " BIGINT";
+
             if (field.getName().equals("rid")) {
-                sql += " PRIMARY KEY AUTO_INCREMENT";
+                sql += field.getName().toLowerCase()+ " BIGSERIAL PRIMARY KEY";
+            }
+            else {
+                sql += field.getName().toLowerCase()+ " BIGINT";
             }
         } else if (field.getType() == Double.class || field.getType() == double.class) {
-            sql += field.getName() + " DOUBLE";
+            sql += field.getName().toLowerCase()+ " double precision";
         } else if (field.getType() == Float.class || field.getType() == float.class) {
-            sql += field.getName() + " FLOAT";
+            sql += field.getName().toLowerCase()+ " real";
         } else if (field.getType() == boolean.class || field.getType() == Boolean.class) {
-            sql += field.getName() + " TINYINT(1)";
+            sql += field.getName().toLowerCase()+ " BOOLEAN";
         } else if (field.getType() == Date.class) {
-            sql += field.getName() + " TIMESTAMP";
+            sql += field.getName().toLowerCase()+ " TIMESTAMP";
             if (field.getName().equals("arsd")) {
                 sql += " DEFAULT CURRENT_TIMESTAMP";
             } else {
                 sql += " NULL";
             }
         } else if (field.getType() == Character.class || field.getType() == char.class) {
-            sql += field.getName() + " CHAR";
+            sql += field.getName().toLowerCase()+ " CHAR";
         } else if (field.getType() instanceof Class && ((Class<?>) field.getType()).isEnum()) {
-            sql += field.getName() + " VARCHAR(200)";
+            sql += field.getName().toLowerCase()+ " VARCHAR(200)";
         } else if (Class.class.isAssignableFrom(field.getType())) {
-            sql += field.getName() + " VARCHAR(200)";
+            sql += field.getName().toLowerCase()+ " VARCHAR(200)";
         }
         else {
             // unknown create text fields to serialize
             fdfLog.debug("Was not able to identify field: {} of type: {} ", field.getName(), field.getType());
-            sql += field.getName() + " BLOB";
+            sql += field.getName().toLowerCase()+ " BLOB";
 
         }
 

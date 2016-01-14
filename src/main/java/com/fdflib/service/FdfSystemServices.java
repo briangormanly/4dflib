@@ -85,9 +85,9 @@ public class FdfSystemServices implements FdfCommonServices {
         // check that deleted records are not returned
         WhereClause whereDf = new WhereClause();
         whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.NOT_EQUAL;
-        whereDf.value = "1";
-        whereDf.valueDataType = Integer.class;
+        whereDf.operator = WhereClause.Operators.IS_NOT;
+        whereDf.value = "true";
+        whereDf.valueDataType = Boolean.class;
 
         // add the id check
         WhereClause whereId = new WhereClause();
@@ -119,9 +119,9 @@ public class FdfSystemServices implements FdfCommonServices {
         // check that deleted records are not returned
         WhereClause whereDf = new WhereClause();
         whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.NOT_EQUAL;
-        whereDf.value = "1";
-        whereDf.valueDataType = Integer.class;
+        whereDf.operator = WhereClause.Operators.IS_NOT;
+        whereDf.value = "true";
+        whereDf.valueDataType = Boolean.class;
 
         // add the id check
         WhereClause whereId = new WhereClause();
@@ -161,9 +161,9 @@ public class FdfSystemServices implements FdfCommonServices {
         // check that deleted records are not returned
         WhereClause whereDf = new WhereClause();
         whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.NOT_EQUAL;
-        whereDf.value = "1";
-        whereDf.valueDataType = Integer.class;
+        whereDf.operator = WhereClause.Operators.IS_NOT;
+        whereDf.value = "true";
+        whereDf.valueDataType = Boolean.class;
 
         // add the id check
         WhereClause whereId = new WhereClause();
