@@ -21,11 +21,11 @@ package com.fdflib.persistence.database;
  */
 public class DatabaseUtil {
     public enum DatabaseType {
-        MYSQL, ORACLE, MSSQL
+        MYSQL, POSTGRES, ORACLE, MSSQL
     }
 
     public enum DatabaseProtocol {
-        JDBC_MYSQL
+        JDBC_MYSQL, JDBC_POSTGRES
     }
 
     public enum DatabaseEncoding {

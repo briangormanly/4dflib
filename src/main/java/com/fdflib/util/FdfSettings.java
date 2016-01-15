@@ -74,6 +74,10 @@ public class FdfSettings {
             protocolString = "jdbc:mysql://";
         }
 
+        if(DB_PROTOCOL == DatabaseUtil.DatabaseProtocol.JDBC_POSTGRES) {
+            protocolString = "jdbc:postgresql://";
+        }
+
         String encodingString = "";
         if(DB_ENCODING == DatabaseUtil.DatabaseEncoding.UTF8) {
             encodingString = "?characterEncoding=UTF-8";
@@ -87,6 +91,10 @@ public class FdfSettings {
         String protocolString = "";
         if(DB_PROTOCOL == DatabaseUtil.DatabaseProtocol.JDBC_MYSQL) {
             protocolString = "jdbc:mysql://";
+        }
+
+        if(DB_PROTOCOL == DatabaseUtil.DatabaseProtocol.JDBC_POSTGRES) {
+            protocolString = "jdbc:postgresql://";
         }
 
         String encodingString = "";

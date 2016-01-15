@@ -21,6 +21,7 @@ import com.fdflib.model.state.CommonState;
 import com.fdflib.model.util.WhereClause;
 import com.fdflib.persistence.FdfPersistence;
 import com.fdflib.util.GeneralConstants;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
@@ -277,9 +278,9 @@ public interface FdfCommonServices {
         // check that deleted records are not returned
         WhereClause whereDf = new WhereClause();
         whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.NOT_EQUAL;
-        whereDf.value = "1";
-        whereDf.valueDataType = Integer.class;
+        whereDf.operator = WhereClause.Operators.IS_NOT;
+        whereDf.value = "true";
+        whereDf.valueDataType = Boolean.class;
 
         WhereClause whereTid = new WhereClause();
         whereTid.name = "tid";
@@ -329,9 +330,9 @@ public interface FdfCommonServices {
         // check that deleted records are not returned
         WhereClause whereDf = new WhereClause();
         whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.NOT_EQUAL;
-        whereDf.value = "1";
-        whereDf.valueDataType = Integer.class;
+        whereDf.operator = WhereClause.Operators.IS_NOT;
+        whereDf.value = "true";
+        whereDf.valueDataType = Boolean.class;
 
         // check that only the current records are returned
         WhereClause whereCf = new WhereClause();
@@ -396,9 +397,9 @@ public interface FdfCommonServices {
         // check that deleted records are not returned
         WhereClause whereDf = new WhereClause();
         whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.NOT_EQUAL;
-        whereDf.value = "1";
-        whereDf.valueDataType = Integer.class;
+        whereDf.operator = WhereClause.Operators.IS_NOT;
+        whereDf.value = "true";
+        whereDf.valueDataType = Boolean.class;
 
         // check that no current records are returned, just historical ones.
         WhereClause whereCf = new WhereClause();
@@ -473,9 +474,9 @@ public interface FdfCommonServices {
         // check that deleted records are not returned
         WhereClause whereDf = new WhereClause();
         whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.NOT_EQUAL;
-        whereDf.value = "1";
-        whereDf.valueDataType = Integer.class;
+        whereDf.operator = WhereClause.Operators.IS_NOT;
+        whereDf.value = "true";
+        whereDf.valueDataType = Boolean.class;
 
         // check that the start date is less than or equal to the date passed
         WhereClause startDate = new WhereClause();
@@ -560,9 +561,9 @@ public interface FdfCommonServices {
         // check that deleted records are not returned
         WhereClause whereDf = new WhereClause();
         whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.NOT_EQUAL;
-        whereDf.value = "1";
-        whereDf.valueDataType = Integer.class;
+        whereDf.operator = WhereClause.Operators.IS_NOT;
+        whereDf.value = "true";
+        whereDf.valueDataType = Boolean.class;
 
         // check that the end date is greater than or equal to the passed date
         WhereClause endDate1 = new WhereClause();
@@ -639,9 +640,9 @@ public interface FdfCommonServices {
         // check that deleted records are not returned
         WhereClause whereDf = new WhereClause();
         whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.NOT_EQUAL;
-        whereDf.value = "1";
-        whereDf.valueDataType = Integer.class;
+        whereDf.operator = WhereClause.Operators.IS_NOT;
+        whereDf.value = "true";
+        whereDf.valueDataType = Boolean.class;
 
         // check that the start date is less than or equal to the passed date
         WhereClause endDate1 = new WhereClause();
@@ -714,9 +715,9 @@ public interface FdfCommonServices {
         // check that deleted records are not returned
         WhereClause whereDf = new WhereClause();
         whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.NOT_EQUAL;
-        whereDf.value = "1";
-        whereDf.valueDataType = Integer.class;
+        whereDf.operator = WhereClause.Operators.IS_NOT;
+        whereDf.value = "true";
+        whereDf.valueDataType = Boolean.class;
 
         // check that the start date is less than or equal to the passed date
         WhereClause startDate1 = new WhereClause();
@@ -858,9 +859,9 @@ public interface FdfCommonServices {
         // check that deleted records are not returned
         WhereClause whereDf = new WhereClause();
         whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.NOT_EQUAL;
-        whereDf.value = "1";
-        whereDf.valueDataType = Integer.class;
+        whereDf.operator = WhereClause.Operators.IS_NOT;
+        whereDf.value = "true";
+        whereDf.valueDataType = Boolean.class;
 
         // add the id check
         WhereClause whereId = new WhereClause();
@@ -907,9 +908,9 @@ public interface FdfCommonServices {
         // check that deleted records are not returned
         WhereClause whereDf = new WhereClause();
         whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.NOT_EQUAL;
-        whereDf.value = "1";
-        whereDf.valueDataType = Integer.class;
+        whereDf.operator = WhereClause.Operators.IS_NOT;
+        whereDf.value = "true";
+        whereDf.valueDataType = Boolean.class;
 
         // add the id check
         WhereClause whereId = new WhereClause();
@@ -971,9 +972,9 @@ public interface FdfCommonServices {
         // check that deleted records are not returned
         WhereClause whereDf = new WhereClause();
         whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.NOT_EQUAL;
-        whereDf.value = "1";
-        whereDf.valueDataType = Integer.class;
+        whereDf.operator = WhereClause.Operators.IS_NOT;
+        whereDf.value = "true";
+        whereDf.valueDataType = Boolean.class;
 
         // check that only the current records are returned
         WhereClause whereCf = new WhereClause();
@@ -1045,9 +1046,9 @@ public interface FdfCommonServices {
         // check that deleted records are not returned
         WhereClause whereDf = new WhereClause();
         whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.NOT_EQUAL;
-        whereDf.value = "1";
-        whereDf.valueDataType = Integer.class;
+        whereDf.operator = WhereClause.Operators.IS_NOT;
+        whereDf.value = "true";
+        whereDf.valueDataType = Boolean.class;
 
         // check that no current records are returned, just historical ones.
         WhereClause whereCf = new WhereClause();
@@ -1140,9 +1141,9 @@ public interface FdfCommonServices {
             // check that deleted records are not returned
             WhereClause whereDf = new WhereClause();
             whereDf.name = "df";
-            whereDf.operator = WhereClause.Operators.NOT_EQUAL;
-            whereDf.value = "1";
-            whereDf.valueDataType = Integer.class;
+            whereDf.operator = WhereClause.Operators.IS_NOT;
+            whereDf.value = "true";
+            whereDf.valueDataType = Boolean.class;
 
             // add the id check
             WhereClause whereId = new WhereClause();
@@ -1217,9 +1218,9 @@ public interface FdfCommonServices {
             // check that deleted records are not returned
             WhereClause whereDf = new WhereClause();
             whereDf.name = "df";
-            whereDf.operator = WhereClause.Operators.NOT_EQUAL;
-            whereDf.value = "1";
-            whereDf.valueDataType = Integer.class;
+            whereDf.operator = WhereClause.Operators.IS_NOT;
+            whereDf.value = "true";
+            whereDf.valueDataType = Boolean.class;
 
             WhereClause whereTid = new WhereClause();
             whereTid.name = "tid";
@@ -1324,9 +1325,9 @@ public interface FdfCommonServices {
         // check that deleted records are not returned
         WhereClause whereDf = new WhereClause();
         whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.NOT_EQUAL;
-        whereDf.value = "1";
-        whereDf.valueDataType = Integer.class;
+        whereDf.operator = WhereClause.Operators.IS_NOT;
+        whereDf.value = "true";
+        whereDf.valueDataType = Boolean.class;
 
         // add the id check
         WhereClause whereId = new WhereClause();
@@ -1423,9 +1424,9 @@ public interface FdfCommonServices {
         // check that deleted records are not returned
         WhereClause whereDf = new WhereClause();
         whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.NOT_EQUAL;
-        whereDf.value = "1";
-        whereDf.valueDataType = Integer.class;
+        whereDf.operator = WhereClause.Operators.IS_NOT;
+        whereDf.value = "true";
+        whereDf.valueDataType = Boolean.class;
 
         // add the id check
         WhereClause whereId = new WhereClause();
@@ -1512,9 +1513,9 @@ public interface FdfCommonServices {
         // check that deleted records are not returned
         WhereClause whereDf = new WhereClause();
         whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.NOT_EQUAL;
-        whereDf.value = "1";
-        whereDf.valueDataType = Integer.class;
+        whereDf.operator = WhereClause.Operators.IS_NOT;
+        whereDf.value = "true";
+        whereDf.valueDataType = Boolean.class;
 
         // add the id check
         WhereClause whereId = new WhereClause();
@@ -1598,9 +1599,9 @@ public interface FdfCommonServices {
         // check that deleted records are not returned
         WhereClause whereDf = new WhereClause();
         whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.NOT_EQUAL;
-        whereDf.value = "1";
-        whereDf.valueDataType = Integer.class;
+        whereDf.operator = WhereClause.Operators.IS_NOT;
+        whereDf.value = "true";
+        whereDf.valueDataType = Boolean.class;
 
         // add the id check
         WhereClause whereId = new WhereClause();
