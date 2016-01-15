@@ -69,8 +69,8 @@ public class FdfTenantServices implements FdfCommonServices {
         // check that deleted records are not returned
         WhereClause whereDf = new WhereClause();
         whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.NOT_EQUAL;
-        whereDf.value = "1";
+        whereDf.operator = WhereClause.Operators.IS_NOT;
+        whereDf.value = "true";
         whereDf.valueDataType = Integer.class;
 
         // check to find results that match the name like condition
@@ -100,8 +100,8 @@ public class FdfTenantServices implements FdfCommonServices {
         // check that deleted records are not returned
         WhereClause whereDf = new WhereClause();
         whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.NOT_EQUAL;
-        whereDf.value = "1";
+        whereDf.operator = WhereClause.Operators.IS_NOT;
+        whereDf.value = "true";
         whereDf.valueDataType = Integer.class;
 
         // check to find results that match the name like condition

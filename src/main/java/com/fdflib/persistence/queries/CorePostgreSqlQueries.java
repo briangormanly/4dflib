@@ -60,11 +60,6 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                     String sqlUserGrant = "GRANT ALL PRIVILEGES ON DATABASE " + "\"" + FdfSettings.DB_NAME + "\""
                             + " to " + "\"" +  FdfSettings.DB_USER.toLowerCase() + "\"" +  ";";
 
-                    System.out.println("Issueing:: " + sqlCreate);
-                    System.out.println("Issueing:: " + sqlCreateUser);
-                    System.out.println("Issueing:: " + sqlUserGrant);
-
-
                     ps = PostgreSqlConnection.getInstance().getNoDBSession().createStatement();
 
                     if(ps != null) {
@@ -80,6 +75,7 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                     }
                 }
             }
+
         }
         catch (SQLException sqlException) {
 
@@ -140,7 +136,7 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                             }
                             sql += ");";
 
-                            fdfLog.info("Table sql {} : {}", c.getSimpleName().toLowerCase(), sql);
+                            fdfLog.debug("Table sql {} : {}", c.getSimpleName().toLowerCase(), sql);
 
                             if(ps != null) {
                                 ps.executeUpdate(sql);
@@ -196,7 +192,7 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                 +  c.getSimpleName().toLowerCase() +  "' and column_name= '"
                                 +  field.getName().toLowerCase() + "';";
 
-                        System.out.println("checking sql---------------> " + fieldTest);
+                        //System.out.println("checking sql---------------> " + fieldTest);
                         if (ps != null) {
                             rs = ps.executeQuery(fieldTest);
                         }
@@ -204,9 +200,6 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                         if (rs != null) {
                             if (!rs.next()) {
                                 // the field did not exist,
-                                fdfLog.info("creating field: {} in table: {}", field.getName().toLowerCase(),
-                                        c.getSimpleName().toLowerCase());
-
                                 String alterSql = "alter table " + "\"" +  c.getSimpleName() + "\"" +  " add column "
                                         + "\"" +  this.getFieldNameAndDataType(field) + "\"" +  ";";
 
@@ -217,6 +210,7 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                 }
                             }
                         }
+
                     }
                 } catch (SQLException sqlException) {
 
@@ -406,7 +400,7 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                 }
             }
 
-            fdfLog.info("update sql : {}", preparedStmt);
+            fdfLog.debug("update sql : {}", preparedStmt);
 
             preparedStmt.execute();
 
@@ -594,12 +588,12 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
 
             }
 
-            fdfLog.info("insert sql : {}", preparedStmt);
+            fdfLog.debug("insert sql : {}", preparedStmt);
 
             preparedStmt.execute();
             ResultSet rs = preparedStmt.getGeneratedKeys();
             rs.next();
-            newId = rs.getLong(1);
+            newId = rs.getLong("id");
 
 
         } catch (SQLException e) {
@@ -657,7 +651,7 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
 
         sql += ";";
 
-        fdfLog.info("select sql: {}", sql);
+        fdfLog.debug("select sql: {}", sql);
 
         List<S> everything = new ArrayList<>();
 
@@ -683,9 +677,9 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                 field.setAccessible(true);
                                 field.set(thisObject, rs.getString(field.getName().toLowerCase()));
                             } catch (SQLException e) {
-                                if(e.getSQLState().equals("S0022")) {
+                                if(e.getSQLState().equals("42703")) {
                                     // Invalid column name, thrown if select statement does not include column
-                                    fdfLog.debug("Select statement had sql state S0022 (Invalid column name) on column"
+                                    fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                             + "{}, This is usually because select statement did not include column and "
                                             + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
                                 } else {
@@ -699,9 +693,9 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                 field.setAccessible(true);
                                 field.set(thisObject, rs.getInt(field.getName().toLowerCase()));
                             } catch (SQLException e) {
-                                if(e.getSQLState().equals("S0022")) {
+                                if(e.getSQLState().equals("42703")) {
                                     // Invalid column name, thrown if select statement does not include column
-                                    fdfLog.debug("Select statement had sql state S0022 (Invalid column name) on column"
+                                    fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                             + "{}, This is usually because select statement did not include column and "
                                             + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
                                 } else {
@@ -715,9 +709,9 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                 field.setAccessible(true);
                                 field.set(thisObject, rs.getLong(field.getName().toLowerCase()));
                             } catch (SQLException e) {
-                                if(e.getSQLState().equals("S0022")) {
+                                if(e.getSQLState().equals("42703")) {
                                     // Invalid column name, thrown if select statement does not include column
-                                    fdfLog.debug("Select statement had sql state S0022 (Invalid column name) on column"
+                                    fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                             + "{}, This is usually because select statement did not include column and "
                                             + "can be ignored. Message is {}", field.getName().toLowerCase(),
                                             e.getMessage());
@@ -732,9 +726,9 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                 field.setAccessible(true);
                                 field.set(thisObject, rs.getDouble(field.getName().toLowerCase()));
                             } catch (SQLException e) {
-                                if(e.getSQLState().equals("S0022")) {
+                                if(e.getSQLState().equals("42703")) {
                                     // Invalid column name, thrown if select statement does not include column
-                                    fdfLog.debug("Select statement had sql state S0022 (Invalid column name) on column"
+                                    fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                             + "{}, This is usually because select statement did not include column and "
                                             + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
                                 } else {
@@ -748,9 +742,9 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                 field.setAccessible(true);
                                 field.set(thisObject, rs.getFloat(field.getName().toLowerCase()));
                             } catch (SQLException e) {
-                                if(e.getSQLState().equals("S0022")) {
+                                if(e.getSQLState().equals("42703")) {
                                     // Invalid column name, thrown if select statement does not include column
-                                    fdfLog.debug("Select statement had sql state S0022 (Invalid column name) on column"
+                                    fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                             + "{}, This is usually because select statement did not include column and "
                                             + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
                                 } else {
@@ -764,9 +758,9 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                 field.setAccessible(true);
                                 field.set(thisObject, rs.getInt(field.getName().toLowerCase()));
                             } catch (SQLException e) {
-                                if(e.getSQLState().equals("S0022")) {
+                                if(e.getSQLState().equals("42703")) {
                                     // Invalid column name, thrown if select statement does not include column
-                                    fdfLog.debug("Select statement had sql state S0022 (Invalid column name) on column"
+                                    fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                             + "{}, This is usually because select statement did not include column and "
                                             + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
                                 } else {
@@ -782,9 +776,9 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                     field.set(thisObject, rs.getString(field.getName().toLowerCase()).charAt(0));
                                 }
                             } catch (SQLException e) {
-                                if(e.getSQLState().equals("S0022")) {
+                                if(e.getSQLState().equals("42703")) {
                                     // Invalid column name, thrown if select statement does not include column
-                                    fdfLog.debug("Select statement had sql state S0022 (Invalid column name) on column"
+                                    fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                             + "{}, This is usually because select statement did not include column and "
                                             + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
                                 } else {
@@ -798,9 +792,9 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                 field.setAccessible(true);
                                 field.set(thisObject, rs.getTimestamp(field.getName().toLowerCase()));
                             } catch (SQLException e) {
-                                if(e.getSQLState().equals("S0022")) {
+                                if(e.getSQLState().equals("42703")) {
                                     // Invalid column name, thrown if select statement does not include column
-                                    fdfLog.debug("Select statement had sql state S0022 (Invalid column name) on column"
+                                    fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                             + "{}, This is usually because select statement did not include column and "
                                             + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
                                 } else {
@@ -819,9 +813,9 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                 field.setAccessible(true);
                                 field.set(thisObject, rs.getBoolean(field.getName().toLowerCase()));
                             } catch (SQLException e) {
-                                if(e.getSQLState().equals("S0022")) {
+                                if(e.getSQLState().equals("42703")) {
                                     // Invalid column name, thrown if select statement does not include column
-                                    fdfLog.debug("Select statement had sql state S0022 (Invalid column name) on column"
+                                    fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                             + "{}, This is usually because select statement did not include column and "
                                             + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
                                 } else {
@@ -835,9 +829,9 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                 field.setAccessible(true);
                                 field.set(thisObject, rs.getBoolean(field.getName().toLowerCase()));
                             } catch (SQLException e) {
-                                if(e.getSQLState().equals("S0022")) {
+                                if(e.getSQLState().equals("42703")) {
                                     // Invalid column name, thrown if select statement does not include column
-                                    fdfLog.debug("Select statement had sql state S0022 (Invalid column name) on column"
+                                    fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                             + "{}, This is usually because select statement did not include column and "
                                             + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
                                 } else {
@@ -852,9 +846,9 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                 field.set(thisObject, Enum.valueOf((Class<Enum>) field.getType(),
                                         rs.getString(field.getName().toLowerCase())));
                             } catch (SQLException e) {
-                                if(e.getSQLState().equals("S0022")) {
+                                if(e.getSQLState().equals("42703")) {
                                     // Invalid column name, thrown if select statement does not include column
-                                    fdfLog.debug("Select statement had sql state S0022 (Invalid column name) on column"
+                                    fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                             + "{}, This is usually because select statement did not include column and "
                                             + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
                                 } else {
@@ -870,9 +864,9 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                         FdfUtil.getClassByFullyQualifiedName(
                                                 rs.getString(field.getName().toLowerCase())));
                             } catch (SQLException e) {
-                                if(e.getSQLState().equals("S0022")) {
+                                if(e.getSQLState().equals("42703")) {
                                     // Invalid column name, thrown if select statement does not include column
-                                    fdfLog.debug("Select statement had sql state S0022 (Invalid column name) on column"
+                                    fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                             + "{}, This is usually because select statement did not include column and "
                                             + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
                                 } else {
@@ -894,9 +888,9 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
 
                                 field.set(thisObject, o);
                             } catch (SQLException e) {
-                                if(e.getSQLState().equals("S0022")) {
+                                if(e.getSQLState().equals("42703")) {
                                     // Invalid column name, thrown if select statement does not include column
-                                    fdfLog.debug("Select statement had sql state S0022 (Invalid column name) on column"
+                                    fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                             + "{}, This is usually because select statement did not include column and "
                                             + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
                                 } else {
