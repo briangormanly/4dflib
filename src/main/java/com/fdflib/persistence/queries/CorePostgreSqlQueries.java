@@ -5,7 +5,6 @@ import com.fdflib.model.state.FdfSystem;
 import com.fdflib.model.state.FdfTenant;
 import com.fdflib.model.util.WhereClause;
 import com.fdflib.persistence.connection.DbConnectionManager;
-import com.fdflib.persistence.database.DatabaseUtil;
 import com.fdflib.persistence.database.PostgreSqlConnection;
 import com.fdflib.persistence.impl.CorePersistenceImpl;
 import com.fdflib.service.FdfSystemServices;
@@ -519,11 +518,21 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                     }
 
                     else if(field.getType() == char.class || field.getType() == Character.class) {
-                        if(field.get(state) != null) {
-                            preparedStmt.setString(fieldCounter3, field.get(state).toString().substring(0, 1));
+                        if(field.get(state) != null && field.get(state).toString() != null
+                                && field.get(state).toString().substring(0, 1) != null) {
+
+                            Character convert = field.get(state).toString().charAt(0);
+
+                            // check to see if the character is a null character -- screw you postgres this better work
+                            if(Character.isLetterOrDigit(field.get(state).toString().charAt(0))) {
+                                preparedStmt.setString(fieldCounter3, convert.toString());
+                            }
+                            else {
+                                preparedStmt.setNull(fieldCounter3, Types.CHAR);
+                            }
                         }
                         else {
-                            preparedStmt.setString(fieldCounter3, "");
+                            preparedStmt.setNull(fieldCounter3, Types.CHAR);
                         }
                     }
 
@@ -588,7 +597,7 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
 
             }
 
-            fdfLog.info("insert sql : {}", preparedStmt);
+            fdfLog.debug("insert sql : {}", preparedStmt);
 
             preparedStmt.execute();
             ResultSet rs = preparedStmt.getGeneratedKeys();
