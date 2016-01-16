@@ -523,7 +523,7 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                             preparedStmt.setString(fieldCounter3, field.get(state).toString().substring(0, 1));
                         }
                         else {
-                            preparedStmt.setNull(fieldCounter3, Types.CHAR);
+                            preparedStmt.setString(fieldCounter3, "");
                         }
                     }
 
@@ -588,7 +588,7 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
 
             }
 
-            fdfLog.debug("insert sql : {}", preparedStmt);
+            fdfLog.info("insert sql : {}", preparedStmt);
 
             preparedStmt.execute();
             ResultSet rs = preparedStmt.getGeneratedKeys();
