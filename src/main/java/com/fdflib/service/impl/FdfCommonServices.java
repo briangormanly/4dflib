@@ -21,7 +21,6 @@ import com.fdflib.model.state.CommonState;
 import com.fdflib.model.util.WhereClause;
 import com.fdflib.persistence.FdfPersistence;
 import com.fdflib.util.GeneralConstants;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
