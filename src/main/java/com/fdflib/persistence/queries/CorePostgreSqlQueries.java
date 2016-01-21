@@ -1,5 +1,6 @@
 package com.fdflib.persistence.queries;
 
+import com.fdflib.annotation.FdfIgnore;
 import com.fdflib.model.state.CommonState;
 import com.fdflib.model.state.FdfSystem;
 import com.fdflib.model.state.FdfTenant;
@@ -100,70 +101,84 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
         // create the tables for the model objects
         for(Class c: classList) {
 
-            // check to see if the table already exists
-            String tableTest = "select * from information_schema.TABLES where table_catalog = '"
-                    + FdfSettings.DB_NAME.toLowerCase() +  "' and table_name = '"
-                    +  c.getSimpleName().toLowerCase() +  "';";
+            // check to see if the class has an @fdfIgonre
+            if(!c.isAnnotationPresent(FdfIgnore.class)) {
 
-            Statement ps = null;
-            ResultSet rs = null;
+                // determine the number of fields
+                int numberOfFields = 0;
+                for (Field field : c.getFields()) {
 
-            try {
-                ps = PostgreSqlConnection.getInstance().getSession().createStatement();
-
-                if(ps != null) {
-                    rs = ps.executeQuery(tableTest);
-                }
-
-                if(rs != null) {
-                    if (!rs.next()) {
-                        // Table does not exist, create
-                        fdfLog.debug("creating table: {}", c.getSimpleName().toLowerCase());
-                        // check there there is at lease one field
-                        if(c.getFields().length > 0) {
-                            String sql = "CREATE TABLE " + "\"" +  c.getSimpleName().toLowerCase()
-                                    + "\"" +  " ( ";
-                            int fieldCounter = 0;
-
-                            for (Field field : c.getFields()) {
-
-                                sql += getFieldNameAndDataType(field);
-
-                                fieldCounter++;
-
-                                if (c.getFields().length > fieldCounter) sql += ", ";
-
-                            }
-                            sql += ");";
-
-                            fdfLog.debug("Table sql {} : {}", c.getSimpleName().toLowerCase(), sql);
-
-                            if(ps != null) {
-                                ps.executeUpdate(sql);
-                            }
-                        }
-                        else {
-                            fdfLog.info("No table created for model object {} class had no valid data members", c.getSimpleName().toLowerCase());
-                        }
+                    // check to see if the class has an @fdfIgonre
+                    if (!field.isAnnotationPresent(FdfIgnore.class)) {
+                        numberOfFields++;
                     }
                 }
-            }
-            catch (SQLException sqlException) {
 
-                // some other error
-                fdfLog.warn("Error occurred checking or creating a table:::");
-                fdfLog.warn("SQL error \nCode: {},\nState: {}\nMessage" +
-                                ": {}\n", sqlException.getErrorCode(), sqlException.getSQLState(),
-                        sqlException.getMessage());
+                // check to see if the table already exists
+                String tableTest = "select * from information_schema.TABLES where table_catalog = '"
+                        + FdfSettings.DB_NAME.toLowerCase() + "' and table_name = '"
+                        + c.getSimpleName().toLowerCase() + "';";
 
-            }
-            catch (Exception ex) {
-                ex.printStackTrace();
-            }
-            finally {
-                ps = null;
-                // close the connection
-                PostgreSqlConnection.getInstance().close();
+                Statement ps = null;
+                ResultSet rs = null;
+
+                try {
+                    ps = PostgreSqlConnection.getInstance().getSession().createStatement();
+
+                    if (ps != null) {
+                        rs = ps.executeQuery(tableTest);
+                    }
+
+                    if (rs != null) {
+                        if (!rs.next()) {
+                            // Table does not exist, create
+                            fdfLog.debug("creating table: {}", c.getSimpleName().toLowerCase());
+                            // check there there is at lease one field
+                            if (c.getFields().length > 0) {
+                                String sql = "CREATE TABLE " + "\"" + c.getSimpleName().toLowerCase()
+                                        + "\"" + " ( ";
+                                int fieldCounter = 0;
+
+                                for (Field field : c.getFields()) {
+
+                                    // check to see if the class has an @fdfIgonre
+                                    if(!field.isAnnotationPresent(FdfIgnore.class)) {
+
+                                        sql += getFieldNameAndDataType(field);
+
+                                        fieldCounter++;
+
+                                        if (numberOfFields > fieldCounter) sql += ", ";
+                                    }
+
+                                }
+                                sql += ");";
+
+                                fdfLog.debug("Table sql {} : {}", c.getSimpleName().toLowerCase(), sql);
+
+                                if (ps != null) {
+                                    ps.executeUpdate(sql);
+                                }
+                            } else {
+                                fdfLog.info("No table created for model object {} class had no valid data members", c.getSimpleName().toLowerCase());
+                            }
+                        }
+                    }
+                } catch (SQLException sqlException) {
+
+                    // some other error
+                    fdfLog.warn("Error occurred checking or creating a table:::");
+                    fdfLog.warn("SQL error \nCode: {},\nState: {}\nMessage" +
+                                    ": {}\n", sqlException.getErrorCode(), sqlException.getSQLState(),
+                            sqlException.getMessage());
+
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                } finally {
+                    ps = null;
+                    // close the connection
+                    PostgreSqlConnection.getInstance().close();
+                }
             }
 
         }
@@ -175,57 +190,75 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
 
         // create the tables for the model objects
         for(Class c: classList) {
-            if(c.getFields().length > 0) {
 
-                Statement ps = null;
-                ResultSet rs = null;
+            // determine the number of fields
+            int numberOfFields = 0;
+            for (Field field : c.getFields()) {
 
-                try {
-                    ps = PostgreSqlConnection.getInstance().getSession().createStatement();
+                // check to see if the class has an @fdfIgonre
+                if (!field.isAnnotationPresent(FdfIgnore.class)) {
+                    numberOfFields++;
+                }
+            }
 
-                    for (Field field : c.getFields()) {
+            if(numberOfFields > 0) {
 
-                        // query for the field in the database
-                        // check to see if the table already exists
-                        String fieldTest = "select * from information_schema.columns where table_catalog= '"
-                                +  FdfSettings.DB_NAME.toLowerCase() +  "' and table_name= '"
-                                +  c.getSimpleName().toLowerCase() +  "' and column_name= '"
-                                +  field.getName().toLowerCase() + "';";
+                // check to see if the class has an @fdfIgonre
+                if(!c.isAnnotationPresent(FdfIgnore.class)) {
 
-                        //System.out.println("checking sql---------------> " + fieldTest);
-                        if (ps != null) {
-                            rs = ps.executeQuery(fieldTest);
-                        }
+                    Statement ps = null;
+                    ResultSet rs = null;
 
-                        if (rs != null) {
-                            if (!rs.next()) {
-                                // the field did not exist,
-                                String alterSql = "alter table " + "\"" +  c.getSimpleName() + "\"" +  " add column "
-                                        + "\"" +  this.getFieldNameAndDataType(field) + "\"" +  ";";
+                    try {
+                        ps = PostgreSqlConnection.getInstance().getSession().createStatement();
 
-                                fdfLog.info("Add field sql {} : {}", c.getSimpleName().toLowerCase(), alterSql);
+                        for (Field field : c.getFields()) {
 
-                                if(ps != null) {
-                                    ps.executeUpdate(alterSql);
+                            // check to see if the class has an @fdfIgonre
+                            if(!field.isAnnotationPresent(FdfIgnore.class)) {
+
+                                // query for the field in the database
+                                // check to see if the table already exists
+                                String fieldTest = "select * from information_schema.columns where table_catalog= '"
+                                        + FdfSettings.DB_NAME.toLowerCase() + "' and table_name= '"
+                                        + c.getSimpleName().toLowerCase() + "' and column_name= '"
+                                        + field.getName().toLowerCase() + "';";
+
+                                //System.out.println("checking sql---------------> " + fieldTest);
+                                if (ps != null) {
+                                    rs = ps.executeQuery(fieldTest);
+                                }
+
+                                if (rs != null) {
+                                    if (!rs.next()) {
+                                        // the field did not exist,
+                                        String alterSql = "alter table " + "\"" + c.getSimpleName() + "\"" + " add column "
+                                                + "\"" + this.getFieldNameAndDataType(field) + "\"" + ";";
+
+                                        fdfLog.info("Add field sql {} : {}", c.getSimpleName().toLowerCase(), alterSql);
+
+                                        if (ps != null) {
+                                            ps.executeUpdate(alterSql);
+                                        }
+                                    }
                                 }
                             }
                         }
+                    } catch (SQLException sqlException) {
 
+                        // some other error
+                        fdfLog.warn("Error occurred checking or creating a field:::");
+                        fdfLog.warn("SQL error \nCode: {},\nState: {}\nMessage" +
+                                        ": {}\n", sqlException.getErrorCode(), sqlException.getSQLState(),
+                                sqlException.getMessage());
+
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    } finally {
+                        ps = null;
+                        // close the connection
+                        PostgreSqlConnection.getInstance().close();
                     }
-                } catch (SQLException sqlException) {
-
-                    // some other error
-                    fdfLog.warn("Error occurred checking or creating a field:::");
-                    fdfLog.warn("SQL error \nCode: {},\nState: {}\nMessage" +
-                                    ": {}\n", sqlException.getErrorCode(), sqlException.getSQLState(),
-                            sqlException.getMessage());
-
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                } finally {
-                    ps = null;
-                    // close the connection
-                    PostgreSqlConnection.getInstance().close();
                 }
             }
         }
@@ -284,190 +317,190 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
 
     public <S> void update(Class<S> c, S state) {
 
-        // Start the sql statement
-        String sql = "update " + "\"" +  c.getSimpleName().toLowerCase() + "\"" +  " set";
+        // check to see if the class has an @fdfIgonre
+        if(!c.isAnnotationPresent(FdfIgnore.class)) {
 
-        int fieldCounter = 0;
+            // determine the number of fields
+            int numberOfFields = 0;
+            for (Field field : c.getFields()) {
 
-
-        for(Field field: c.getFields()) {
-            fieldCounter++;
-            if(!field.getName().toLowerCase().equals("rid")) {
-                sql += " " + field.getName().toLowerCase() + " = ?";
-                if (c.getFields().length > fieldCounter) sql += ",";
-            }
-        }
-
-        PreparedStatement preparedStmt;
-
-        try {
-
-
-            sql += " where rid = " + c.getField("rid").get(state) + " ;";
-
-
-            preparedStmt = PostgreSqlConnection.getInstance().getSession().prepareStatement(sql,
-                    Statement.RETURN_GENERATED_KEYS);
-
-            int fieldCounter3 = 1;
-            for(Field field: c.getFields()) {
-                try {
-                    if(field.getType() == String.class) {
-                        preparedStmt.setString(fieldCounter3, field.get(state).toString());
-                    }
-
-                    else if(field.getType() == int.class || field.getType() == Integer.class) {
-                        if(!field.getName().toLowerCase().equals("rid")) {
-                            preparedStmt.setInt(fieldCounter3, (int) field.get(state));
-
-                        }
-                    }
-                    else if(field.getType() == Long.class || field.getType() == long.class) {
-                        if(!field.getName().toLowerCase().equals("rid")) {
-                            preparedStmt.setLong(fieldCounter3, (long) field.get(state));
-
-                        }
-                    }
-                    else if(field.getType() == Double.class || field.getType() == double.class) {
-                        if(!field.getName().toLowerCase().equals("rid")) {
-                            preparedStmt.setDouble(fieldCounter3, (double) field.get(state));
-
-                        }
-                    }else if(field.getType() == Float.class || field.getType() == float.class) {
-                        if(!field.getName().toLowerCase().equals("rid")) {
-                            preparedStmt.setFloat(fieldCounter3, (float) field.get(state));
-
-                        }
-                    }
-
-                    else if(field.getType() == boolean.class || field.getType() == Boolean.class) {
-                        preparedStmt.setBoolean(fieldCounter3, (boolean) field.get(state));
-
-                    }
-
-                    else if(field.getType() == char.class || field.getType() == Character.class) {
-                        if (field.get(state) != null && field.get(state).toString() != null
-                                && field.get(state).toString().substring(0, 1) != null) {
-                            Character convert = field.get(state).toString().charAt(0);
-
-                            // check to see if the character is a null character -- screw you postgres this better work
-                            if (Character.isLetterOrDigit(field.get(state).toString().charAt(0))) {
-                                preparedStmt.setString(fieldCounter3, convert.toString());
-                            } else {
-                                preparedStmt.setNull(fieldCounter3, Types.CHAR);
-                            }
-                        } else {
-                            preparedStmt.setNull(fieldCounter3, Types.CHAR);
-                        }
-                    }
-
-                    else if(field.getType() == Date.class) {
-                        Date insertDate = (Date) field.get(state);
-                        if(insertDate == null) {
-                            preparedStmt.setTimestamp(fieldCounter3, null);
-                        }
-                        else {
-                            preparedStmt.setTimestamp(fieldCounter3, new Timestamp(insertDate.getTime()));
-                        }
-
-                    }
-
-                    else if(field.getType() instanceof Class && ((Class<?>)field.getType()).isEnum()) {
-                        preparedStmt.setString(fieldCounter3, field.get(state).toString());
-                    }
-
-                    else if(Class.class.isAssignableFrom(field.getType())) {
-                        String className = field.get(state).toString();
-                        preparedStmt.setString(fieldCounter3, FdfUtil.getClassName(className));
-                    }
-                    else if (field.getGenericType() instanceof ParameterizedType && field.get(state) != null) {
-                        ParameterizedType pt = (ParameterizedType) field.getGenericType();
-                        if(pt.getActualTypeArguments().length == 1
-                                && (pt.getActualTypeArguments()[0].toString().contains("Long")
-                                || pt.getActualTypeArguments()[0].toString().contains("long")
-                                || pt.getActualTypeArguments()[0].toString().contains("Integer")
-                                || pt.getActualTypeArguments()[0].toString().contains("int")
-                                || pt.getActualTypeArguments()[0].toString().contains("Double")
-                                || pt.getActualTypeArguments()[0].toString().contains("double")
-                                || pt.getActualTypeArguments()[0].toString().contains("Float")
-                                || pt.getActualTypeArguments()[0].toString().contains("float")
-                                || pt.getActualTypeArguments()[0].toString().contains("boolean")
-                                || pt.getActualTypeArguments()[0].toString().contains("Boolean")
-                                || pt.getActualTypeArguments()[0].toString().contains("String"))) {
-
-                            preparedStmt.setString(fieldCounter3, field.get(state).toString());
-
-                        }
-                        else {
-                            // try to serialize the object
-                            if(field.get(state) != null) {
-
-                                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                                ObjectOutputStream oos = null;
-                                try {
-                                    oos = new ObjectOutputStream( baos );
-                                    oos.writeObject(field.get(state));
-                                    oos.close();
-
-                                    preparedStmt.setString(fieldCounter3,
-                                            Base64.getEncoder().encodeToString(baos.toByteArray()));
-
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                            else {
-                                preparedStmt.setNull(fieldCounter3, Types.BLOB);
-                            }
-                        }
-
-                    }
-                    else {
-                        // try to serialize the object
-                        if(field.get(state) != null) {
-
-                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                            ObjectOutputStream oos = null;
-                            try {
-                                oos = new ObjectOutputStream( baos );
-                                oos.writeObject(field.get(state));
-                                oos.close();
-
-                                preparedStmt.setString(fieldCounter3,
-                                        Base64.getEncoder().encodeToString(baos.toByteArray()));
-
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        else {
-                            preparedStmt.setNull(fieldCounter3, Types.BLOB);
-                        }
-                    }
-
-                    if(!field.getName().toLowerCase().equals("rid")) fieldCounter3++;
-
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
+                // check to see if the class has an @fdfIgonre
+                if (!field.isAnnotationPresent(FdfIgnore.class)) {
+                    numberOfFields++;
                 }
             }
 
-            fdfLog.debug("update sql : {}", preparedStmt);
+            // Start the sql statement
+            String sql = "update " + "\"" + c.getSimpleName().toLowerCase() + "\"" + " set";
 
-            preparedStmt.execute();
+            int fieldCounter = 0;
+
+            for (Field field : c.getFields()) {
+
+                // check to see if the class has an @fdfIgonre
+                if(!field.isAnnotationPresent(FdfIgnore.class)) {
+
+                    fieldCounter++;
+                    if (!field.getName().toLowerCase().equals("rid")) {
+                        sql += " " + field.getName().toLowerCase() + " = ?";
+                        if (numberOfFields > fieldCounter) sql += ",";
+                    }
+                }
+            }
+
+            PreparedStatement preparedStmt;
+
+            try {
+
+                sql += " where rid = " + c.getField("rid").get(state) + " ;";
+
+                preparedStmt = PostgreSqlConnection.getInstance().getSession().prepareStatement(sql,
+                        Statement.RETURN_GENERATED_KEYS);
+
+                int fieldCounter3 = 1;
+                for (Field field : c.getFields()) {
+
+                    // check to see if the class has an @fdfIgonre
+                    if(!field.isAnnotationPresent(FdfIgnore.class)) {
+
+                        try {
+                            if (field.getType() == String.class) {
+                                preparedStmt.setString(fieldCounter3, field.get(state).toString());
+                            } else if (field.getType() == int.class || field.getType() == Integer.class) {
+                                if (!field.getName().toLowerCase().equals("rid")) {
+                                    preparedStmt.setInt(fieldCounter3, (int) field.get(state));
+
+                                }
+                            } else if (field.getType() == Long.class || field.getType() == long.class) {
+                                if (!field.getName().toLowerCase().equals("rid")) {
+                                    preparedStmt.setLong(fieldCounter3, (long) field.get(state));
+
+                                }
+                            } else if (field.getType() == Double.class || field.getType() == double.class) {
+                                if (!field.getName().toLowerCase().equals("rid")) {
+                                    preparedStmt.setDouble(fieldCounter3, (double) field.get(state));
+
+                                }
+                            } else if (field.getType() == Float.class || field.getType() == float.class) {
+                                if (!field.getName().toLowerCase().equals("rid")) {
+                                    preparedStmt.setFloat(fieldCounter3, (float) field.get(state));
+
+                                }
+                            } else if (field.getType() == boolean.class || field.getType() == Boolean.class) {
+                                preparedStmt.setBoolean(fieldCounter3, (boolean) field.get(state));
+
+                            } else if (field.getType() == char.class || field.getType() == Character.class) {
+                                if (field.get(state) != null && field.get(state).toString() != null
+                                        && field.get(state).toString().substring(0, 1) != null) {
+                                    Character convert = field.get(state).toString().charAt(0);
+
+                                    // check to see if the character is a null character -- screw you postgres this better work
+                                    if (Character.isLetterOrDigit(field.get(state).toString().charAt(0))) {
+                                        preparedStmt.setString(fieldCounter3, convert.toString());
+                                    } else {
+                                        preparedStmt.setNull(fieldCounter3, Types.CHAR);
+                                    }
+                                } else {
+                                    preparedStmt.setNull(fieldCounter3, Types.CHAR);
+                                }
+                            } else if (field.getType() == Date.class) {
+                                Date insertDate = (Date) field.get(state);
+                                if (insertDate == null) {
+                                    preparedStmt.setTimestamp(fieldCounter3, null);
+                                } else {
+                                    preparedStmt.setTimestamp(fieldCounter3, new Timestamp(insertDate.getTime()));
+                                }
+
+                            } else if (field.getType() instanceof Class && ((Class<?>) field.getType()).isEnum()) {
+                                preparedStmt.setString(fieldCounter3, field.get(state).toString());
+                            } else if (Class.class.isAssignableFrom(field.getType())) {
+                                String className = field.get(state).toString();
+                                preparedStmt.setString(fieldCounter3, FdfUtil.getClassName(className));
+                            } else if (field.getGenericType() instanceof ParameterizedType && field.get(state) != null) {
+                                ParameterizedType pt = (ParameterizedType) field.getGenericType();
+                                if (pt.getActualTypeArguments().length == 1
+                                        && (pt.getActualTypeArguments()[0].toString().contains("Long")
+                                        || pt.getActualTypeArguments()[0].toString().contains("long")
+                                        || pt.getActualTypeArguments()[0].toString().contains("Integer")
+                                        || pt.getActualTypeArguments()[0].toString().contains("int")
+                                        || pt.getActualTypeArguments()[0].toString().contains("Double")
+                                        || pt.getActualTypeArguments()[0].toString().contains("double")
+                                        || pt.getActualTypeArguments()[0].toString().contains("Float")
+                                        || pt.getActualTypeArguments()[0].toString().contains("float")
+                                        || pt.getActualTypeArguments()[0].toString().contains("boolean")
+                                        || pt.getActualTypeArguments()[0].toString().contains("Boolean")
+                                        || pt.getActualTypeArguments()[0].toString().contains("String"))) {
+
+                                    preparedStmt.setString(fieldCounter3, field.get(state).toString());
+
+                                } else {
+                                    // try to serialize the object
+                                    if (field.get(state) != null) {
+
+                                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                                        ObjectOutputStream oos = null;
+                                        try {
+                                            oos = new ObjectOutputStream(baos);
+                                            oos.writeObject(field.get(state));
+                                            oos.close();
+
+                                            preparedStmt.setString(fieldCounter3,
+                                                    Base64.getEncoder().encodeToString(baos.toByteArray()));
+
+                                        } catch (IOException e) {
+                                            e.printStackTrace();
+                                        }
+                                    } else {
+                                        preparedStmt.setNull(fieldCounter3, Types.BLOB);
+                                    }
+                                }
+
+                            } else {
+                                // try to serialize the object
+                                if (field.get(state) != null) {
+
+                                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                                    ObjectOutputStream oos = null;
+                                    try {
+                                        oos = new ObjectOutputStream(baos);
+                                        oos.writeObject(field.get(state));
+                                        oos.close();
+
+                                        preparedStmt.setString(fieldCounter3,
+                                                Base64.getEncoder().encodeToString(baos.toByteArray()));
+
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                } else {
+                                    preparedStmt.setNull(fieldCounter3, Types.BLOB);
+                                }
+                            }
+
+                            if (!field.getName().toLowerCase().equals("rid")) fieldCounter3++;
+
+                        } catch (IllegalAccessException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+
+                fdfLog.debug("update sql : {}", preparedStmt);
+
+                preparedStmt.execute();
 
 
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (NoSuchFieldException e) {
-            e.printStackTrace();
-        }
-        finally {
-            preparedStmt = null;
-            // close the connection
-            PostgreSqlConnection.getInstance().close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (NoSuchFieldException e) {
+                e.printStackTrace();
+            } finally {
+                preparedStmt = null;
+                // close the connection
+                PostgreSqlConnection.getInstance().close();
+            }
         }
 
     }
@@ -477,234 +510,231 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
         // spot to hold returned id for new record
         long newId = -1L;
 
-        // Start the sql statement
-        String sql = "insert into " + "\"" +  c.getSimpleName().toLowerCase() + "\"" +  " (";
+        // determine the number of fields
+        int numberOfFields = 0;
+        for (Field field : c.getFields()) {
 
-        int fieldCounter = 0;
-        for(Field field: c.getFields()) {
-            fieldCounter++;
-            if(!field.getName().toLowerCase().equals("rid")) {
-                sql += " " + field.getName().toLowerCase();
-                if (c.getFields().length > fieldCounter) sql += ",";
+            // check to see if the class has an @fdfIgonre
+            if (!field.isAnnotationPresent(FdfIgnore.class)) {
+                numberOfFields++;
             }
         }
 
-        sql += " ) values (";
+        // check to see if the class has an @fdfIgonre
+        if(!c.isAnnotationPresent(FdfIgnore.class)) {
 
-        //insert the correct number of question marks for the prepared statement
-        int fieldCounter2 = 0;
-        for(Field field: c.getFields()) {
-            fieldCounter2++;
-            if(!field.getName().toLowerCase().equals("rid")) {
-                sql += " ?";
-                if (c.getFields().length > fieldCounter2) sql += ",";
+            // Start the sql statement
+            String sql = "insert into " + "\"" + c.getSimpleName().toLowerCase() + "\"" + " (";
+
+            int fieldCounter = 0;
+            for (Field field : c.getFields()) {
+
+                // check to see if the class has an @fdfIgonre
+                if(!field.isAnnotationPresent(FdfIgnore.class)) {
+
+                    fieldCounter++;
+                    if (!field.getName().toLowerCase().equals("rid")) {
+                        sql += " " + field.getName().toLowerCase();
+                        if (numberOfFields > fieldCounter) sql += ",";
+                    }
+                }
             }
-        }
-        sql += ");";
 
-        PreparedStatement preparedStmt;
+            sql += " ) values (";
 
-        try {
-            preparedStmt = PostgreSqlConnection.getInstance().getSession().prepareStatement(sql,
-                    Statement.RETURN_GENERATED_KEYS);
+            //insert the correct number of question marks for the prepared statement
+            int fieldCounter2 = 0;
+            for (Field field : c.getFields()) {
 
-            int fieldCounter3 = 1;
-            for(Field field: c.getFields()) {
-                try {
-                    if(field.getType() == String.class) {
-                        if(field.get(state) != null) {
-                            preparedStmt.setString(fieldCounter3, field.get(state).toString());
-                        }
-                        else {
-                            preparedStmt.setNull(fieldCounter3, Types.VARCHAR);
-                        }
+                // check to see if the class has an @fdfIgonre
+                if(!field.isAnnotationPresent(FdfIgnore.class)) {
+
+                    fieldCounter2++;
+                    if (!field.getName().toLowerCase().equals("rid")) {
+                        sql += " ?";
+                        if (numberOfFields > fieldCounter2) sql += ",";
                     }
+                }
+            }
+            sql += ");";
 
-                    else if(field.getType() == int.class || field.getType() == Integer.class) {
-                        if(field.get(state) != null) {
-                            if(!field.getName().toLowerCase().equals("rid")) {
-                                preparedStmt.setInt(fieldCounter3, (int) field.get(state));
-                            }
-                        }
-                        else {
-                            preparedStmt.setNull(fieldCounter3, Types.INTEGER);
-                        }
-                    }
-                    else if(field.getType() == Long.class || field.getType() == long.class) {
-                        if(field.get(state) != null) {
-                            if(!field.getName().toLowerCase().equals("rid")) {
-                                preparedStmt.setLong(fieldCounter3, (long) field.get(state));
-                            }
-                        }
-                        else {
-                            preparedStmt.setNull(fieldCounter3, Types.BIGINT);
-                        }
-                    }
-                    else if(field.getType() == Double.class || field.getType() == double.class) {
-                        if(field.get(state) != null) {
-                            if(!field.getName().toLowerCase().equals("rid")) {
-                                preparedStmt.setDouble(fieldCounter3, (double) field.get(state));
-                            }
-                        }
-                        else {
-                            preparedStmt.setNull(fieldCounter3, Types.BIGINT);
-                        }
-                    }else if(field.getType() == Float.class || field.getType() == float.class) {
-                        if(field.get(state) != null) {
-                            if (!field.getName().toLowerCase().equals("rid")) {
-                                preparedStmt.setFloat(fieldCounter3, (float) field.get(state));
-                            }
-                        }
-                        else {
-                            preparedStmt.setNull(fieldCounter3, Types.BIGINT);
-                        }
-                    }
+            PreparedStatement preparedStmt;
 
-                    else if(field.getType() == boolean.class || field.getType() == Boolean.class) {
-                        if(field.get(state) != null) {
-                            preparedStmt.setBoolean(fieldCounter3, (boolean) field.get(state));
-                        }
-                        else {
-                            preparedStmt.setNull(fieldCounter3, Types.TINYINT);
-                        }
+            try {
+                preparedStmt = PostgreSqlConnection.getInstance().getSession().prepareStatement(sql,
+                        Statement.RETURN_GENERATED_KEYS);
 
-                    }
+                int fieldCounter3 = 1;
+                for (Field field : c.getFields()) {
 
-                    else if(field.getType() == char.class || field.getType() == Character.class) {
-                        if(field.get(state) != null && field.get(state).toString() != null
-                                && field.get(state).toString().substring(0, 1) != null) {
+                    // check to see if the class has an @fdfIgonre
+                    if(!field.isAnnotationPresent(FdfIgnore.class)) {
 
-                            Character convert = field.get(state).toString().charAt(0);
+                        try {
+                            if (field.getType() == String.class) {
+                                if (field.get(state) != null) {
+                                    preparedStmt.setString(fieldCounter3, field.get(state).toString());
+                                } else {
+                                    preparedStmt.setNull(fieldCounter3, Types.VARCHAR);
+                                }
+                            } else if (field.getType() == int.class || field.getType() == Integer.class) {
+                                if (field.get(state) != null) {
+                                    if (!field.getName().toLowerCase().equals("rid")) {
+                                        preparedStmt.setInt(fieldCounter3, (int) field.get(state));
+                                    }
+                                } else {
+                                    preparedStmt.setNull(fieldCounter3, Types.INTEGER);
+                                }
+                            } else if (field.getType() == Long.class || field.getType() == long.class) {
+                                if (field.get(state) != null) {
+                                    if (!field.getName().toLowerCase().equals("rid")) {
+                                        preparedStmt.setLong(fieldCounter3, (long) field.get(state));
+                                    }
+                                } else {
+                                    preparedStmt.setNull(fieldCounter3, Types.BIGINT);
+                                }
+                            } else if (field.getType() == Double.class || field.getType() == double.class) {
+                                if (field.get(state) != null) {
+                                    if (!field.getName().toLowerCase().equals("rid")) {
+                                        preparedStmt.setDouble(fieldCounter3, (double) field.get(state));
+                                    }
+                                } else {
+                                    preparedStmt.setNull(fieldCounter3, Types.BIGINT);
+                                }
+                            } else if (field.getType() == Float.class || field.getType() == float.class) {
+                                if (field.get(state) != null) {
+                                    if (!field.getName().toLowerCase().equals("rid")) {
+                                        preparedStmt.setFloat(fieldCounter3, (float) field.get(state));
+                                    }
+                                } else {
+                                    preparedStmt.setNull(fieldCounter3, Types.BIGINT);
+                                }
+                            } else if (field.getType() == boolean.class || field.getType() == Boolean.class) {
+                                if (field.get(state) != null) {
+                                    preparedStmt.setBoolean(fieldCounter3, (boolean) field.get(state));
+                                } else {
+                                    preparedStmt.setNull(fieldCounter3, Types.TINYINT);
+                                }
 
-                            // check to see if the character is a null character -- screw you postgres this better work
-                            if(Character.isLetterOrDigit(field.get(state).toString().charAt(0))) {
-                                preparedStmt.setString(fieldCounter3, convert.toString());
-                            }
-                            else {
-                                preparedStmt.setNull(fieldCounter3, Types.CHAR);
-                            }
-                        }
-                        else {
-                            preparedStmt.setNull(fieldCounter3, Types.CHAR);
-                        }
-                    }
+                            } else if (field.getType() == char.class || field.getType() == Character.class) {
+                                if (field.get(state) != null && field.get(state).toString() != null
+                                        && field.get(state).toString().substring(0, 1) != null) {
 
-                    else if(field.getType() == Date.class) {
-                        Date insertDate = (Date) field.get(state);
-                        if(insertDate == null) {
-                            preparedStmt.setTimestamp(fieldCounter3, null);
-                        }
-                        else {
-                            preparedStmt.setTimestamp(fieldCounter3, new Timestamp(insertDate.getTime()));
-                        }
+                                    Character convert = field.get(state).toString().charAt(0);
 
-                    }
+                                    // check to see if the character is a null character -- screw you postgres this better work
+                                    if (Character.isLetterOrDigit(field.get(state).toString().charAt(0))) {
+                                        preparedStmt.setString(fieldCounter3, convert.toString());
+                                    } else {
+                                        preparedStmt.setNull(fieldCounter3, Types.CHAR);
+                                    }
+                                } else {
+                                    preparedStmt.setNull(fieldCounter3, Types.CHAR);
+                                }
+                            } else if (field.getType() == Date.class) {
+                                Date insertDate = (Date) field.get(state);
+                                if (insertDate == null) {
+                                    preparedStmt.setTimestamp(fieldCounter3, null);
+                                } else {
+                                    preparedStmt.setTimestamp(fieldCounter3, new Timestamp(insertDate.getTime()));
+                                }
 
-                    else if(field.getType() instanceof Class && ((Class<?>)field.getType()).isEnum()) {
-                        if(field.get(state) != null) {
-                            preparedStmt.setString(fieldCounter3, field.get(state).toString());
-                        }
-                        else {
-                            preparedStmt.setNull(fieldCounter3, Types.VARCHAR);
-                        }
-                    }
+                            } else if (field.getType() instanceof Class && ((Class<?>) field.getType()).isEnum()) {
+                                if (field.get(state) != null) {
+                                    preparedStmt.setString(fieldCounter3, field.get(state).toString());
+                                } else {
+                                    preparedStmt.setNull(fieldCounter3, Types.VARCHAR);
+                                }
+                            } else if (Class.class.isAssignableFrom(field.getType())) {
+                                if (field.get(state) != null) {
+                                    String className = field.get(state).toString();
+                                    preparedStmt.setString(fieldCounter3, FdfUtil.getClassName(className));
+                                } else {
+                                    preparedStmt.setNull(fieldCounter3, Types.VARCHAR);
+                                }
+                            } else if (field.getGenericType() instanceof ParameterizedType && field.get(state) != null) {
+                                ParameterizedType pt = (ParameterizedType) field.getGenericType();
+                                if (pt.getActualTypeArguments().length == 1
+                                        && (pt.getActualTypeArguments()[0].toString().contains("Long")
+                                        || pt.getActualTypeArguments()[0].toString().contains("long")
+                                        || pt.getActualTypeArguments()[0].toString().contains("Integer")
+                                        || pt.getActualTypeArguments()[0].toString().contains("int")
+                                        || pt.getActualTypeArguments()[0].toString().contains("Double")
+                                        || pt.getActualTypeArguments()[0].toString().contains("double")
+                                        || pt.getActualTypeArguments()[0].toString().contains("Float")
+                                        || pt.getActualTypeArguments()[0].toString().contains("float")
+                                        || pt.getActualTypeArguments()[0].toString().contains("boolean")
+                                        || pt.getActualTypeArguments()[0].toString().contains("Boolean")
+                                        || pt.getActualTypeArguments()[0].toString().contains("String"))) {
 
-                    else if(Class.class.isAssignableFrom(field.getType())) {
-                        if(field.get(state) != null) {
-                            String className = field.get(state).toString();
-                            preparedStmt.setString(fieldCounter3, FdfUtil.getClassName(className));
-                        }
-                        else {
-                            preparedStmt.setNull(fieldCounter3, Types.VARCHAR);
-                        }
-                    }
-                    else if (field.getGenericType() instanceof ParameterizedType && field.get(state) != null) {
-                        ParameterizedType pt = (ParameterizedType) field.getGenericType();
-                        if(pt.getActualTypeArguments().length == 1
-                                && (pt.getActualTypeArguments()[0].toString().contains("Long")
-                                || pt.getActualTypeArguments()[0].toString().contains("long")
-                                || pt.getActualTypeArguments()[0].toString().contains("Integer")
-                                || pt.getActualTypeArguments()[0].toString().contains("int")
-                                || pt.getActualTypeArguments()[0].toString().contains("Double")
-                                || pt.getActualTypeArguments()[0].toString().contains("double")
-                                || pt.getActualTypeArguments()[0].toString().contains("Float")
-                                || pt.getActualTypeArguments()[0].toString().contains("float")
-                                || pt.getActualTypeArguments()[0].toString().contains("boolean")
-                                || pt.getActualTypeArguments()[0].toString().contains("Boolean")
-                                || pt.getActualTypeArguments()[0].toString().contains("String"))) {
+                                    preparedStmt.setString(fieldCounter3, field.get(state).toString());
 
-                            preparedStmt.setString(fieldCounter3, field.get(state).toString());
+                                } else {
+                                    // try to serialize the object
+                                    if (field.get(state) != null) {
 
-                        }
-                        else {
-                            // try to serialize the object
-                            if(field.get(state) != null) {
+                                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                                        ObjectOutputStream oos = null;
+                                        try {
+                                            oos = new ObjectOutputStream(baos);
+                                            oos.writeObject(field.get(state));
+                                            oos.close();
 
-                                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                                ObjectOutputStream oos = null;
-                                try {
-                                    oos = new ObjectOutputStream( baos );
-                                    oos.writeObject(field.get(state));
-                                    oos.close();
+                                            preparedStmt.setString(fieldCounter3,
+                                                    Base64.getEncoder().encodeToString(baos.toByteArray()));
 
-                                    preparedStmt.setString(fieldCounter3,
-                                            Base64.getEncoder().encodeToString(baos.toByteArray()));
+                                        } catch (IOException e) {
+                                            e.printStackTrace();
+                                        }
+                                    } else {
+                                        preparedStmt.setNull(fieldCounter3, Types.BLOB);
+                                    }
+                                }
+                            } else {
+                                // try to serialize the object
+                                if (field.get(state) != null) {
 
-                                } catch (IOException e) {
-                                    e.printStackTrace();
+                                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                                    ObjectOutputStream oos = null;
+                                    try {
+                                        oos = new ObjectOutputStream(baos);
+                                        oos.writeObject(field.get(state));
+                                        oos.close();
+
+                                        preparedStmt.setString(fieldCounter3,
+                                                Base64.getEncoder().encodeToString(baos.toByteArray()));
+
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                } else {
+                                    preparedStmt.setNull(fieldCounter3, Types.BLOB);
                                 }
                             }
-                            else {
-                                preparedStmt.setNull(fieldCounter3, Types.BLOB);
-                            }
+
+                            if (!field.getName().toLowerCase().equals("rid")) fieldCounter3++;
+
+                        } catch (IllegalAccessException e) {
+                            e.printStackTrace();
                         }
                     }
-                    else {
-                        // try to serialize the object
-                        if(field.get(state) != null) {
-
-                            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                            ObjectOutputStream oos = null;
-                            try {
-                                oos = new ObjectOutputStream( baos );
-                                oos.writeObject(field.get(state));
-                                oos.close();
-
-                                preparedStmt.setString(fieldCounter3,
-                                        Base64.getEncoder().encodeToString(baos.toByteArray()));
-
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        else {
-                            preparedStmt.setNull(fieldCounter3, Types.BLOB);
-                        }
-                    }
-
-                    if(!field.getName().toLowerCase().equals("rid")) fieldCounter3++;
-
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
                 }
 
+                fdfLog.debug("insert sql : {}", preparedStmt);
+
+                preparedStmt.execute();
+                ResultSet rs = preparedStmt.getGeneratedKeys();
+                rs.next();
+                newId = rs.getLong("id");
+
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } finally {
+                preparedStmt = null;
+                // close the connection
+                PostgreSqlConnection.getInstance().close();
             }
-
-            fdfLog.debug("insert sql : {}", preparedStmt);
-
-            preparedStmt.execute();
-            ResultSet rs = preparedStmt.getGeneratedKeys();
-            rs.next();
-            newId = rs.getLong("id");
-
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        finally {
-            preparedStmt = null;
-            // close the connection
-            PostgreSqlConnection.getInstance().close();
         }
 
         return newId;
@@ -733,378 +763,381 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
      */
     public <S extends CommonState> List<S> selectQuery(Class c, List<String> select, List<WhereClause> where) {
 
-        // start the sql statement
-        String sql = "select";
-        if(select != null) {
-            int selectCount = 0;
-            for(String selectItem: select) {
-                sql += " " + selectItem;
-                selectCount++;
-                if (selectCount < select.size()) sql += ",";
-            }
-        }
-        else {
-            sql += " *";
-        }
-
-        sql += " from " + "\"" +  c.getSimpleName().toLowerCase() +  "\"";
-
-        sql += parseWhere(where);
-
-        sql += ";";
-
-        fdfLog.debug("select sql: {}", sql);
-
         List<S> everything = new ArrayList<>();
 
-        PreparedStatement ps;
-        ResultSet rs;
+        // check to see if the class has an @fdfIgonre
+        if(!c.isAnnotationPresent(FdfIgnore.class)) {
 
-        try {
-            ps = PostgreSqlConnection.getInstance().getSession().prepareStatement(sql);
+            // start the sql statement
+            String sql = "select";
+            if (select != null) {
+                int selectCount = 0;
+                for (String selectItem : select) {
+                    sql += " " + selectItem;
+                    selectCount++;
+                    if (selectCount < select.size()) sql += ",";
+                }
+            } else {
+                sql += " *";
+            }
 
-            if(ps != null) {
-                rs = ps.executeQuery();
-                while (rs.next ()) {
+            sql += " from " + "\"" + c.getSimpleName().toLowerCase() + "\"";
 
-                    // create a new object of type passed
-                    Object thisObject = c.newInstance();
+            sql += parseWhere(where);
 
-                    for(Field field: c.getFields()) {
+            sql += ";";
 
-                        try {
+            fdfLog.debug("select sql: {}", sql);
+
+            PreparedStatement ps;
+            ResultSet rs;
+
+            try {
+                ps = PostgreSqlConnection.getInstance().getSession().prepareStatement(sql);
+
+                if (ps != null) {
+                    rs = ps.executeQuery();
+                    while (rs.next()) {
+
+                        // create a new object of type passed
+                        Object thisObject = c.newInstance();
+
+                        for (Field field : c.getFields()) {
 
                             // check the datatype of the field to apply the correct method to
                             // retrieve the data on the resultset
-                            if(field.getType() == String.class) {
+
+                            // check to see if the class has an @fdfIgonre
+                            if(!field.isAnnotationPresent(FdfIgnore.class)) {
                                 try {
-                                    field.setAccessible(true);
-                                    field.set(thisObject, rs.getString(field.getName().toLowerCase()));
-                                } catch (SQLException e) {
-                                    if(e.getSQLState().equals("42703")) {
-                                        // Invalid column name, thrown if select statement does not include column
-                                        fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
-                                                + "{}, This is usually because select statement did not include column and "
-                                                + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
-                                    } else {
-                                        fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
-                                                ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
-                                    }
-                                }
-                            }
-                            else if(field.getType() == int.class || field.getType() == Integer.class) {
-                                try {
-                                    field.setAccessible(true);
-                                    field.set(thisObject, rs.getInt(field.getName().toLowerCase()));
-                                } catch (SQLException e) {
-                                    if(e.getSQLState().equals("42703")) {
-                                        // Invalid column name, thrown if select statement does not include column
-                                        fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
-                                                + "{}, This is usually because select statement did not include column and "
-                                                + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
-                                    } else {
-                                        fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
-                                                ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
-                                    }
-                                }
-                            }
-                            else if(field.getType() == long.class || field.getType() == Long.class) {
-                                try {
-                                    field.setAccessible(true);
-                                    field.set(thisObject, rs.getLong(field.getName().toLowerCase()));
-                                } catch (SQLException e) {
-                                    if(e.getSQLState().equals("42703")) {
-                                        // Invalid column name, thrown if select statement does not include column
-                                        fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
-                                                + "{}, This is usually because select statement did not include column and "
-                                                + "can be ignored. Message is {}", field.getName().toLowerCase(),
-                                                e.getMessage());
-                                    } else {
-                                        fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
-                                                ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
-                                    }
-                                }
-                            }
-                            else if(field.getType() == double.class || field.getType() == Double.class) {
-                                try {
-                                    field.setAccessible(true);
-                                    field.set(thisObject, rs.getDouble(field.getName().toLowerCase()));
-                                } catch (SQLException e) {
-                                    if(e.getSQLState().equals("42703")) {
-                                        // Invalid column name, thrown if select statement does not include column
-                                        fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
-                                                + "{}, This is usually because select statement did not include column and "
-                                                + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
-                                    } else {
-                                        fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
-                                                ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
-                                    }
-                                }
-                            }
-                            else if(field.getType() == float.class || field.getType() == Float.class) {
-                                try {
-                                    field.setAccessible(true);
-                                    field.set(thisObject, rs.getFloat(field.getName().toLowerCase()));
-                                } catch (SQLException e) {
-                                    if(e.getSQLState().equals("42703")) {
-                                        // Invalid column name, thrown if select statement does not include column
-                                        fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
-                                                + "{}, This is usually because select statement did not include column and "
-                                                + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
-                                    } else {
-                                        fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
-                                                ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
-                                    }
-                                }
-                            }
-                            else if(field.getType() == int.class || field.getType() == Integer.class) {
-                                try {
-                                    field.setAccessible(true);
-                                    field.set(thisObject, rs.getInt(field.getName().toLowerCase()));
-                                } catch (SQLException e) {
-                                    if(e.getSQLState().equals("42703")) {
-                                        // Invalid column name, thrown if select statement does not include column
-                                        fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
-                                                + "{}, This is usually because select statement did not include column and "
-                                                + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
-                                    } else {
-                                        fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
-                                                ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
-                                    }
-                                }
-                            }
-                            else if(field.getType() == char.class || field.getType() == Character.class) {
-                                try {
-                                    field.setAccessible(true);
-                                    if(rs.getString(field.getName()) != null && rs.getString(field.getName()).length() > 0) {
-                                        field.set(thisObject, rs.getString(field.getName().toLowerCase()).charAt(0));
-                                    }
-                                } catch (SQLException e) {
-                                    if(e.getSQLState().equals("42703")) {
-                                        // Invalid column name, thrown if select statement does not include column
-                                        fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
-                                                + "{}, This is usually because select statement did not include column and "
-                                                + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
-                                    } else {
-                                        fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
-                                                ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
-                                    }
-                                }
-                            }
-                            else if(field.getType() == Date.class) {
-                                try {
-                                    field.setAccessible(true);
-                                    field.set(thisObject, rs.getTimestamp(field.getName().toLowerCase()));
-                                } catch (SQLException e) {
-                                    if(e.getSQLState().equals("42703")) {
-                                        // Invalid column name, thrown if select statement does not include column
-                                        fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
-                                                + "{}, This is usually because select statement did not include column and "
-                                                + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
-                                    } else {
-                                        fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
-                                                ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
-                                    }
-                                }
-                                catch (NullPointerException npe) {
-                                    // Nullpointer in timestap
-                                    fdfLog.debug("NullPointer on timestamp column {}, This is usually because select"
-                                            + "statement did not include column", field.getName().toLowerCase(), npe.getMessage());
-                                }
-                            }
-                            else if(field.getType() == boolean.class) {
-                                try {
-                                    field.setAccessible(true);
-                                    field.set(thisObject, rs.getBoolean(field.getName().toLowerCase()));
-                                } catch (SQLException e) {
-                                    if(e.getSQLState().equals("42703")) {
-                                        // Invalid column name, thrown if select statement does not include column
-                                        fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
-                                                + "{}, This is usually because select statement did not include column and "
-                                                + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
-                                    } else {
-                                        fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
-                                                ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
-                                    }
-                                }
-                            }
-                            else if(field.getType() == Boolean.class) {
-                                try {
-                                    field.setAccessible(true);
-                                    field.set(thisObject, rs.getBoolean(field.getName().toLowerCase()));
-                                } catch (SQLException e) {
-                                    if(e.getSQLState().equals("42703")) {
-                                        // Invalid column name, thrown if select statement does not include column
-                                        fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
-                                                + "{}, This is usually because select statement did not include column and "
-                                                + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
-                                    } else {
-                                        fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
-                                                ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
-                                    }
-                                }
-                            }
-                            else if(field.getType() instanceof Class && ((Class<?>)field.getType()).isEnum()) {
-                                try {
-                                    field.setAccessible(true);
-                                    field.set(thisObject, Enum.valueOf((Class<Enum>) field.getType(),
-                                            rs.getString(field.getName().toLowerCase())));
-                                } catch (SQLException e) {
-                                    if(e.getSQLState().equals("42703")) {
-                                        // Invalid column name, thrown if select statement does not include column
-                                        fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
-                                                + "{}, This is usually because select statement did not include column and "
-                                                + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
-                                    } else {
-                                        fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
-                                                ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
-                                    }
-                                }
-                            }
-                            else if(Class.class.isAssignableFrom(field.getType())) {
-                                try {
-                                    field.setAccessible(true);
-                                    field.set(thisObject,
-                                            FdfUtil.getClassByFullyQualifiedName(
+
+                                    if (field.getType() == String.class) {
+                                        try {
+                                            field.setAccessible(true);
+                                            field.set(thisObject, rs.getString(field.getName().toLowerCase()));
+                                        } catch (SQLException e) {
+                                            if (e.getSQLState().equals("42703")) {
+                                                // Invalid column name, thrown if select statement does not include column
+                                                fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
+                                                        + "{}, This is usually because select statement did not include column and "
+                                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                            } else {
+                                                fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
+                                                        ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
+                                            }
+                                        }
+                                    } else if (field.getType() == int.class || field.getType() == Integer.class) {
+                                        try {
+                                            field.setAccessible(true);
+                                            field.set(thisObject, rs.getInt(field.getName().toLowerCase()));
+                                        } catch (SQLException e) {
+                                            if (e.getSQLState().equals("42703")) {
+                                                // Invalid column name, thrown if select statement does not include column
+                                                fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
+                                                        + "{}, This is usually because select statement did not include column and "
+                                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                            } else {
+                                                fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
+                                                        ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
+                                            }
+                                        }
+                                    } else if (field.getType() == long.class || field.getType() == Long.class) {
+                                        try {
+                                            field.setAccessible(true);
+                                            field.set(thisObject, rs.getLong(field.getName().toLowerCase()));
+                                        } catch (SQLException e) {
+                                            if (e.getSQLState().equals("42703")) {
+                                                // Invalid column name, thrown if select statement does not include column
+                                                fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
+                                                                + "{}, This is usually because select statement did not include column and "
+                                                                + "can be ignored. Message is {}", field.getName().toLowerCase(),
+                                                        e.getMessage());
+                                            } else {
+                                                fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
+                                                        ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
+                                            }
+                                        }
+                                    } else if (field.getType() == double.class || field.getType() == Double.class) {
+                                        try {
+                                            field.setAccessible(true);
+                                            field.set(thisObject, rs.getDouble(field.getName().toLowerCase()));
+                                        } catch (SQLException e) {
+                                            if (e.getSQLState().equals("42703")) {
+                                                // Invalid column name, thrown if select statement does not include column
+                                                fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
+                                                        + "{}, This is usually because select statement did not include column and "
+                                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                            } else {
+                                                fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
+                                                        ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
+                                            }
+                                        }
+                                    } else if (field.getType() == float.class || field.getType() == Float.class) {
+                                        try {
+                                            field.setAccessible(true);
+                                            field.set(thisObject, rs.getFloat(field.getName().toLowerCase()));
+                                        } catch (SQLException e) {
+                                            if (e.getSQLState().equals("42703")) {
+                                                // Invalid column name, thrown if select statement does not include column
+                                                fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
+                                                        + "{}, This is usually because select statement did not include column and "
+                                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                            } else {
+                                                fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
+                                                        ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
+                                            }
+                                        }
+                                    } else if (field.getType() == int.class || field.getType() == Integer.class) {
+                                        try {
+                                            field.setAccessible(true);
+                                            field.set(thisObject, rs.getInt(field.getName().toLowerCase()));
+                                        } catch (SQLException e) {
+                                            if (e.getSQLState().equals("42703")) {
+                                                // Invalid column name, thrown if select statement does not include column
+                                                fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
+                                                        + "{}, This is usually because select statement did not include column and "
+                                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                            } else {
+                                                fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
+                                                        ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
+                                            }
+                                        }
+                                    } else if (field.getType() == char.class || field.getType() == Character.class) {
+                                        try {
+                                            field.setAccessible(true);
+                                            if (rs.getString(field.getName()) != null && rs.getString(field.getName()).length() > 0) {
+                                                field.set(thisObject, rs.getString(field.getName().toLowerCase()).charAt(0));
+                                            }
+                                        } catch (SQLException e) {
+                                            if (e.getSQLState().equals("42703")) {
+                                                // Invalid column name, thrown if select statement does not include column
+                                                fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
+                                                        + "{}, This is usually because select statement did not include column and "
+                                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                            } else {
+                                                fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
+                                                        ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
+                                            }
+                                        }
+                                    } else if (field.getType() == Date.class) {
+                                        try {
+                                            field.setAccessible(true);
+                                            field.set(thisObject, rs.getTimestamp(field.getName().toLowerCase()));
+                                        } catch (SQLException e) {
+                                            if (e.getSQLState().equals("42703")) {
+                                                // Invalid column name, thrown if select statement does not include column
+                                                fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
+                                                        + "{}, This is usually because select statement did not include column and "
+                                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                            } else {
+                                                fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
+                                                        ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
+                                            }
+                                        } catch (NullPointerException npe) {
+                                            // Nullpointer in timestap
+                                            fdfLog.debug("NullPointer on timestamp column {}, This is usually because select"
+                                                    + "statement did not include column", field.getName().toLowerCase(), npe.getMessage());
+                                        }
+                                    } else if (field.getType() == boolean.class) {
+                                        try {
+                                            field.setAccessible(true);
+                                            field.set(thisObject, rs.getBoolean(field.getName().toLowerCase()));
+                                        } catch (SQLException e) {
+                                            if (e.getSQLState().equals("42703")) {
+                                                // Invalid column name, thrown if select statement does not include column
+                                                fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
+                                                        + "{}, This is usually because select statement did not include column and "
+                                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                            } else {
+                                                fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
+                                                        ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
+                                            }
+                                        }
+                                    } else if (field.getType() == Boolean.class) {
+                                        try {
+                                            field.setAccessible(true);
+                                            field.set(thisObject, rs.getBoolean(field.getName().toLowerCase()));
+                                        } catch (SQLException e) {
+                                            if (e.getSQLState().equals("42703")) {
+                                                // Invalid column name, thrown if select statement does not include column
+                                                fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
+                                                        + "{}, This is usually because select statement did not include column and "
+                                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                            } else {
+                                                fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
+                                                        ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
+                                            }
+                                        }
+                                    } else if (field.getType() instanceof Class && ((Class<?>) field.getType()).isEnum()) {
+                                        try {
+                                            field.setAccessible(true);
+                                            field.set(thisObject, Enum.valueOf((Class<Enum>) field.getType(),
                                                     rs.getString(field.getName().toLowerCase())));
-                                } catch (SQLException e) {
-                                    if(e.getSQLState().equals("42703")) {
-                                        // Invalid column name, thrown if select statement does not include column
-                                        fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
-                                                + "{}, This is usually because select statement did not include column and "
-                                                + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
-                                    } else {
-                                        fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
-                                                ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
-                                    }
-                                }
-                            }
-                            else if (field.getGenericType() instanceof ParameterizedType
-                                    && rs.getString(field.getName()) != null) {
-                                ParameterizedType pt = (ParameterizedType) field.getGenericType();
+                                        } catch (SQLException e) {
+                                            if (e.getSQLState().equals("42703")) {
+                                                // Invalid column name, thrown if select statement does not include column
+                                                fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
+                                                        + "{}, This is usually because select statement did not include column and "
+                                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                            } else {
+                                                fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
+                                                        ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
+                                            }
+                                        }
+                                    } else if (Class.class.isAssignableFrom(field.getType())) {
+                                        try {
+                                            field.setAccessible(true);
+                                            field.set(thisObject,
+                                                    FdfUtil.getClassByFullyQualifiedName(
+                                                            rs.getString(field.getName().toLowerCase())));
+                                        } catch (SQLException e) {
+                                            if (e.getSQLState().equals("42703")) {
+                                                // Invalid column name, thrown if select statement does not include column
+                                                fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
+                                                        + "{}, This is usually because select statement did not include column and "
+                                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                            } else {
+                                                fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
+                                                        ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
+                                            }
+                                        }
+                                    } else if (field.getGenericType() instanceof ParameterizedType
+                                            && rs.getString(field.getName()) != null) {
+                                        ParameterizedType pt = (ParameterizedType) field.getGenericType();
 
-                                if (pt.getActualTypeArguments().length == 1 &&
-                                        (pt.getActualTypeArguments()[0].toString().contains("Long")
-                                                || pt.getActualTypeArguments()[0].toString().contains("long"))) {
+                                        if (pt.getActualTypeArguments().length == 1 &&
+                                                (pt.getActualTypeArguments()[0].toString().contains("Long")
+                                                        || pt.getActualTypeArguments()[0].toString().contains("long"))) {
 
-                                    List<Long> list = new ArrayList<>();
+                                            List<Long> list = new ArrayList<>();
 
-                                    String[] strArr = rs.getString(field.getName()).substring(1,
-                                            rs.getString(field.getName()).length() - 1).split(",");
+                                            String[] strArr = rs.getString(field.getName()).substring(1,
+                                                    rs.getString(field.getName()).length() - 1).split(",");
 
-                                    for (String str : strArr) {
-                                        list.add(Long.parseLong(str.replaceAll("\\s", "")));
-                                    }
+                                            for (String str : strArr) {
+                                                list.add(Long.parseLong(str.replaceAll("\\s", "")));
+                                            }
 
-                                    field.set(thisObject, list);
-                                } else if (pt.getActualTypeArguments().length == 1 &&
-                                        (pt.getActualTypeArguments()[0].toString().contains("Integer")
-                                                || pt.getActualTypeArguments()[0].toString().contains("int"))) {
+                                            field.set(thisObject, list);
+                                        } else if (pt.getActualTypeArguments().length == 1 &&
+                                                (pt.getActualTypeArguments()[0].toString().contains("Integer")
+                                                        || pt.getActualTypeArguments()[0].toString().contains("int"))) {
 
-                                    List<Integer> list = new ArrayList<>();
+                                            List<Integer> list = new ArrayList<>();
 
-                                    String[] strArr = rs.getString(field.getName()).substring(1,
-                                            rs.getString(field.getName()).length() - 1).split(",");
+                                            String[] strArr = rs.getString(field.getName()).substring(1,
+                                                    rs.getString(field.getName()).length() - 1).split(",");
 
-                                    for (String str : strArr) {
-                                        list.add(Integer.parseInt(str.replaceAll("\\s", "")));
-                                    }
+                                            for (String str : strArr) {
+                                                list.add(Integer.parseInt(str.replaceAll("\\s", "")));
+                                            }
 
-                                    field.set(thisObject, list);
-                                } else if (pt.getActualTypeArguments().length == 1 &&
-                                        (pt.getActualTypeArguments()[0].toString().contains("Float")
-                                                || pt.getActualTypeArguments()[0].toString().contains("float"))) {
+                                            field.set(thisObject, list);
+                                        } else if (pt.getActualTypeArguments().length == 1 &&
+                                                (pt.getActualTypeArguments()[0].toString().contains("Float")
+                                                        || pt.getActualTypeArguments()[0].toString().contains("float"))) {
 
-                                    List<Float> list = new ArrayList<>();
+                                            List<Float> list = new ArrayList<>();
 
-                                    String[] strArr = rs.getString(field.getName()).substring(1,
-                                            rs.getString(field.getName()).length() - 1).split(",");
+                                            String[] strArr = rs.getString(field.getName()).substring(1,
+                                                    rs.getString(field.getName()).length() - 1).split(",");
 
-                                    for (String str : strArr) {
-                                        list.add(Float.parseFloat(str.replaceAll("\\s", "")));
-                                    }
+                                            for (String str : strArr) {
+                                                list.add(Float.parseFloat(str.replaceAll("\\s", "")));
+                                            }
 
-                                    field.set(thisObject, list);
-                                } else if (pt.getActualTypeArguments().length == 1 &&
-                                        (pt.getActualTypeArguments()[0].toString().contains("Double")
-                                                || pt.getActualTypeArguments()[0].toString().contains("double"))) {
+                                            field.set(thisObject, list);
+                                        } else if (pt.getActualTypeArguments().length == 1 &&
+                                                (pt.getActualTypeArguments()[0].toString().contains("Double")
+                                                        || pt.getActualTypeArguments()[0].toString().contains("double"))) {
 
-                                    List<Double> list = new ArrayList<>();
+                                            List<Double> list = new ArrayList<>();
 
-                                    String[] strArr = rs.getString(field.getName()).substring(1,
-                                            rs.getString(field.getName()).length() - 1).split(",");
+                                            String[] strArr = rs.getString(field.getName()).substring(1,
+                                                    rs.getString(field.getName()).length() - 1).split(",");
 
-                                    for (String str : strArr) {
-                                        list.add(Double.parseDouble(str.replaceAll("\\s", "")));
-                                    }
+                                            for (String str : strArr) {
+                                                list.add(Double.parseDouble(str.replaceAll("\\s", "")));
+                                            }
 
-                                    field.set(thisObject, list);
-                                } else if (pt.getActualTypeArguments().length == 1 &&
-                                        (pt.getActualTypeArguments()[0].toString().contains("Boolean")
-                                                || pt.getActualTypeArguments()[0].toString().contains("boolean"))) {
+                                            field.set(thisObject, list);
+                                        } else if (pt.getActualTypeArguments().length == 1 &&
+                                                (pt.getActualTypeArguments()[0].toString().contains("Boolean")
+                                                        || pt.getActualTypeArguments()[0].toString().contains("boolean"))) {
 
-                                    List<Boolean> list = new ArrayList<>();
+                                            List<Boolean> list = new ArrayList<>();
 
-                                    String[] strArr = rs.getString(field.getName()).substring(1,
-                                            rs.getString(field.getName()).length() - 1).split(",");
+                                            String[] strArr = rs.getString(field.getName()).substring(1,
+                                                    rs.getString(field.getName()).length() - 1).split(",");
 
-                                    for (String str : strArr) {
-                                        list.add(Boolean.parseBoolean(str.replaceAll("\\s", "")));
-                                    }
+                                            for (String str : strArr) {
+                                                list.add(Boolean.parseBoolean(str.replaceAll("\\s", "")));
+                                            }
 
-                                    field.set(thisObject, list);
-                                } else if (pt.getActualTypeArguments().length == 1 &&
-                                        pt.getActualTypeArguments()[0].toString().contains("String")) {
+                                            field.set(thisObject, list);
+                                        } else if (pt.getActualTypeArguments().length == 1 &&
+                                                pt.getActualTypeArguments()[0].toString().contains("String")) {
 
-                                    List<String> list = new ArrayList<>();
+                                            List<String> list = new ArrayList<>();
 
-                                    String[] strArr = rs.getString(field.getName()).substring(1,
-                                            rs.getString(field.getName()).length() - 1).split(",");
+                                            String[] strArr = rs.getString(field.getName()).substring(1,
+                                                    rs.getString(field.getName()).length() - 1).split(",");
 
-                                    for (String str : strArr) {
-                                        list.add(str.replaceAll("\\s", ""));
-                                    }
+                                            for (String str : strArr) {
+                                                list.add(str.replaceAll("\\s", ""));
+                                            }
 
-                                    field.set(thisObject, list);
-                                } else {
-                                    // serialized object, deserialize
-                                    try {
-                                        field.setAccessible(true);
-
-                                        byte[] data = Base64.getDecoder().decode(rs.getString(field.getName()));
-                                        ObjectInputStream ois = new ObjectInputStream(
-                                                new ByteArrayInputStream(data));
-                                        Object o = ois.readObject();
-                                        ois.close();
-
-                                        field.set(thisObject, o);
-                                    } catch (SQLException e) {
-                                        if(e.getSQLState().equals("42703")) {
-                                            // Invalid column name, thrown if select statement does not include column
-                                            fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
-                                                    + "{}, This is usually because select statement did not include column and "
-                                                    + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                            field.set(thisObject, list);
                                         } else {
-                                            fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
-                                                    ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
+                                            // serialized object, deserialize
+                                            try {
+                                                field.setAccessible(true);
+
+                                                byte[] data = Base64.getDecoder().decode(rs.getString(field.getName()));
+                                                ObjectInputStream ois = new ObjectInputStream(
+                                                        new ByteArrayInputStream(data));
+                                                Object o = ois.readObject();
+                                                ois.close();
+
+                                                field.set(thisObject, o);
+                                            } catch (SQLException e) {
+                                                if (e.getSQLState().equals("42703")) {
+                                                    // Invalid column name, thrown if select statement does not include column
+                                                    fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
+                                                            + "{}, This is usually because select statement did not include column and "
+                                                            + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                                } else {
+                                                    fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
+                                                            ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
+                                                }
+                                            }
+                                        }
+                                    } else if (rs.getString(field.getName()) != null) {
+                                        // serialized object, deserialize
+                                        try {
+                                            field.setAccessible(true);
+
+                                            byte[] data = Base64.getDecoder().decode(rs.getString(field.getName().toLowerCase()));
+                                            ObjectInputStream ois = new ObjectInputStream(
+                                                    new ByteArrayInputStream(data));
+                                            Object o = ois.readObject();
+                                            ois.close();
+
+                                            field.set(thisObject, o);
+                                        } catch (SQLException e) {
+                                            if (e.getSQLState().equals("42703")) {
+                                                // Invalid column name, thrown if select statement does not include column
+                                                fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
+                                                        + "{}, This is usually because select statement did not include column and "
+                                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                            } else {
+                                                fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
+                                                        ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
+                                            }
                                         }
                                     }
-                                }
-                            }
-                            else if (rs.getString(field.getName()) != null) {
-                                // serialized object, deserialize
-                                try {
-                                    field.setAccessible(true);
-
-                                    byte [] data = Base64.getDecoder().decode(rs.getString(field.getName().toLowerCase()));
-                                    ObjectInputStream ois = new ObjectInputStream(
-                                            new ByteArrayInputStream(data));
-                                    Object o  = ois.readObject();
-                                    ois.close();
-
-                                    field.set(thisObject, o);
                                 } catch (SQLException e) {
-                                    if(e.getSQLState().equals("42703")) {
+                                    if (e.getSQLState().equals("42703")) {
                                         // Invalid column name, thrown if select statement does not include column
                                         fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                                 + "{}, This is usually because select statement did not include column and "
@@ -1115,36 +1148,22 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                     }
                                 }
                             }
-                        } catch (SQLException e) {
-                            if(e.getSQLState().equals("42703")) {
-                                // Invalid column name, thrown if select statement does not include column
-                                fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
-                                        + "{}, This is usually because select statement did not include column and "
-                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
-                            } else {
-                                fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
-                                        ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
-                            }
                         }
+                        S thisUserStateTest = (S) thisObject;
+                        everything.add(thisUserStateTest);
                     }
-
-                    S thisUserStateTest = (S) thisObject;
-                    everything.add(thisUserStateTest);
                 }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            } finally {
+                rs = null;
+                ps = null;
+                // close the connection
+                PostgreSqlConnection.getInstance().close();
             }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } catch (Exception ex) {
-            ex.printStackTrace();
         }
-        finally {
-            rs = null;
-            ps = null;
-            // close the connection
-            PostgreSqlConnection.getInstance().close();
-        }
-
         return everything;
     }
 
