@@ -132,7 +132,7 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                     if (rs != null) {
                         if (!rs.next()) {
                             // Table does not exist, create
-                            fdfLog.debug("creating table: {}", c.getSimpleName().toLowerCase());
+                            fdfLog.info("creating table: {}", c.getSimpleName().toLowerCase());
                             // check there there is at lease one field
                             if (c.getFields().length > 0) {
                                 String sql = "CREATE TABLE " + "\"" + c.getSimpleName().toLowerCase()
