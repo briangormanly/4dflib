@@ -17,6 +17,8 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -386,7 +388,14 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                     preparedStmt.setFloat(fieldCounter3, (float) field.get(state));
 
                                 }
-                            } else if (field.getType() == boolean.class || field.getType() == Boolean.class) {
+                            }
+                            else if (field.getType() == BigDecimal.class) {
+                                if (!field.getName().toLowerCase().equals("rid")) {
+                                    preparedStmt.setBigDecimal(fieldCounter3, (BigDecimal) field.get(state));
+
+                                }
+                            }
+                            else if (field.getType() == boolean.class || field.getType() == Boolean.class) {
                                 preparedStmt.setBoolean(fieldCounter3, (boolean) field.get(state));
 
                             } else if (field.getType() == char.class || field.getType() == Character.class) {
@@ -609,7 +618,17 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                 } else {
                                     preparedStmt.setNull(fieldCounter3, Types.BIGINT);
                                 }
-                            } else if (field.getType() == boolean.class || field.getType() == Boolean.class) {
+                            }
+                            else if (field.getType() == BigDecimal.class) {
+                                if (field.get(state) != null) {
+                                    if (!field.getName().toLowerCase().equals("rid")) {
+                                        preparedStmt.setBigDecimal(fieldCounter3, (BigDecimal) field.get(state));
+                                    }
+                                } else {
+                                    preparedStmt.setNull(fieldCounter3, Types.NUMERIC);
+                                }
+                            }
+                            else if (field.getType() == boolean.class || field.getType() == Boolean.class) {
                                 if (field.get(state) != null) {
                                     preparedStmt.setBoolean(fieldCounter3, (boolean) field.get(state));
                                 } else {
@@ -902,6 +921,21 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                                         ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
                                             }
                                         }
+                                    } else if (field.getType() == BigDecimal.class) {
+                                        try {
+                                            field.setAccessible(true);
+                                            field.set(thisObject, rs.getBigDecimal(field.getName().toLowerCase()));
+                                        } catch (SQLException e) {
+                                            if (e.getSQLState().equals("42703")) {
+                                                // Invalid column name, thrown if select statement does not include column
+                                                fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
+                                                        + "{}, This is usually because select statement did not include column and "
+                                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                            } else {
+                                                fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
+                                                        ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
+                                            }
+                                        }
                                     } else if (field.getType() == char.class || field.getType() == Character.class) {
                                         try {
                                             field.setAccessible(true);
@@ -1061,7 +1095,22 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                             }
 
                                             field.set(thisObject, list);
-                                        } else if (pt.getActualTypeArguments().length == 1 &&
+                                        }
+                                        else if (pt.getActualTypeArguments().length == 1 &&
+                                                (pt.getActualTypeArguments()[0].toString().contains("BigDecimal"))) {
+
+                                            List<Double> list = new ArrayList<>();
+
+                                            String[] strArr = rs.getString(field.getName()).substring(1,
+                                                    rs.getString(field.getName()).length() - 1).split(",");
+
+                                            for (String str : strArr) {
+                                                list.add(Double.parseDouble(str.replaceAll("\\s", "")));
+                                            }
+
+                                            field.set(thisObject, list);
+                                        }
+                                        else if (pt.getActualTypeArguments().length == 1 &&
                                                 (pt.getActualTypeArguments()[0].toString().contains("Boolean")
                                                         || pt.getActualTypeArguments()[0].toString().contains("boolean"))) {
 
@@ -1188,6 +1237,10 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
             sql += field.getName().toLowerCase()+ " double precision";
         } else if (field.getType() == Float.class || field.getType() == float.class) {
             sql += field.getName().toLowerCase()+ " real";
+
+        }
+        else if (field.getType() == BigDecimal.class) {
+            sql += field.getName() + " NUMERIC(10,4)";
         } else if (field.getType() == boolean.class || field.getType() == Boolean.class) {
             sql += field.getName().toLowerCase()+ " BOOLEAN";
         } else if (field.getType() == Date.class) {
@@ -1271,7 +1324,8 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                 else if(clause.valueDataType == int.class || clause.valueDataType == Integer.class ||
                         clause.valueDataType == long.class || clause.valueDataType == Long.class ||
                         clause.valueDataType == double.class || clause.valueDataType == Double.class ||
-                        clause.valueDataType == float.class || clause.valueDataType == Float.class){
+                        clause.valueDataType == float.class || clause.valueDataType == Float.class ||
+                        clause.value2DataType == BigDecimal.class){
                     sql += " " + clause.name + " " + clause.getOperatorString() + " " + clause.value;
                 }
                 else if(clause.valueDataType == boolean.class || clause.valueDataType == Boolean.class) {
