@@ -18,6 +18,7 @@ package com.fdflib.service.impl;
 
 import com.fdflib.model.entity.FdfEntity;
 import com.fdflib.model.state.CommonState;
+import com.fdflib.model.state.FdfTenant;
 import com.fdflib.model.util.WhereClause;
 import com.fdflib.persistence.FdfPersistence;
 import com.fdflib.util.GeneralConstants;
@@ -95,7 +96,7 @@ public interface FdfCommonServices {
         // check to see if this if an id is assigned (existing vs new entity)
         if(state.id <= 0) {
             // if this is a new entity, get an id for it
-            state.id = getNewEnityId(entityState);
+            state.id = getNewEntityId(entityState, tenantId);
         }
 
         // get full entity for state
@@ -1865,9 +1866,9 @@ public interface FdfCommonServices {
     }
 
 
-    default <S extends CommonState> long getNewEnityId(Class<S> entityState) {
+    default <S extends CommonState> long getNewEntityId(Class<S> entityState) {
 
-        return getNewEnityId(entityState, 1);
+        return getNewEntityId(entityState, 1);
 
     }
 
@@ -1877,7 +1878,7 @@ public interface FdfCommonServices {
      * @param <S>
      * @return
      */
-    default <S extends CommonState> long getNewEnityId(Class<S> entityState, long tenantId) {
+    default <S extends CommonState> long getNewEntityId(Class<S> entityState, long tenantId) {
         // get the last id assigned
         List<String> select = new ArrayList<>();
         String maxId = "max(id) as id";
