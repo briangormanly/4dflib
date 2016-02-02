@@ -246,6 +246,112 @@ public interface FdfCommonServices {
         return null;
     }
 
+
+    /**
+     * Retrieves all entities including deleted records of type passed from persistence. Includes all current and
+     * historical data for each entity returned.  Uses the Default FdfTenant (when not using multi-tenant)
+     *
+     * @param entityState The entity type to query
+     * @param <S> parameterized type of entity
+     * @return List of type passed
+     */
+    default <S extends CommonState> List<FdfEntity<S>> auditAll(Class<S> entityState) {
+
+        return auditAll(entityState, 1);
+
+    }
+
+    /**
+     * Retrieves all entities including deleted records of type passed from persistence. Includes all current and
+     * historical data for each entity returned.  Includes specified tenant (when using multi-tenant)
+     *
+     * @param entityState The entity type to query
+     * @param tenantId Id of the tenant to retrieve for (Multi-FdfTenant mode)
+     * @param <S> parameterized type of entity
+     * @return List of type passed
+     */
+    default <S extends CommonState> List<FdfEntity<S>> auditAll(Class<S> entityState, long tenantId) {
+
+        // create the where statement for the query
+        List<WhereClause> whereStatement = new ArrayList<>();
+
+        WhereClause whereTid = new WhereClause();
+        whereTid.name = "tid";
+        whereTid.operator = WhereClause.Operators.EQUAL;
+        whereTid.value = Long.toString(tenantId);
+        whereTid.valueDataType = Long.class;
+
+        whereStatement.add(whereTid);
+
+        // do the query
+        List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
+
+        // create a List of entities
+        return manageReturnedEntities(returnedStates);
+
+    }
+
+    /**
+     * Retrieves all entities including deleted records of type passed from persistence, only returns current data for
+     * each entity, without any historical data.  Uses the Default FdfTenant (when not using multi-tenant)
+     *
+     * @param entityState The entity type to query
+     * @param <S> parameterized type of entity
+     * @return List of type passed
+     */
+    default <S extends CommonState> List<S> auditAllCurrent(Class<S> entityState) {
+
+        return auditAllCurrent(entityState, 1);
+
+    }
+
+    /**
+     * Retrieves all entities including deleted records of type passed from persistence, only returns current data for
+     * each entity, without any historical data.  Includes specified tenant (when using multi-tenant)
+     *
+     * @param entityState The entity type to query
+     * @param tenantId Id of the tenant to retrieve for (Multi-FdfTenant mode)
+     * @param <S> parameterized type of entity
+     * @return List of type passed
+     */
+    default <S extends CommonState> List<S> auditAllCurrent(Class<S> entityState, long tenantId) {
+
+        // create the where statement for the statement
+        List<WhereClause> whereStatement = new ArrayList<>();
+
+        // check that only the current records are returned
+        WhereClause whereCf = new WhereClause();
+        whereCf.name = "cf";
+        whereCf.value = "true";
+        whereCf.valueDataType = Boolean.class;
+
+        WhereClause whereTid = new WhereClause();
+        whereTid.name = "tid";
+        whereTid.operator = WhereClause.Operators.EQUAL;
+        whereTid.value = Long.toString(tenantId);
+        whereTid.valueDataType = Long.class;
+
+        whereStatement.add(whereCf);
+        whereStatement.add(whereTid);
+
+        // do the query
+        List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
+
+        // organize the results
+        List<FdfEntity<S>> returnedList = manageReturnedEntities(returnedStates);
+        if(returnedList != null) {
+            List<S> entities = new ArrayList<>();
+            for(FdfEntity<S> returnedEntity: returnedList) {
+                entities.add(returnedEntity.current);
+            }
+            return entities;
+        }
+        return null;
+
+    }
+
+
+
     /**
      * Retrieves all entities of type passed from persistence. Includes all current and historical data for
      * each entity returned.  Uses the Default FdfTenant (when not using multi-tenant)
