@@ -126,8 +126,11 @@ public interface FdfCommonServices {
         // save the new state as current
         long returnedRid = FdfPersistence.getInstance().insert(entityState, state);
 
+        // get id for rid
+        long id = auditEntityByRid(entityState, returnedRid).entityId;
+
         // get the entitiy and return
-        return auditEntityByRid(entityState, returnedRid);
+        return auditEntityById(entityState, id);
     }
 
 
@@ -172,7 +175,7 @@ public interface FdfCommonServices {
         if(id > -1) {
 
             // get full entity for state
-            FdfEntity<S> thisEntity = getEntityById(entityState, id);
+            FdfEntity<S> thisEntity = auditEntityById(entityState, id);
 
             // create the new state that will maintain the deletion records from the most recent state available
             S deletedState = thisEntity.getMostRecentState();
@@ -232,7 +235,7 @@ public interface FdfCommonServices {
         if(id > -1) {
 
             // get full entity for state
-            FdfEntity<S> thisEntity = getEntityById(entityState, id);
+            FdfEntity<S> thisEntity = auditEntityById(entityState, id);
 
             // create the new state that will maintain the deletion records from the most recent state available
             S deletedState = thisEntity.getMostRecentState();
