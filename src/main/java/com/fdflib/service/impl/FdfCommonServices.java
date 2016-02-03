@@ -100,7 +100,7 @@ public interface FdfCommonServices {
         }
 
         // get full entity for state
-        FdfEntity<S> thisEntity = auditEntityById(entityState, state.id);
+        FdfEntity<S> thisEntity = auditEntityById(entityState, state.id, tenantId);
 
 
         // check to see if there is an existing entity, if not, create
@@ -130,7 +130,7 @@ public interface FdfCommonServices {
         long id = auditEntityByRid(entityState, returnedRid).entityId;
 
         // get the entitiy and return
-        return auditEntityById(entityState, id);
+        return auditEntityById(entityState, id, tenantId);
     }
 
 
@@ -175,7 +175,7 @@ public interface FdfCommonServices {
         if(id > -1) {
 
             // get full entity for state
-            FdfEntity<S> thisEntity = auditEntityById(entityState, id);
+            FdfEntity<S> thisEntity = auditEntityById(entityState, id, tenantId);
 
             // create the new state that will maintain the deletion records from the most recent state available
             S deletedState = thisEntity.getMostRecentState();
@@ -235,7 +235,7 @@ public interface FdfCommonServices {
         if(id > -1) {
 
             // get full entity for state
-            FdfEntity<S> thisEntity = auditEntityById(entityState, id);
+            FdfEntity<S> thisEntity = auditEntityById(entityState, id, tenantId);
 
             // create the new state that will maintain the deletion records from the most recent state available
             S deletedState = thisEntity.getMostRecentState();
