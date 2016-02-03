@@ -367,7 +367,11 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
 
                         try {
                             if (field.getType() == String.class) {
-                                preparedStmt.setString(fieldCounter3, field.get(state).toString());
+                                if (field.get(state) != null) {
+                                    preparedStmt.setString(fieldCounter3, field.get(state).toString());
+                                } else {
+                                    preparedStmt.setNull(fieldCounter3, Types.VARCHAR);
+                                }
                             } else if (field.getType() == int.class || field.getType() == Integer.class) {
                                 if (!field.getName().toLowerCase().equals("rid")) {
                                     preparedStmt.setInt(fieldCounter3, (int) field.get(state));
