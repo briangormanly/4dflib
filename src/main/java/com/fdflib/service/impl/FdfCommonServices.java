@@ -127,10 +127,10 @@ public interface FdfCommonServices {
         long returnedRid = FdfPersistence.getInstance().insert(entityState, state);
 
         // get id for rid
-        long id = auditEntityByRid(entityState, returnedRid).entityId;
+        S entity = auditEntityByRid(entityState, returnedRid);
 
-        // get the entitiy and return
-        return auditEntityById(entityState, id, tenantId);
+        // get the entity and return
+        return auditEntityById(entityState, entity.id, tenantId);
     }
 
 
@@ -881,7 +881,7 @@ public interface FdfCommonServices {
      * @param <S> Parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> FdfEntity<S> getEntityByRid(Class<S> entityState, long rid) {
+    default <S extends CommonState> S getEntityByRid(Class<S> entityState, long rid) {
 
         // create the where statement for the query
         List<WhereClause> whereStatement = new ArrayList<>();
@@ -910,7 +910,7 @@ public interface FdfCommonServices {
 
         // now that we have the state with the rid, get all of the states with the id it contains
         if(returnedStates.size() > 0 && returnedStates.get(0) != null) {
-            return getEntityById(entityState, returnedStates.get(0).id);
+            return returnedStates.get(0);
         }
         else {
             return null;
@@ -928,7 +928,7 @@ public interface FdfCommonServices {
      * @param <S> Parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> FdfEntity<S> auditEntityByRid(Class<S> entityState, long rid) {
+    default <S extends CommonState> S auditEntityByRid(Class<S> entityState, long rid) {
 
         // create the where statement for the query
         List<WhereClause> whereStatement = new ArrayList<>();
@@ -949,7 +949,7 @@ public interface FdfCommonServices {
 
         // now that we have the state with the rid, get all of the states with the id it contains
         if(returnedStates.size() > 0 && returnedStates.get(0) != null) {
-            return getEntityById(entityState, returnedStates.get(0).id);
+            return returnedStates.get(0);
         }
         else {
             return null;
