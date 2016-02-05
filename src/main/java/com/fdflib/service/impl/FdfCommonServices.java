@@ -339,18 +339,7 @@ public interface FdfCommonServices {
         whereStatement.add(whereTid);
 
         // do the query
-        List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
-
-        // organize the results
-        List<FdfEntity<S>> returnedList = manageReturnedEntities(returnedStates);
-        if(returnedList != null) {
-            List<S> entities = new ArrayList<>();
-            for(FdfEntity<S> returnedEntity: returnedList) {
-                entities.add(returnedEntity.current);
-            }
-            return entities;
-        }
-        return null;
+        return FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
 
     }
 
@@ -460,18 +449,7 @@ public interface FdfCommonServices {
         whereStatement.add(whereTid);
 
         // do the query
-        List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
-
-        // organize the results
-        List<FdfEntity<S>> returnedList = manageReturnedEntities(returnedStates);
-        if(returnedList != null) {
-            List<S> entities = new ArrayList<>();
-            for(FdfEntity<S> returnedEntity: returnedList) {
-                entities.add(returnedEntity.current);
-            }
-            return entities;
-        }
-        return null;
+        return FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
 
     }
 
