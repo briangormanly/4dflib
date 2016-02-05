@@ -43,11 +43,103 @@ public interface FdfCommonServices {
      * Save an Entities State to persistence internally manages all insert, update and actions associated with
      * maintaining the correct state of the data in persistence.  Uses the Default FdfTenant (when not using multi-tenant)
      *
+     * @param state state to save
+     * @param entityState State Type to save
+     * @param userId Id of user that is saving the state
+     * @param systemId Id of system that is saving the state
+     * @param <S> parameterized type of entity state
+     * @return S the saved entity state (without FdfEntity)
+     */
+    default <S extends CommonState> S save(S state, Class<S> entityState, long userId, long systemId) {
+
+        return save(state, entityState, userId, systemId, 1);
+    }
+
+    /**
+     * Save an Entities State to persistence internally manages all insert, update and actions associated with
+     * maintaining the correct state of the data in persistence.  Includes specified tenant (when using multi-tenant)
+     *
+     * This method signature assumes that the object contains the userId, systemId and tenantId saving the data in the
+     * euid, esid, and tid respectively.
+     *
+     * @param state state to save
+     * @param entityState State Type to save
+     * @param <S> parameterized type of entity state
+     * @return S the saved entity state (without FdfEntity)
+     */
+    default <S extends CommonState> S save(S state, Class<S> entityState) {
+        return save(state, entityState, state.euid, state.esid, state.tid);
+    }
+
+
+    /**
+     * Save an Entities State to persistence internally manages all insert, update and actions associated with
+     * maintaining the correct state of the data in persistence.  Includes specified tenant (when using multi-tenant)
+     *
+     * @param state state to save
+     * @param entityState State Type to save
+     * @param userId Id of user that is saving the state
+     * @param systemId Id of system that is saving the state
+     * @param tenantId Id of tenant this entity is associated with
+     * @param <S> parameterized type of entity state
+     * @return S the saved entity state (without FdfEntity)
+     */
+    default <S extends CommonState> S save(S state, Class<S> entityState, long userId, long systemId, long tenantId) {
+        // set the common meta fields for the new record
+        state.arsd = Calendar.getInstance().getTime();
+        state.ared = null;
+        state.cf = true;
+        state.euid = userId;
+        state.esid = systemId;
+        state.tid = tenantId;
+
+        // check to see if this if an id is assigned (existing vs new entity)
+        if(state.id <= 0) {
+            // if this is a new entity, get an id for it
+            state.id = getNewEntityId(entityState, tenantId);
+        }
+
+        // get full entity for state
+        FdfEntity<S> thisEntity = auditEntityById(entityState, state.id, tenantId);
+
+
+        // check to see if there is an existing entity, if not, create
+        if(thisEntity == null) {
+            thisEntity = new FdfEntity<>();
+        }
+
+        // get the previous current record and move to history
+        if(thisEntity.current != null) {
+            S lastCurrentState = thisEntity.current;
+
+            // set the end date
+            lastCurrentState.ared = Calendar.getInstance().getTime();
+
+            // set the current flag
+            lastCurrentState.cf = false;
+
+            // move the state to history
+            FdfPersistence.getInstance().update(entityState, lastCurrentState);
+
+        }
+
+        // save the new state as current
+        long returnedRid = FdfPersistence.getInstance().insert(entityState, state);
+
+        // get id for rid
+        return auditEntityByRid(entityState, returnedRid);
+    }
+
+    /**
+     * Save an Entities State to persistence internally manages all insert, update and actions associated with
+     * maintaining the correct state of the data in persistence.  Uses the Default FdfTenant (when not using multi-tenant)
+     *
      * @param entityState State Type to save
      * @param state state to save
      * @param userId Id of user that is saving the state
      * @param systemId Id of system that is saving the state
      * @param <S> parameterized type of entity state
+     * @return FdfEntity<S> FdfEntity that contains current and historical states for the saved entity
      */
     default <S extends CommonState> FdfEntity<S> save(Class<S> entityState, S state, long userId, long systemId) {
 
@@ -64,7 +156,7 @@ public interface FdfCommonServices {
      * @param entityState State Type to save
      * @param state state to save
      * @param <S> parameterized type of entity state
-     * @return
+     * @return FdfEntity<S> FdfEntity that contains current and historical states for the saved entity
      */
     default <S extends CommonState> FdfEntity<S> save(Class<S> entityState, S state) {
         return save(entityState,state, state.euid, state.esid, state.tid);
@@ -81,7 +173,7 @@ public interface FdfCommonServices {
      * @param systemId Id of system that is saving the state
      * @param tenantId Id of tenant this entity is associated with
      * @param <S> parameterized type of entity state
-     * @return
+     * @return FdfEntity<S> FdfEntity that contains current and historical states for the saved entity
      */
     default <S extends CommonState> FdfEntity<S> save(Class<S> entityState, S state,
                                                       long userId, long systemId, long tenantId) {
