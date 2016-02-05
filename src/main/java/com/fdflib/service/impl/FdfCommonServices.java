@@ -599,6 +599,83 @@ public interface FdfCommonServices {
     }
 
     /**
+     * Retrieves all entities of the passed type from persistence as they existed at the date passed. Only states
+     * existing at the date passed will be returned.
+     *
+     * Audit includes deleted records
+     *
+     * Uses the Default FdfTenant (when not using multi-tenant)
+     *
+     * @param entityState The entity type to query
+     * @param date Date at which to get entities state
+     * @param <S> parameterized type of entity
+     * @return List of type passed
+     */
+    default <S extends CommonState> List<S> auditAllAtDate(Class<S> entityState, Date date) {
+        return auditAllAtDate(entityState, date, 1);
+
+    }
+
+
+    /**
+     * Retrieves all entities of the passed type from persistence as they existed at the date passed. Only states
+     * existing at the date passed will be returned. This will return one State as they were in at that time.
+     *
+     * Audit includes deleted records
+     *
+     * Includes specified tenant (when using multi-tenant)
+     *
+     * @param entityState The entity type to query
+     * @param date Date at which to get entities state
+     * @param tenantId Id of the tenant to retrieve for (Multi-FdfTenant mode)
+     * @param <S> parameterized type of entity
+     * @return List of type passed
+     */
+    default <S extends CommonState> List<S> auditAllAtDate(Class<S> entityState, Date date, long tenantId) {
+
+        // create the where statement for the statement
+        List<WhereClause> whereStatement = new ArrayList<>();
+
+
+        // check that the start date is less than or equal to the date passed
+        WhereClause startDate = new WhereClause();
+        startDate.name = "arsd";
+        startDate.operator = WhereClause.Operators.LESS_THAN_OR_EQUAL;
+        startDate.value = GeneralConstants.DB_DATE_FORMAT.format(date);
+        startDate.valueDataType = Date.class;
+
+        // check that the end date is greater than the date passed
+        WhereClause endDate = new WhereClause();
+        endDate.groupings.add(WhereClause.GROUPINGS.OPEN_PARENTHESIS);
+        endDate.name = "ared";
+        endDate.operator = WhereClause.Operators.GREATER_THAN;
+        endDate.value = GeneralConstants.DB_DATE_FORMAT.format(date);
+        endDate.valueDataType = Date.class;
+
+        // OR that the end date is null (still active)
+        WhereClause endDateNull = new WhereClause();
+        endDateNull.conditional = WhereClause.CONDITIONALS.OR;
+        endDateNull.name = "ared";
+        endDateNull.operator = WhereClause.Operators.IS;
+        endDateNull.value = WhereClause.NULL;
+        endDateNull.groupings.add(WhereClause.GROUPINGS.CLOSE_PARENTHESIS);
+
+        WhereClause whereTid = new WhereClause();
+        whereTid.name = "tid";
+        whereTid.operator = WhereClause.Operators.EQUAL;
+        whereTid.value = Long.toString(tenantId);
+        whereTid.valueDataType = Long.class;
+
+        whereStatement.add(startDate);
+        whereStatement.add(endDate);
+        whereStatement.add(endDateNull);
+        whereStatement.add(whereTid);
+
+        // do the query
+        return FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
+    }
+
+    /**
      * Retrieves all entities that have states active starting at or after the date passed into the method.  Will
      * return current and historical data for the entity equal to or newer then the passed date, but no history
      * with an end date before the passed date.  If a entity does not have a record with a end date equal to or
@@ -1392,13 +1469,7 @@ public interface FdfCommonServices {
 
     /**
      * Retrieves entity of the passed type from persistence as it existed at the date passed. Only states
-     * existing at the date passed will be returned.  Usually this will only return one State in the form
-     * they were in at that time, however if the time passed was the same time as a change to a entity you will get
-     * back both the states as the end date of the outgoing and the startdate of the incoming will match the date
-     * passed.
-     *
-     * If the state is still the current state it will be contained in the entity.current else it will be
-     * in the entity.history
+     * existing at the date passed will be returned.
      *
      * Uses the Default FdfTenant (when not using multi-tenant)
      *
@@ -1408,9 +1479,9 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> S getEntityAtDateById(Class<S> entityState, long id, Date date) {
+    default <S extends CommonState> S getAtDateById(Class<S> entityState, long id, Date date) {
 
-        return getEntityAtDateById(entityState, id, date, 1);
+        return getAtDateById(entityState, id, date, 1);
 
     }
 
@@ -1428,7 +1499,7 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> S getEntityAtDateById(Class<S> entityState, long id, Date date,
+    default <S extends CommonState> S getAtDateById(Class<S> entityState, long id, Date date,
                                                                      long tenantId) {
 
         // create the where statement for the statement
@@ -1479,6 +1550,101 @@ public interface FdfCommonServices {
         whereTid.valueDataType = Long.class;
 
         whereStatement.add(whereDf);
+        whereStatement.add(whereId);
+        whereStatement.add(startDate);
+        whereStatement.add(endDate);
+        whereStatement.add(endDateNull);
+        whereStatement.add(whereTid);
+
+        // do the query
+        List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
+        if(returnedStates.size() > 0) {
+            return returnedStates.get(0);
+        }
+
+        return null;
+    }
+
+    /**
+     * Retrieves entity of the passed type from persistence as it existed at the date passed. Only states
+     * existing at the date passed will be returned.
+     *
+     * Audit includes deleted records
+     *
+     * Uses the Default FdfTenant (when not using multi-tenant)
+     *
+     * @param entityState The entity type to query
+     * @param id Id of the Entity to retrieve
+     * @param date Date to get entity state at
+     * @param <S> parameterized type of entity
+     * @return Entity of type passed
+     */
+    default <S extends CommonState> S auditAtDateById(Class<S> entityState, long id, Date date) {
+
+        return auditAtDateById(entityState, id, date, 1);
+
+    }
+
+    /**
+     * Retrieves entity of the passed type from persistence as it existed at the date passed. Only states
+     * existing at the date passed will be returned.  Usually this will only return one State in the form
+     * they were in at that time.
+     *
+     * Audit includes deleted records
+     *
+     * Includes specified tenant (when using multi-tenant)
+     *
+     * @param entityState The entity type to query
+     * @param id Id of the Entity to retrieve
+     * @param date Date to get entity state at
+     * @param tenantId Id of the tenant to retrieve for (Multi-FdfTenant mode)
+     * @param <S> parameterized type of entity
+     * @return Entity of type passed
+     */
+    default <S extends CommonState> S auditAtDateById(Class<S> entityState, long id, Date date,
+                                                          long tenantId) {
+
+        // create the where statement for the statement
+        List<WhereClause> whereStatement = new ArrayList<>();
+
+
+        // add the id check
+        WhereClause whereId = new WhereClause();
+        whereId.conditional = WhereClause.CONDITIONALS.AND;
+        whereId.name = "id";
+        whereId.operator = WhereClause.Operators.EQUAL;
+        whereId.value = Long.toString(id);
+        whereId.valueDataType = Long.class;
+
+        // check that the start date is less than or equal to the date passed
+        WhereClause startDate = new WhereClause();
+        startDate.name = "arsd";
+        startDate.operator = WhereClause.Operators.LESS_THAN_OR_EQUAL;
+        startDate.value = GeneralConstants.DB_DATE_FORMAT.format(date);
+        startDate.valueDataType = Date.class;
+
+        // check that the end date is greater than the date passed
+        WhereClause endDate = new WhereClause();
+        endDate.groupings.add(WhereClause.GROUPINGS.OPEN_PARENTHESIS);
+        endDate.name = "ared";
+        endDate.operator = WhereClause.Operators.GREATER_THAN;
+        endDate.value = GeneralConstants.DB_DATE_FORMAT.format(date);
+        endDate.valueDataType = Date.class;
+
+        // OR that the end date is null (still active)
+        WhereClause endDateNull = new WhereClause();
+        endDateNull.conditional = WhereClause.CONDITIONALS.OR;
+        endDateNull.name = "ared";
+        endDateNull.operator = WhereClause.Operators.IS;
+        endDateNull.value = WhereClause.NULL;
+        endDateNull.groupings.add(WhereClause.GROUPINGS.CLOSE_PARENTHESIS);
+
+        WhereClause whereTid = new WhereClause();
+        whereTid.name = "tid";
+        whereTid.operator = WhereClause.Operators.EQUAL;
+        whereTid.value = Long.toString(tenantId);
+        whereTid.valueDataType = Long.class;
+
         whereStatement.add(whereId);
         whereStatement.add(startDate);
         whereStatement.add(endDate);
