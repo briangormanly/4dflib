@@ -551,7 +551,7 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    default <S extends CommonState> List<FdfEntity<S>> getAllAtDate(Class<S> entityState, Date date) {
+    default <S extends CommonState> List<S> getAllAtDate(Class<S> entityState, Date date) {
         return getAllAtDate(entityState, date, 1);
 
     }
@@ -559,13 +559,7 @@ public interface FdfCommonServices {
 
     /**
      * Retrieves all entities of the passed type from persistence as they existed at the date passed. Only states
-     * existing at the date passed will be returned.  Usually this will only return one State per Entity in the form
-     * they were in at that time, however if the time passed was the same time as a change to a entity you will get
-     * back both the states as the end date of the outgoing and the startdate of the incoming will match the date
-     * passed.
-     *
-     * One state will be returned for each entity, if the state is still the current state it will be contained
-     * in the entity.current else it will be in the entity.history
+     * existing at the date passed will be returned. This will return one State as they were in at that time.
      *
      * Includes specified tenant (when using multi-tenant)
      *
@@ -575,7 +569,7 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    default <S extends CommonState> List<FdfEntity<S>> getAllAtDate(Class<S> entityState, Date date, long tenantId) {
+    default <S extends CommonState> List<S> getAllAtDate(Class<S> entityState, Date date, long tenantId) {
 
         // create the where statement for the statement
         List<WhereClause> whereStatement = new ArrayList<>();
@@ -598,7 +592,7 @@ public interface FdfCommonServices {
         WhereClause endDate = new WhereClause();
         endDate.groupings.add(WhereClause.GROUPINGS.OPEN_PARENTHESIS);
         endDate.name = "ared";
-        endDate.operator = WhereClause.Operators.GREATER_THAN_OR_EQUAL;
+        endDate.operator = WhereClause.Operators.GREATER_THAN;
         endDate.value = GeneralConstants.DB_DATE_FORMAT.format(date);
         endDate.valueDataType = Date.class;
 
@@ -623,10 +617,7 @@ public interface FdfCommonServices {
         whereStatement.add(whereTid);
 
         // do the query
-        List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
-
-        // organize the results
-        return manageReturnedEntities(returnedStates);
+        return FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
     }
 
     /**
@@ -1439,7 +1430,7 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> FdfEntity<S> getEntityAtDateById(Class<S> entityState, long id, Date date) {
+    default <S extends CommonState> S getEntityAtDateById(Class<S> entityState, long id, Date date) {
 
         return getEntityAtDateById(entityState, id, date, 1);
 
@@ -1448,12 +1439,7 @@ public interface FdfCommonServices {
     /**
      * Retrieves entity of the passed type from persistence as it existed at the date passed. Only states
      * existing at the date passed will be returned.  Usually this will only return one State in the form
-     * they were in at that time, however if the time passed was the same time as a change to a entity you will get
-     * back both the states as the end date of the outgoing and the startdate of the incoming will match the date
-     * passed.
-     *
-     * If the state is still the current state it will be contained in the entity.current else it will be
-     * in the entity.history
+     * they were in at that time.
      *
      * Includes specified tenant (when using multi-tenant)
      *
@@ -1464,7 +1450,7 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> FdfEntity<S> getEntityAtDateById(Class<S> entityState, long id, Date date,
+    default <S extends CommonState> S getEntityAtDateById(Class<S> entityState, long id, Date date,
                                                                      long tenantId) {
 
         // create the where statement for the statement
@@ -1496,7 +1482,7 @@ public interface FdfCommonServices {
         WhereClause endDate = new WhereClause();
         endDate.groupings.add(WhereClause.GROUPINGS.OPEN_PARENTHESIS);
         endDate.name = "ared";
-        endDate.operator = WhereClause.Operators.GREATER_THAN_OR_EQUAL;
+        endDate.operator = WhereClause.Operators.GREATER_THAN;
         endDate.value = GeneralConstants.DB_DATE_FORMAT.format(date);
         endDate.valueDataType = Date.class;
 
@@ -1523,9 +1509,11 @@ public interface FdfCommonServices {
 
         // do the query
         List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
+        if(returnedStates.size() > 0) {
+            return returnedStates.get(0);
+        }
 
-        // create a List of entities
-        return manageReturnedEntity(returnedStates);
+        return null;
     }
 
     /**
@@ -1850,7 +1838,7 @@ public interface FdfCommonServices {
      * @return Entities of Type passed
      */
     default <S extends CommonState> FdfEntity<S> manageReturnedEntity(List<S> rawStates) {
-        // create a List of entities
+        // create an entity
         FdfEntity<S> entity = new FdfEntity<>();
 
         for(S state: rawStates) {
