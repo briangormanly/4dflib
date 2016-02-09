@@ -20,10 +20,8 @@ import java.lang.reflect.ParameterizedType;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Base64;
+import java.util.*;
 import java.util.Date;
-import java.util.List;
 
 /**
  * Created by brian.gormanly on 1/14/16.
@@ -423,8 +421,14 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                 } else {
                                     preparedStmt.setTimestamp(fieldCounter3, new Timestamp(insertDate.getTime()));
                                 }
-
-                            } else if (field.getType() instanceof Class && ((Class<?>) field.getType()).isEnum()) {
+                            } else if (field.getType() == UUID.class) {
+                                if (field.get(state) != null) {
+                                    preparedStmt.setString(fieldCounter3, field.get(state).toString());
+                                } else {
+                                    preparedStmt.setNull(fieldCounter3, Types.VARCHAR);
+                                }
+                            }
+                            else if (field.getType() instanceof Class && ((Class<?>) field.getType()).isEnum()) {
                                 preparedStmt.setString(fieldCounter3, field.get(state).toString());
                             } else if (Class.class.isAssignableFrom(field.getType())) {
                                 String className = field.get(state).toString();
@@ -662,6 +666,12 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                     preparedStmt.setTimestamp(fieldCounter3, new Timestamp(insertDate.getTime()));
                                 }
 
+                            } else if (field.getType() == UUID.class) {
+                                if (field.get(state) != null) {
+                                    preparedStmt.setString(fieldCounter3, field.get(state).toString());
+                                } else {
+                                    preparedStmt.setNull(fieldCounter3, Types.VARCHAR);
+                                }
                             } else if (field.getType() instanceof Class && ((Class<?>) field.getType()).isEnum()) {
                                 if (field.get(state) != null) {
                                     preparedStmt.setString(fieldCounter3, field.get(state).toString());
@@ -976,6 +986,21 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                             fdfLog.debug("NullPointer on timestamp column {}, This is usually because select"
                                                     + "statement did not include column", field.getName().toLowerCase(), npe.getMessage());
                                         }
+                                    } else if (field.getType() == UUID.class) {
+                                        try {
+                                            field.setAccessible(true);
+                                            field.set(thisObject, UUID.fromString(rs.getString(field.getName().toLowerCase())));
+                                        } catch (SQLException e) {
+                                            if (e.getSQLState().equals("42703")) {
+                                                // Invalid column name, thrown if select statement does not include column
+                                                fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
+                                                        + "{}, This is usually because select statement did not include column and "
+                                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                            } else {
+                                                fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
+                                                        ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
+                                            }
+                                        }
                                     } else if (field.getType() == boolean.class) {
                                         try {
                                             field.setAccessible(true);
@@ -1254,6 +1279,8 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
             } else {
                 sql += " NULL";
             }
+        } else if (field.getType() == UUID.class) {
+            sql += field.getName() + " VARCHAR(132)";
         } else if (field.getType() == Character.class || field.getType() == char.class) {
             sql += field.getName().toLowerCase()+ " CHAR";
         } else if (field.getType() instanceof Class && ((Class<?>) field.getType()).isEnum()) {
@@ -1341,6 +1368,9 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                     }
                 }
                 else if(clause.valueDataType == Date.class) {
+                    sql += " " + clause.name + " " + clause.getOperatorString() + " '" + clause.value + "'";
+                }
+                else if (clause.valueDataType == UUID.class) {
                     sql += " " + clause.name + " " + clause.getOperatorString() + " '" + clause.value + "'";
                 }
                 else if(clause.value == WhereClause.NULL) {
