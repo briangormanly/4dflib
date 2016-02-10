@@ -1031,7 +1031,8 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                                         ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
                                             }
                                         }
-                                    } else if (field.getType() instanceof Class && ((Class<?>) field.getType()).isEnum()) {
+                                    } else if (field.getType() instanceof Class && ((Class<?>) field.getType()).isEnum()
+                                            && rs.getString(field.getName()) != null) {
                                         try {
                                             field.setAccessible(true);
                                             field.set(thisObject, Enum.valueOf((Class<Enum>) field.getType(),
