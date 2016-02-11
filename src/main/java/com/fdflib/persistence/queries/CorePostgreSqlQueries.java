@@ -1048,7 +1048,8 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                                         ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
                                             }
                                         }
-                                    } else if (Class.class.isAssignableFrom(field.getType())) {
+                                    } else if (Class.class.isAssignableFrom(field.getType())
+                                            && rs.getString(field.getName()) != null) {
                                         try {
                                             field.setAccessible(true);
                                             field.set(thisObject,
