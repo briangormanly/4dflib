@@ -429,10 +429,18 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                 }
                             }
                             else if (field.getType() instanceof Class && ((Class<?>) field.getType()).isEnum()) {
-                                preparedStmt.setString(fieldCounter3, field.get(state).toString());
+                                if (field.get(state) != null) {
+                                    preparedStmt.setString(fieldCounter3, field.get(state).toString());
+                                } else {
+                                    preparedStmt.setNull(fieldCounter3, Types.VARCHAR);
+                                }
                             } else if (Class.class.isAssignableFrom(field.getType())) {
-                                String className = field.get(state).toString();
-                                preparedStmt.setString(fieldCounter3, FdfUtil.getClassName(className));
+                                if (field.get(state) != null) {
+                                    String className = field.get(state).toString();
+                                    preparedStmt.setString(fieldCounter3, FdfUtil.getClassName(className));
+                                } else {
+                                    preparedStmt.setNull(fieldCounter3, Types.VARCHAR);
+                                }
                             } else if (field.getGenericType() instanceof ParameterizedType && field.get(state) != null) {
                                 ParameterizedType pt = (ParameterizedType) field.getGenericType();
                                 if (pt.getActualTypeArguments().length == 1
