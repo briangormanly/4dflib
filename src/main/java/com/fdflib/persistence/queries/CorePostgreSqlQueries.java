@@ -26,7 +26,7 @@ import java.util.Date;
 /**
  * Created by brian.gormanly on 1/14/16.
  */
-public class CorePostgreSqlQueries extends DbConnectionManager implements CorePersistenceImpl {
+public class CorePostgreSqlQueries implements CorePersistenceImpl {
 
     private static final CorePostgreSqlQueries INSTANCE = new CorePostgreSqlQueries();
     static org.slf4j.Logger fdfLog = LoggerFactory.getLogger(CorePostgreSqlQueries.class);
@@ -41,13 +41,18 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
         // create database
         String dbexists = "SELECT * FROM pg_database WHERE datname= '" + FdfSettings.DB_NAME.toLowerCase() + "';";
 
-        Statement ps;
+        Connection conn = null;
+        Connection conn2 = null;
+        Statement stmt = null;
+        Statement stmt2 = null;
         ResultSet rs = null;
-        try {
-            ps = PostgreSqlConnection.getInstance().getNoDBSession().createStatement();
 
-            if (ps != null) {
-                rs = ps.executeQuery(dbexists);
+        try {
+            conn = PostgreSqlConnection.getInstance().getNoDBSession();
+            stmt = conn.createStatement();
+
+            if (stmt != null) {
+                rs = stmt.executeQuery(dbexists);
             }
 
             if(rs != null) {
@@ -61,12 +66,13 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                     String sqlUserGrant = "GRANT ALL PRIVILEGES ON DATABASE " + "\"" + FdfSettings.DB_NAME + "\""
                             + " to " + "\"" +  FdfSettings.DB_USER.toLowerCase() + "\"" +  ";";
 
-                    ps = PostgreSqlConnection.getInstance().getNoDBSession().createStatement();
+                    conn2 = PostgreSqlConnection.getInstance().getNoDBSession();
+                    stmt2 = conn2.createStatement();
 
-                    if(ps != null) {
-                        ps.executeUpdate(sqlCreate);
-                        ps.executeUpdate(sqlCreateUser);
-                        ps.executeUpdate(sqlUserGrant);
+                    if(stmt2 != null) {
+                        stmt2.executeUpdate(sqlCreate);
+                        stmt2.executeUpdate(sqlCreateUser);
+                        stmt2.executeUpdate(sqlUserGrant);
                         fdfLog.info("******************************************************************");
                         fdfLog.info("4DFLib Database did not exist, attempting to create.");
                         fdfLog.info("******************************************************************");
@@ -87,9 +93,22 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
 
         }
         finally {
-            ps = null;
-            // close the connection
-            PostgreSqlConnection.getInstance().close();
+            if (rs != null) {
+                rs.close();
+            }
+            if (stmt != null) {
+                stmt.close();
+            }
+            if (conn != null) {
+                PostgreSqlConnection.getInstance().close(conn);
+            }
+            if (stmt2 != null) {
+                stmt2.close();
+            }
+            if (conn2 != null) {
+                PostgreSqlConnection.getInstance().close(conn2);
+            }
+
         }
 
     }
@@ -119,14 +138,16 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                         + FdfSettings.DB_NAME.toLowerCase() + "' and table_name = '"
                         + c.getSimpleName().toLowerCase() + "';";
 
-                Statement ps = null;
+                Connection conn = null;
+                Statement stmt = null;
                 ResultSet rs = null;
 
                 try {
-                    ps = PostgreSqlConnection.getInstance().getSession().createStatement();
+                    conn = PostgreSqlConnection.getInstance().getSession();
+                    stmt = conn.createStatement();
 
-                    if (ps != null) {
-                        rs = ps.executeQuery(tableTest);
+                    if (stmt != null) {
+                        rs = stmt.executeQuery(tableTest);
                     }
 
                     if (rs != null) {
@@ -156,8 +177,8 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
 
                                 fdfLog.debug("Table sql {} : {}", c.getSimpleName().toLowerCase(), sql);
 
-                                if (ps != null) {
-                                    ps.executeUpdate(sql);
+                                if (stmt != null) {
+                                    stmt.executeUpdate(sql);
                                 }
                             } else {
                                 fdfLog.info("No table created for model object {} class had no valid data members", c.getSimpleName().toLowerCase());
@@ -175,9 +196,15 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 } finally {
-                    ps = null;
-                    // close the connection
-                    PostgreSqlConnection.getInstance().close();
+                    if (rs != null) {
+                        rs.close();
+                    }
+                    if (stmt != null) {
+                        stmt.close();
+                    }
+                    if (conn != null) {
+                        PostgreSqlConnection.getInstance().close(conn);
+                    }
                 }
             }
 
@@ -206,11 +233,13 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                 // check to see if the class has an @fdfIgonre
                 if(!c.isAnnotationPresent(FdfIgnore.class)) {
 
-                    Statement ps = null;
+                    Connection conn = null;
+                    Statement stmt = null;
                     ResultSet rs = null;
 
                     try {
-                        ps = PostgreSqlConnection.getInstance().getSession().createStatement();
+                        conn = PostgreSqlConnection.getInstance().getSession();
+                        stmt = conn.createStatement();
 
                         for (Field field : c.getFields()) {
 
@@ -225,8 +254,8 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                         + field.getName().toLowerCase() + "';";
 
                                 //System.out.println("checking sql---------------> " + fieldTest);
-                                if (ps != null) {
-                                    rs = ps.executeQuery(fieldTest);
+                                if (stmt != null) {
+                                    rs = stmt.executeQuery(fieldTest);
                                 }
 
                                 if (rs != null) {
@@ -237,8 +266,8 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
 
                                         fdfLog.info("Add field sql {} : {}", c.getSimpleName().toLowerCase(), alterSql);
 
-                                        if (ps != null) {
-                                            ps.executeUpdate(alterSql);
+                                        if (stmt != null) {
+                                            stmt.executeUpdate(alterSql);
                                         }
                                     }
                                 }
@@ -255,9 +284,15 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                     } catch (Exception ex) {
                         ex.printStackTrace();
                     } finally {
-                        ps = null;
-                        // close the connection
-                        PostgreSqlConnection.getInstance().close();
+                        if (rs != null) {
+                            rs.close();
+                        }
+                        if (stmt != null) {
+                            stmt.close();
+                        }
+                        if (conn != null) {
+                            PostgreSqlConnection.getInstance().close(conn);
+                        }
                     }
                 }
             }
@@ -348,14 +383,16 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                 }
             }
 
-            PreparedStatement preparedStmt;
+            Connection conn = null;
+            PreparedStatement preparedStmt = null;
+            ResultSet rs = null;
 
             try {
 
                 sql += " where rid = " + c.getField("rid").get(state) + " ;";
 
-                preparedStmt = PostgreSqlConnection.getInstance().getSession().prepareStatement(sql,
-                        Statement.RETURN_GENERATED_KEYS);
+                conn = PostgreSqlConnection.getInstance().getSession();
+                preparedStmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
                 int fieldCounter3 = 1;
                 for (Field field : c.getFields()) {
@@ -522,9 +559,27 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
             } catch (NoSuchFieldException e) {
                 e.printStackTrace();
             } finally {
-                preparedStmt = null;
-                // close the connection
-                PostgreSqlConnection.getInstance().close();
+                if (rs != null) {
+                    try {
+                        rs.close();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (preparedStmt != null) {
+                    try {
+                        preparedStmt.close();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (conn != null) {
+                    try {
+                        PostgreSqlConnection.getInstance().close(conn);
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }
 
@@ -583,11 +638,13 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
             }
             sql += ");";
 
-            PreparedStatement preparedStmt;
+            Connection conn = null;
+            PreparedStatement preparedStmt = null;
+            ResultSet rs = null;
 
             try {
-                preparedStmt = PostgreSqlConnection.getInstance().getSession().prepareStatement(sql,
-                        Statement.RETURN_GENERATED_KEYS);
+                conn = PostgreSqlConnection.getInstance().getSession();
+                preparedStmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
                 int fieldCounter3 = 1;
                 for (Field field : c.getFields()) {
@@ -764,17 +821,34 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                 fdfLog.debug("insert sql : {}", preparedStmt);
 
                 preparedStmt.execute();
-                ResultSet rs = preparedStmt.getGeneratedKeys();
+                rs = preparedStmt.getGeneratedKeys();
                 rs.next();
                 newId = rs.getLong("id");
-
 
             } catch (SQLException e) {
                 e.printStackTrace();
             } finally {
-                preparedStmt = null;
-                // close the connection
-                PostgreSqlConnection.getInstance().close();
+                if (rs != null) {
+                    try {
+                        rs.close();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (preparedStmt != null) {
+                    try {
+                        preparedStmt.close();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (conn != null) {
+                    try {
+                        PostgreSqlConnection.getInstance().close(conn);
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }
 
@@ -830,11 +904,13 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
 
             fdfLog.debug("select sql: {}", sql);
 
-            PreparedStatement ps;
-            ResultSet rs;
+            Connection conn = null;
+            PreparedStatement ps = null;
+            ResultSet rs = null;
 
             try {
-                ps = PostgreSqlConnection.getInstance().getSession().prepareStatement(sql);
+                conn = PostgreSqlConnection.getInstance().getSession();
+                ps = conn.prepareStatement(sql);
 
                 if (ps != null) {
                     rs = ps.executeQuery();
@@ -854,8 +930,10 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
 
                                     if (field.getType() == String.class) {
                                         try {
-                                            field.setAccessible(true);
-                                            field.set(thisObject, rs.getString(field.getName().toLowerCase()));
+                                            if(field.getName() != null && rs.getString(field.getName()) != null) {
+                                                field.setAccessible(true);
+                                                field.set(thisObject, rs.getString(field.getName().toLowerCase()));
+                                            }
                                         } catch (SQLException e) {
                                             if (e.getSQLState().equals("42703")) {
                                                 // Invalid column name, thrown if select statement does not include column
@@ -869,8 +947,10 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                         }
                                     } else if (field.getType() == int.class || field.getType() == Integer.class) {
                                         try {
-                                            field.setAccessible(true);
-                                            field.set(thisObject, rs.getInt(field.getName().toLowerCase()));
+                                            if(field.getName() != null && rs.getString(field.getName()) != null) {
+                                                field.setAccessible(true);
+                                                field.set(thisObject, rs.getInt(field.getName().toLowerCase()));
+                                            }
                                         } catch (SQLException e) {
                                             if (e.getSQLState().equals("42703")) {
                                                 // Invalid column name, thrown if select statement does not include column
@@ -884,8 +964,10 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                         }
                                     } else if (field.getType() == long.class || field.getType() == Long.class) {
                                         try {
-                                            field.setAccessible(true);
-                                            field.set(thisObject, rs.getLong(field.getName().toLowerCase()));
+                                            if(field.getName() != null && rs.getString(field.getName()) != null) {
+                                                field.setAccessible(true);
+                                                field.set(thisObject, rs.getLong(field.getName().toLowerCase()));
+                                            }
                                         } catch (SQLException e) {
                                             if (e.getSQLState().equals("42703")) {
                                                 // Invalid column name, thrown if select statement does not include column
@@ -900,8 +982,10 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                         }
                                     } else if (field.getType() == double.class || field.getType() == Double.class) {
                                         try {
-                                            field.setAccessible(true);
-                                            field.set(thisObject, rs.getDouble(field.getName().toLowerCase()));
+                                            if(field.getName() != null && rs.getString(field.getName()) != null) {
+                                                field.setAccessible(true);
+                                                field.set(thisObject, rs.getDouble(field.getName().toLowerCase()));
+                                            }
                                         } catch (SQLException e) {
                                             if (e.getSQLState().equals("42703")) {
                                                 // Invalid column name, thrown if select statement does not include column
@@ -915,8 +999,10 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                         }
                                     } else if (field.getType() == float.class || field.getType() == Float.class) {
                                         try {
-                                            field.setAccessible(true);
-                                            field.set(thisObject, rs.getFloat(field.getName().toLowerCase()));
+                                            if(field.getName() != null && rs.getString(field.getName()) != null) {
+                                                field.setAccessible(true);
+                                                field.set(thisObject, rs.getFloat(field.getName().toLowerCase()));
+                                            }
                                         } catch (SQLException e) {
                                             if (e.getSQLState().equals("42703")) {
                                                 // Invalid column name, thrown if select statement does not include column
@@ -930,8 +1016,10 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                         }
                                     } else if (field.getType() == int.class || field.getType() == Integer.class) {
                                         try {
-                                            field.setAccessible(true);
-                                            field.set(thisObject, rs.getInt(field.getName().toLowerCase()));
+                                            if(field.getName() != null && rs.getString(field.getName()) != null) {
+                                                field.setAccessible(true);
+                                                field.set(thisObject, rs.getInt(field.getName().toLowerCase()));
+                                            }
                                         } catch (SQLException e) {
                                             if (e.getSQLState().equals("42703")) {
                                                 // Invalid column name, thrown if select statement does not include column
@@ -945,8 +1033,10 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                         }
                                     } else if (field.getType() == BigDecimal.class) {
                                         try {
-                                            field.setAccessible(true);
-                                            field.set(thisObject, rs.getBigDecimal(field.getName().toLowerCase()));
+                                            if(field.getName() != null && rs.getString(field.getName()) != null) {
+                                                field.setAccessible(true);
+                                                field.set(thisObject, rs.getBigDecimal(field.getName().toLowerCase()));
+                                            }
                                         } catch (SQLException e) {
                                             if (e.getSQLState().equals("42703")) {
                                                 // Invalid column name, thrown if select statement does not include column
@@ -961,7 +1051,7 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                     } else if (field.getType() == char.class || field.getType() == Character.class) {
                                         try {
                                             field.setAccessible(true);
-                                            if (rs.getString(field.getName()) != null && rs.getString(field.getName()).length() > 0) {
+                                            if (field.getName() != null && rs.getString(field.getName()) != null && rs.getString(field.getName()).length() > 0) {
                                                 field.set(thisObject, rs.getString(field.getName().toLowerCase()).charAt(0));
                                             }
                                         } catch (SQLException e) {
@@ -977,8 +1067,10 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                         }
                                     } else if (field.getType() == Date.class) {
                                         try {
-                                            field.setAccessible(true);
-                                            field.set(thisObject, rs.getTimestamp(field.getName().toLowerCase()));
+                                            if(field.getName() != null && rs.getString(field.getName()) != null) {
+                                                field.setAccessible(true);
+                                                field.set(thisObject, rs.getTimestamp(field.getName().toLowerCase()));
+                                            }
                                         } catch (SQLException e) {
                                             if (e.getSQLState().equals("42703")) {
                                                 // Invalid column name, thrown if select statement does not include column
@@ -996,8 +1088,10 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                         }
                                     } else if (field.getType() == UUID.class) {
                                         try {
-                                            field.setAccessible(true);
-                                            field.set(thisObject, UUID.fromString(rs.getString(field.getName().toLowerCase())));
+                                            if(field.getName() != null && rs.getString(field.getName()) != null) {
+                                                field.setAccessible(true);
+                                                field.set(thisObject, UUID.fromString(rs.getString(field.getName().toLowerCase())));
+                                            }
                                         } catch (SQLException e) {
                                             if (e.getSQLState().equals("42703")) {
                                                 // Invalid column name, thrown if select statement does not include column
@@ -1011,8 +1105,10 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                         }
                                     } else if (field.getType() == boolean.class) {
                                         try {
-                                            field.setAccessible(true);
-                                            field.set(thisObject, rs.getBoolean(field.getName().toLowerCase()));
+                                            if(field.getName() != null && rs.getString(field.getName()) != null) {
+                                                field.setAccessible(true);
+                                                field.set(thisObject, rs.getBoolean(field.getName().toLowerCase()));
+                                            }
                                         } catch (SQLException e) {
                                             if (e.getSQLState().equals("42703")) {
                                                 // Invalid column name, thrown if select statement does not include column
@@ -1026,8 +1122,10 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                         }
                                     } else if (field.getType() == Boolean.class) {
                                         try {
-                                            field.setAccessible(true);
-                                            field.set(thisObject, rs.getBoolean(field.getName().toLowerCase()));
+                                            if(field.getName() != null && rs.getString(field.getName()) != null) {
+                                                field.setAccessible(true);
+                                                field.set(thisObject, rs.getBoolean(field.getName().toLowerCase()));
+                                            }
                                         } catch (SQLException e) {
                                             if (e.getSQLState().equals("42703")) {
                                                 // Invalid column name, thrown if select statement does not include column
@@ -1040,7 +1138,7 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                             }
                                         }
                                     } else if (field.getType() instanceof Class && ((Class<?>) field.getType()).isEnum()
-                                            && rs.getString(field.getName()) != null) {
+                                            && field.getName() != null && rs.getString(field.getName()) != null) {
                                         try {
                                             field.setAccessible(true);
                                             field.set(thisObject, Enum.valueOf((Class<Enum>) field.getType(),
@@ -1057,7 +1155,7 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                             }
                                         }
                                     } else if (Class.class.isAssignableFrom(field.getType())
-                                            && rs.getString(field.getName()) != null) {
+                                            && field.getName() != null && rs.getString(field.getName()) != null) {
                                         try {
                                             field.setAccessible(true);
                                             field.set(thisObject,
@@ -1075,7 +1173,7 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                             }
                                         }
                                     } else if (field.getGenericType() instanceof ParameterizedType
-                                            && rs.getString(field.getName()) != null) {
+                                            && field.getName() != null && rs.getString(field.getName()) != null) {
                                         ParameterizedType pt = (ParameterizedType) field.getGenericType();
 
                                         if (pt.getActualTypeArguments().length == 1 &&
@@ -1200,7 +1298,7 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                                                 }
                                             }
                                         }
-                                    } else if (rs.getString(field.getName()) != null) {
+                                    } else if (field.getName() != null && rs.getString(field.getName()) != null) {
                                         // serialized object, deserialize
                                         try {
                                             field.setAccessible(true);
@@ -1241,15 +1339,33 @@ public class CorePostgreSqlQueries extends DbConnectionManager implements CorePe
                         everything.add(thisUserStateTest);
                     }
                 }
+
             } catch (SQLException e) {
                 e.printStackTrace();
             } catch (Exception ex) {
                 ex.printStackTrace();
             } finally {
-                rs = null;
-                ps = null;
-                // close the connection
-                PostgreSqlConnection.getInstance().close();
+                if (rs != null) {
+                    try {
+                        rs.close();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (ps != null) {
+                    try {
+                        ps.close();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
+                if (conn != null) {
+                    try {
+                        PostgreSqlConnection.getInstance().close(conn);
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }
         return everything;

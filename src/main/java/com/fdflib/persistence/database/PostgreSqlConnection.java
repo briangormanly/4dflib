@@ -23,12 +23,8 @@ public class PostgreSqlConnection {
         return INSTANCE;
     }
 
-    private Connection connection;
-    //private Session session;
-
-    private void connect() throws SQLException {
-
-        fdfLog.debug("Establishing mysql connection with regular credentials");
+    public Connection getSession() throws SQLException  {
+        fdfLog.debug("Establishing postgresql connection with regular credentials");
         try {
             Class.forName("org.postgresql.Driver");
         } catch (ClassNotFoundException e) {
@@ -36,8 +32,11 @@ public class PostgreSqlConnection {
         }
 
         try {
-            connection = DriverManager.getConnection(FdfSettings.returnDBConnectionString(), FdfSettings.DB_USER
+            Connection connection = DriverManager.getConnection(FdfSettings.returnDBConnectionString(), FdfSettings.DB_USER
                     , FdfSettings.DB_PASSWORD);
+
+            return connection;
+
         } catch (SQLException e) {
             fdfLog.warn("SQL Error: {}\nDescription: ", e.getErrorCode(), e.getMessage());
 
@@ -49,11 +48,11 @@ public class PostgreSqlConnection {
                 fdfLog.error(e.getStackTrace().toString());
             }
         }
+        return null;
     }
 
-    private void connectWithoutDatabase() throws SQLException {
-
-        fdfLog.debug("Establishing mysql connection with root credentials");
+    public Connection getNoDBSession() throws SQLException  {
+        fdfLog.debug("Establishing postgresql connection with root credentials");
         try {
             Class.forName("com.mysql.jdbc.Driver");
         } catch (ClassNotFoundException e) {
@@ -61,8 +60,11 @@ public class PostgreSqlConnection {
         }
 
         try {
-            connection = DriverManager.getConnection(FdfSettings.returnDBConnectionStringWithoutDatabase(),
+            Connection connection = DriverManager.getConnection(FdfSettings.returnDBConnectionStringWithoutDatabase(),
                     FdfSettings.DB_ROOT_USER, FdfSettings.DB_ROOT_PASSWORD);
+
+            return connection;
+
         } catch (SQLException e) {
             fdfLog.warn("SQL Error: {}\nDescription: ", e.getErrorCode(), e.getMessage());
 
@@ -74,33 +76,15 @@ public class PostgreSqlConnection {
                 fdfLog.error(e.getStackTrace().toString());
             }
         }
+
+        return null;
     }
 
-    public Connection getSession() throws SQLException  {
-        if(this.connection == null) {
-            this.connect();
+    public void close(Connection connection) throws SQLException {
+
+        fdfLog.debug("Closing postgresql database connection.");
+        if (connection != null && !connection.isClosed()) {
+            connection.close();
         }
-        return this.connection;
-    }
-
-    public Connection getNoDBSession() throws SQLException  {
-        if(this.connection == null) {
-            this.connectWithoutDatabase();
-        }
-        return this.connection;
-    }
-
-    public void close() {
-
-        fdfLog.debug("Closing mysql database connection.");
-        if (this.connection != null) {
-            try {
-                this.connection.close();
-            }
-            catch (SQLException ignore) {
-            }
-            this.connection = null;
-        }
-
     }
 }
