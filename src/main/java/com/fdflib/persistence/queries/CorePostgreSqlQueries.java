@@ -408,34 +408,53 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                     preparedStmt.setNull(fieldCounter3, Types.VARCHAR);
                                 }
                             } else if (field.getType() == int.class || field.getType() == Integer.class) {
-                                if (!field.getName().toLowerCase().equals("rid")) {
-                                    preparedStmt.setInt(fieldCounter3, (int) field.get(state));
-
+                                if (!field.getName().toLowerCase().equals("rid") && field.get(state) != null) {
+                                    if (field.get(state) != null) {
+                                        preparedStmt.setInt(fieldCounter3, (int) field.get(state));
+                                    } else {
+                                        preparedStmt.setNull(fieldCounter3, Types.INTEGER);
+                                    }
                                 }
                             } else if (field.getType() == Long.class || field.getType() == long.class) {
                                 if (!field.getName().toLowerCase().equals("rid")) {
-                                    preparedStmt.setLong(fieldCounter3, (long) field.get(state));
-
+                                    if (field.get(state) != null) {
+                                        preparedStmt.setLong(fieldCounter3, (long) field.get(state));
+                                    } else {
+                                        preparedStmt.setNull(fieldCounter3, Types.BIGINT);
+                                    }
                                 }
                             } else if (field.getType() == Double.class || field.getType() == double.class) {
                                 if (!field.getName().toLowerCase().equals("rid")) {
-                                    preparedStmt.setDouble(fieldCounter3, (double) field.get(state));
-
+                                    if (field.get(state) != null) {
+                                        preparedStmt.setDouble(fieldCounter3, (double) field.get(state));
+                                    } else {
+                                        preparedStmt.setNull(fieldCounter3, Types.DOUBLE);
+                                    }
                                 }
                             } else if (field.getType() == Float.class || field.getType() == float.class) {
                                 if (!field.getName().toLowerCase().equals("rid")) {
-                                    preparedStmt.setFloat(fieldCounter3, (float) field.get(state));
-
+                                    if (field.get(state) != null) {
+                                        preparedStmt.setFloat(fieldCounter3, (float) field.get(state));
+                                    } else {
+                                        preparedStmt.setNull(fieldCounter3, Types.FLOAT);
+                                    }
                                 }
                             }
                             else if (field.getType() == BigDecimal.class) {
                                 if (!field.getName().toLowerCase().equals("rid")) {
-                                    preparedStmt.setBigDecimal(fieldCounter3, (BigDecimal) field.get(state));
-
+                                    if (field.get(state) != null) {
+                                        preparedStmt.setBigDecimal(fieldCounter3, (BigDecimal) field.get(state));
+                                    } else {
+                                        preparedStmt.setNull(fieldCounter3, Types.NUMERIC);
+                                    }
                                 }
                             }
                             else if (field.getType() == boolean.class || field.getType() == Boolean.class) {
-                                preparedStmt.setBoolean(fieldCounter3, (boolean) field.get(state));
+                                if (field.get(state) != null) {
+                                    preparedStmt.setBoolean(fieldCounter3, (boolean) field.get(state));
+                                } else {
+                                    preparedStmt.setNull(fieldCounter3, Types.BOOLEAN);
+                                }
 
                             } else if (field.getType() == char.class || field.getType() == Character.class) {
                                 if (field.get(state) != null && field.get(state).toString() != null
@@ -452,11 +471,15 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                     preparedStmt.setNull(fieldCounter3, Types.CHAR);
                                 }
                             } else if (field.getType() == Date.class) {
-                                Date insertDate = (Date) field.get(state);
-                                if (insertDate == null) {
-                                    preparedStmt.setTimestamp(fieldCounter3, null);
+                                if (field.get(state) != null) {
+                                    Date insertDate = (Date) field.get(state);
+                                    if (insertDate == null) {
+                                        preparedStmt.setTimestamp(fieldCounter3, null);
+                                    } else {
+                                        preparedStmt.setTimestamp(fieldCounter3, new Timestamp(insertDate.getTime()));
+                                    }
                                 } else {
-                                    preparedStmt.setTimestamp(fieldCounter3, new Timestamp(insertDate.getTime()));
+                                    preparedStmt.setNull(fieldCounter3, Types.TIMESTAMP);
                                 }
                             } else if (field.getType() == UUID.class) {
                                 if (field.get(state) != null) {
