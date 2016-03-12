@@ -26,7 +26,7 @@ import java.util.List;
 /**
  * Created by brian.gormanly on 5/19/15.
  */
-public class FdfSettings {
+public class    FdfSettings {
 
     private static final FdfSettings INSTANCE = new FdfSettings();
 

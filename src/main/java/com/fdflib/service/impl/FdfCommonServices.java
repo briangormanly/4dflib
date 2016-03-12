@@ -2163,6 +2163,9 @@ public interface FdfCommonServices {
 
         List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, select, whereStatement);
         if(returnedStates != null && returnedStates.size() == 1) {
+            if(returnedStates.get(0).id == -1) {
+                returnedStates.get(0).id = 0;
+            }
             return returnedStates.get(0).id + 1;
         }
         return -1;
