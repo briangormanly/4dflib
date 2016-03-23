@@ -139,7 +139,7 @@ public interface FdfCommonServices {
      * @param userId Id of user that is saving the state
      * @param systemId Id of system that is saving the state
      * @param <S> parameterized type of entity state
-     * @return FdfEntity<S> FdfEntity that contains current and historical states for the saved entity
+     * @return FdfEntity that contains current and historical states for the saved entity
      */
     default <S extends CommonState> FdfEntity<S> save(Class<S> entityState, S state, long userId, long systemId) {
 
@@ -156,7 +156,7 @@ public interface FdfCommonServices {
      * @param entityState State Type to save
      * @param state state to save
      * @param <S> parameterized type of entity state
-     * @return FdfEntity<S> FdfEntity that contains current and historical states for the saved entity
+     * @return FdfEntity that contains current and historical states for the saved entity
      */
     default <S extends CommonState> FdfEntity<S> save(Class<S> entityState, S state) {
         return save(entityState,state, state.euid, state.esid, state.tid);
@@ -173,7 +173,7 @@ public interface FdfCommonServices {
      * @param systemId Id of system that is saving the state
      * @param tenantId Id of tenant this entity is associated with
      * @param <S> parameterized type of entity state
-     * @return FdfEntity<S> FdfEntity that contains current and historical states for the saved entity
+     * @return FdfEntity that contains current and historical states for the saved entity
      */
     default <S extends CommonState> FdfEntity<S> save(Class<S> entityState, S state,
                                                       long userId, long systemId, long tenantId) {
@@ -240,6 +240,7 @@ public interface FdfCommonServices {
      * @param userId the userId of the user making the change
      * @param systemId the systemId of the system makeing the change
      * @param <S> The parameterized type of the entity
+     * @return FdfEntity that contains current and historical states for the saved entity
      */
     default <S extends CommonState> FdfEntity<S> setDeleteFlag(Class<S> entityState, long id, long userId,
                                                                 long systemId) {
@@ -261,6 +262,7 @@ public interface FdfCommonServices {
      * @param systemId the systemId of the system makeing the change
      * @param tenantId the tenantId of the tenant making the change (if multi tenant)
      * @param <S> The parameterized type of the entity
+     * @return FdfEntity that contains current and historical states for the saved entity
      */
     default <S extends CommonState> FdfEntity<S> setDeleteFlag(Class<S> entityState, long id, long userId,
                                                                 long systemId, long tenantId) {
@@ -298,6 +300,7 @@ public interface FdfCommonServices {
      * @param userId the userId of the user making the change
      * @param systemId the systemId of the system makeing the change
      * @param <S> The parameterized type of the entity
+     * @return FdfEntity that contains current and historical states for the saved entity
      */
     default <S extends CommonState> FdfEntity<S> removeDeleteFlag(Class<S> entityState, long id, long userId,
                                                        long systemId) {
@@ -321,6 +324,7 @@ public interface FdfCommonServices {
      * @param systemId the systemId of the system makeing the change
      * @param tenantId the tenantId of the tenant making the change (if multi tenant)
      * @param <S> The parameterized type of the entity
+     * @return FdfEntity that contains current and historical states for the saved entity
      */
     default <S extends CommonState> FdfEntity<S> removeDeleteFlag(Class<S> entityState, long id, long userId,
                                                        long systemId, long tenantId) {
@@ -2091,7 +2095,7 @@ public interface FdfCommonServices {
      *
      * @param state State to be added to an Entity
      * @param entity Entity that will have a state added
-     * @param <S> Parameterized type of State.
+     * @param <S> Parameterized type of State
      */
     @SuppressWarnings("unchecked")
     default <S extends CommonState> void addStateToEntity(CommonState state, FdfEntity<S> entity) {
@@ -2140,9 +2144,10 @@ public interface FdfCommonServices {
 
     /**
      *
-     * @param entityState
-     * @param <S>
-     * @return
+     * @param entityState Class of entity to use for returned type.
+     * @param tenantId Id of tenant associated with the entity
+     * @param <S> Parameterized type of State.
+     * @return Entities of Type passed
      */
     default <S extends CommonState> long getNewEntityId(Class<S> entityState, long tenantId) {
         // get the last id assigned

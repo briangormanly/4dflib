@@ -894,10 +894,10 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
      * and where: {[firstName, Larry], [lastName, Smith, AND]} would be:
      *      SELECT * FROM User where firstName = 'Larry' AND lastName = 'Smith';
      *
-     * @param c
-     * @param where
-     * @param <S>
-     * @return
+     * @param c Class of entity to select from
+     * @param where where clauses
+     * @param <S> Type extending CommonState to query and return
+     * @return data queried
      */
     public <S extends CommonState> List<S> selectQuery(Class c, List<String> select, List<WhereClause> where) {
 

@@ -188,8 +188,6 @@ public class FdfSystemServices implements FdfCommonServices {
      * Returns true if the passed SHA-256 hashed password matched the one saved for the tenant.
      * @param clearTextPassword Clear text password to be hashed
      * @return String representing the hashed password
-     * @throws NoSuchAlgorithmException
-     * @throws UnsupportedEncodingException
      */
     public String hashPassword(String clearTextPassword) {
 
