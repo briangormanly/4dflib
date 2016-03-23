@@ -46,20 +46,34 @@ Please see license.txt for details.
 desired logging framework at deployment time.
 
 
-<h2>3. Maven Repository Information</h2>
-Currently only the development SNAPSHOT is available, once stable versions are released this will be updated.
+<h2>3. Maven Central Repository Information</h2>
 ```
     <dependencies>
         ...
         <dependency>
             <groupId>com.fdflib</groupId>
             <artifactId>4dflib</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.0</version>
         </dependency>
         ...
     </dependencies>
 ```
-
+<h3>Gradle</h3>
+```
+dependencies {
+    ...
+    compile "com.fdflib:4dflib:1.0"
+    ...
+}
+```
+<h3>sbt</h3>
+```
+libraryDependencies ++= Seq(
+  ...
+  "com.fdflib" % "4dflib" % "1.0"
+  ...
+)
+```
 
 <h2>Examples of Usage</h2>
 The easiest way to see how 4DFLib works is to build a very simple application that uses it.  For this example we have
