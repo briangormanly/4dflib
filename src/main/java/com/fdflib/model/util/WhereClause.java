@@ -80,7 +80,7 @@ public class WhereClause {
      * ENUM of available Conditionals
      */
     public enum CONDITIONALS {
-        AND, OR
+        AND, OR, NOT
     }
 
     /**
@@ -91,7 +91,7 @@ public class WhereClause {
     }
 
     public enum Operators {
-        EQUAL, NOT_EQUAL, GREATER_THAN, LESS_THAN, GREATER_THAN_OR_EQUAL, LESS_THAN_OR_EQUAL, BETWEEN, LIKE, IN, IS, IS_NOT
+        EQUAL, NOT_EQUAL, GREATER_THAN, LESS_THAN, GREATER_THAN_OR_EQUAL, LESS_THAN_OR_EQUAL, BETWEEN, LIKE, IN, IS, IS_NOT, UNARY
     }
 
     /**

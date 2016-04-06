@@ -1486,6 +1486,9 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                     else if (clause.conditional == WhereClause.CONDITIONALS.OR) {
                         sql += " OR";
                     }
+                    else if (clause.conditional == WhereClause.CONDITIONALS.NOT) {
+                        sql += " NOT";
+                    }
                 }
 
                 // check to see if there are any open parenthesis to apply
@@ -1498,35 +1501,30 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                 }
 
                 // add the claus formatting the sql for the correct datatype
-                if(clause.valueDataType == String.class) {
-                    sql += " " + clause.name + " " + clause.getOperatorString() + " '" + clause.value + "'";
-                }
-                else if(clause.valueDataType == int.class || clause.valueDataType == Integer.class ||
-                        clause.valueDataType == long.class || clause.valueDataType == Long.class ||
-                        clause.valueDataType == double.class || clause.valueDataType == Double.class ||
-                        clause.valueDataType == float.class || clause.valueDataType == Float.class ||
-                        clause.value2DataType == BigDecimal.class){
-                    sql += " " + clause.name + " " + clause.getOperatorString() + " " + clause.value;
-                }
-                else if(clause.valueDataType == boolean.class || clause.valueDataType == Boolean.class) {
-                    if(clause.value.toLowerCase().equals("true")) {
-                        sql += " " + clause.name + " " + clause.getOperatorString() + " true";
+                if(clause.operator != WhereClause.Operators.UNARY) {
+                    if (clause.valueDataType == String.class) {
+                        sql += " " + clause.name + " " + clause.getOperatorString() + " '" + clause.value + "'";
+                    } else if (clause.valueDataType == int.class || clause.valueDataType == Integer.class ||
+                            clause.valueDataType == long.class || clause.valueDataType == Long.class ||
+                            clause.valueDataType == double.class || clause.valueDataType == Double.class ||
+                            clause.valueDataType == float.class || clause.valueDataType == Float.class ||
+                            clause.value2DataType == BigDecimal.class) {
+                        sql += " " + clause.name + " " + clause.getOperatorString() + " " + clause.value;
+                    } else if (clause.valueDataType == boolean.class || clause.valueDataType == Boolean.class) {
+                        if (clause.value.toLowerCase().equals("true")) {
+                            sql += " " + clause.name + " " + clause.getOperatorString() + " true";
+                        } else if (clause.value.toLowerCase().equals("false")) {
+                            sql += " " + clause.name + " " + clause.getOperatorString() + " false";
+                        }
+                    } else if (clause.valueDataType == Date.class) {
+                        sql += " " + clause.name + " " + clause.getOperatorString() + " '" + clause.value + "'";
+                    } else if (clause.valueDataType == UUID.class) {
+                        sql += " " + clause.name + " " + clause.getOperatorString() + " '" + clause.value + "'";
+                    } else if (clause.value == WhereClause.NULL) {
+                        sql += " " + clause.name + " " + clause.getOperatorString() + " " + clause.value + "";
+                    } else {
+                        sql += " " + clause.name + " " + clause.getOperatorString() + " '" + clause.value + "'";
                     }
-                    else if (clause.value.toLowerCase().equals("false")) {
-                        sql += " " + clause.name + " " + clause.getOperatorString() + " false";
-                    }
-                }
-                else if(clause.valueDataType == Date.class) {
-                    sql += " " + clause.name + " " + clause.getOperatorString() + " '" + clause.value + "'";
-                }
-                else if (clause.valueDataType == UUID.class) {
-                    sql += " " + clause.name + " " + clause.getOperatorString() + " '" + clause.value + "'";
-                }
-                else if(clause.value == WhereClause.NULL) {
-                    sql += " " + clause.name + " " + clause.getOperatorString() + " " + clause.value + "";
-                }
-                else {
-                    sql += " " + clause.name + " " + clause.getOperatorString() + " '" + clause.value + "'";
                 }
 
                 // check to see if there are any closing parenthesis to apply
