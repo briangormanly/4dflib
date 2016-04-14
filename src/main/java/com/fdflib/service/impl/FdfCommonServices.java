@@ -224,17 +224,17 @@ public interface FdfCommonServices {
         if(state.id <= 0) {
             // if this is a new entity, get an id for it
             state.id = getNewEntityId(entityState, tenantId);
+            if(state.id < 0) {
+                return null;
+            }
         }
-
         // get full entity for state
         FdfEntity<S> thisEntity = auditEntityById(entityState, state.id, tenantId);
-
 
         // check to see if there is an existing entity, if not, create
         if(thisEntity == null) {
             thisEntity = new FdfEntity<>();
         }
-
         // get the previous current record and move to history
         if(thisEntity.current != null) {
             S lastCurrentState = thisEntity.current;
@@ -247,14 +247,9 @@ public interface FdfCommonServices {
 
             // move the state to history
             FdfPersistence.getInstance().update(entityState, lastCurrentState);
-
         }
-
-        // save the new state as current
-        long returnedRid = FdfPersistence.getInstance().insert(entityState, state);
-
         // get id for rid
-        return auditEntityByRid(entityState, returnedRid);
+        return auditEntityByRid(entityState, FdfPersistence.getInstance().insert(entityState, state));
     }
 
     /**
@@ -300,8 +295,7 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity state
      * @return FdfEntity that contains current and historical states for the saved entity
      */
-    default <S extends CommonState> FdfEntity<S> save(Class<S> entityState, S state,
-                                                      long userId, long systemId, long tenantId) {
+    default <S extends CommonState> FdfEntity<S> save(Class<S> entityState, S state, long userId, long systemId, long tenantId) {
         // set the common meta fields for the new record
         state.arsd = Calendar.getInstance().getTime();
         state.ared = null;
@@ -314,17 +308,18 @@ public interface FdfCommonServices {
         if(state.id <= 0) {
             // if this is a new entity, get an id for it
             state.id = getNewEntityId(entityState, tenantId);
+            if(state.id < 0) {
+                return null;
+            }
         }
 
         // get full entity for state
         FdfEntity<S> thisEntity = auditEntityById(entityState, state.id, tenantId);
 
-
         // check to see if there is an existing entity, if not, create
         if(thisEntity == null) {
             thisEntity = new FdfEntity<>();
         }
-
         // get the previous current record and move to history
         if(thisEntity.current != null) {
             S lastCurrentState = thisEntity.current;
@@ -337,9 +332,7 @@ public interface FdfCommonServices {
 
             // move the state to history
             FdfPersistence.getInstance().update(entityState, lastCurrentState);
-
         }
-
         // save the new state as current
         long returnedRid = FdfPersistence.getInstance().insert(entityState, state);
 
@@ -1321,8 +1314,8 @@ public interface FdfCommonServices {
         //create an entity
         FdfEntity<S> entity = new FdfEntity<>();
         for(S state: rawStates) {
-                //add individual state to entity
-                addStateToEntity(state, entity);
+            //Add individual state to entity
+            addStateToEntity(state, entity);
         }
         return entity;
     }
@@ -1339,22 +1332,22 @@ public interface FdfCommonServices {
     @SuppressWarnings("unchecked")
     default <S extends CommonState> void addStateToEntity(CommonState state, FdfEntity<S> entity) {
         boolean flag = false;
-        //check to see if this is the first state being saved to the entity, if so set the entityId
+        //Check to see if this is the first state being saved to the entity, if so set the entityId
         if(entity.entityId == -1) {
             entity.entityId = state.id;
         }
-        //check to see that the id of the state passed matches the existing id for this entity, otherwise it does not belong here.
+        //Check to see that the id of the state passed matches the existing id for this entity, otherwise it does not belong here.
         if(entity.entityId == state.id) {
-            //if there is history for the entity and this is not a current state, check to see if the passed state is there already.
+            //If there is history for the entity and this is not a current state, check to see if the passed state is there already.
             if(!state.cf && entity.history.size() > 0) {
-                // check to see if this record was already in history
+                //Check to see if this record was already in history
                 for(CommonState historyState: entity.history) {
                     if (historyState.rid == state.rid) {
                         flag = true;
                     }
                 }
             }
-            // set the record in the entity
+            //Set the record in the entity
             if(state.cf) {
                 entity.current = (S) state;
             } else if(!flag) {
@@ -1381,11 +1374,8 @@ public interface FdfCommonServices {
      * @return Entities of Type passed
      */
     default <S extends CommonState> long getNewEntityId(Class<S> entityState, long tenantId) {
-        //get the last id assigned
-        List<String> select = new ArrayList<>();
-        select.add("max(id) as id");
         addByTid(tenantId);
-        List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, select, whereStatement);
+        List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, Arrays.asList("max(id) as id"), whereStatement);
         if(returnedStates != null && returnedStates.size() == 1) {
             if(returnedStates.get(0).id == -1) {
                 returnedStates.get(0).id = 0;
