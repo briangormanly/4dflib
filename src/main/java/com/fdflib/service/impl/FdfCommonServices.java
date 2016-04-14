@@ -1318,11 +1318,10 @@ public interface FdfCommonServices {
      * @return Entities of Type passed
      */
     default <S extends CommonState> FdfEntity<S> manageReturnedEntity(List<S> rawStates) {
-        // create an entity
+        //create an entity
         FdfEntity<S> entity = new FdfEntity<>();
-
         for(S state: rawStates) {
-                // add individual state to entity
+                //add individual state to entity
                 addStateToEntity(state, entity);
         }
         return entity;
@@ -1340,36 +1339,32 @@ public interface FdfCommonServices {
     @SuppressWarnings("unchecked")
     default <S extends CommonState> void addStateToEntity(CommonState state, FdfEntity<S> entity) {
         boolean flag = false;
-        // check to see if this is the first state being saved to the entity, if so set the entityId
+        //check to see if this is the first state being saved to the entity, if so set the entityId
         if(entity.entityId == -1) {
             entity.entityId = state.id;
         }
-        // check to see that the id of the state passed matches the existing id for this entity, otherwise it does
-        // not belong here.
+        //check to see that the id of the state passed matches the existing id for this entity, otherwise it does not belong here.
         if(entity.entityId == state.id) {
-            // if there is history for the entity and this is not a current state, check to see if the passed state
-            // is there already.
+            //if there is history for the entity and this is not a current state, check to see if the passed state is there already.
             if(!state.cf && entity.history.size() > 0) {
                 // check to see if this record was already in history
-                for (CommonState historyState: entity.history) {
+                for(CommonState historyState: entity.history) {
                     if (historyState.rid == state.rid) {
                         flag = true;
                     }
                 }
             }
             // set the record in the entity
-            if (state.cf) {
+            if(state.cf) {
                 entity.current = (S) state;
-            } else if (!flag) {
+            } else if(!flag) {
                 entity.history.add((S) state);
             }
         }
     }
 
     /**
-     *
      * Uses the Default FdfTenant (when not using multi-tenant)
-     *
      * @param entityState Class of entity to use for returned type.
      * @param <S> Parameterized type of State.
      * @return Entities of Type passed
@@ -1379,9 +1374,7 @@ public interface FdfCommonServices {
     }
 
     /**
-     *
      * Includes specified tenant (when using multi-tenant)
-     *
      * @param entityState Class of entity to use for returned type.
      * @param tenantId Id of tenant associated with the entity
      * @param <S> Parameterized type of State.
@@ -1392,7 +1385,6 @@ public interface FdfCommonServices {
         List<String> select = new ArrayList<>();
         select.add("max(id) as id");
         addByTid(tenantId);
-
         List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, select, whereStatement);
         if(returnedStates != null && returnedStates.size() == 1) {
             if(returnedStates.get(0).id == -1) {
