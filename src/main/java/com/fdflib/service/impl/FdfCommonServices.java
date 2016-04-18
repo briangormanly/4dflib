@@ -105,7 +105,7 @@ public interface FdfCommonServices {
         }
         else {
             whereEndBefore.operator = WhereClause.Operators.IS_NOT;
-            whereEndBefore.value = "NULL";
+            whereEndBefore.value = WhereClause.NULL;
         }
         whereStatement.add(whereEndBefore);
     }
@@ -125,7 +125,7 @@ public interface FdfCommonServices {
         }
         whereCurrent.name = "ared";
         whereCurrent.operator = WhereClause.Operators.IS;
-        whereCurrent.value = "NULL";
+        whereCurrent.value = WhereClause.NULL;
         whereStatement.add(whereCurrent);
     }
     default void addAtDate(Date date) {
