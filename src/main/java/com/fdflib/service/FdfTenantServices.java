@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * Created by brian.gormanly on 9/28/15.
  */
-public class FdfTenantServices implements FdfCommonServices {
+public class FdfTenantServices extends FdfCommonServices {
 
     public List<FdfTenant> getAllTenants() {
         List<FdfTenant> currentTenants = new ArrayList<>();

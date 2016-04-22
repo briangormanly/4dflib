@@ -9,5 +9,5 @@ import com.fdflib.service.impl.FdfCommonServices;
 /**
  * Convenience service available to instantiate and use the Common Services from your controllers.
  */
-public class GenericService implements FdfCommonServices {
+public class GenericService extends FdfCommonServices {
 }
