@@ -15,7 +15,7 @@ import java.util.List;
 /**
  * Created by brian.gormanly on 8/22/15.
  */
-public class FdfSystemServices implements FdfCommonServices {
+public class FdfSystemServices extends FdfCommonServices {
 
     public FdfEntity<FdfSystem> saveSystem(FdfSystem systemState) {
         return save(FdfSystem.class, systemState);
@@ -190,14 +190,11 @@ public class FdfSystemServices implements FdfCommonServices {
      * @return String representing the hashed password
      */
     public String hashPassword(String clearTextPassword) {
-
-        byte[] digest = null;
         StringBuffer sb = new StringBuffer();
-
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             md.update(clearTextPassword.getBytes("UTF-8"));
-            digest = md.digest();
+            byte[] digest = md.digest();
 
             for(byte b : digest) {
                 sb.append(String.format("%02x", b));
@@ -208,7 +205,6 @@ public class FdfSystemServices implements FdfCommonServices {
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-
         return sb.toString();
     }
 
@@ -221,18 +217,9 @@ public class FdfSystemServices implements FdfCommonServices {
      * @return True if authentication attempt is successful, false otherwise.
      */
     public Boolean authenticateSystem(long systemId, String sha256EncryptedPassword) {
-        Boolean isValid = false;
-
-        // get the tenant
+        //compare the password hashes
         FdfEntity<FdfSystem> system = getEntityById(FdfSystem.class, systemId);
-
-        // compare the password hashes
-        if(system != null && system.current != null
-                && system.current.sha256EncodedPassword.equals(sha256EncryptedPassword)) {
-            isValid = true;
-        }
-
-        return isValid;
+        return Boolean.valueOf(system != null && system.current != null && system.current.sha256EncodedPassword.equals(sha256EncryptedPassword));
     }
 
 }

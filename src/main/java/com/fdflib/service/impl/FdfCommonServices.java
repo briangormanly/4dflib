@@ -18,10 +18,9 @@ package com.fdflib.service.impl;
 
 import com.fdflib.model.entity.FdfEntity;
 import com.fdflib.model.state.CommonState;
-import com.fdflib.model.state.FdfTenant;
 import com.fdflib.model.util.WhereClause;
+import com.fdflib.model.util.WhereStatement;
 import com.fdflib.persistence.FdfPersistence;
-import com.fdflib.util.GeneralConstants;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
@@ -35,9 +34,58 @@ import java.util.*;
  * @author brian.gormanly
  */
 @SuppressWarnings("unused")
-public interface FdfCommonServices {
+public abstract class FdfCommonServices {
+    protected final static org.slf4j.Logger fdfLog = LoggerFactory.getLogger(CommonState.class);
+    protected final static WhereStatement whereStatement = new WhereStatement();
 
-    org.slf4j.Logger fdfLog = LoggerFactory.getLogger(CommonState.class);
+    /* --- For Legacy --- */
+    protected static void addByRid(long rid) {
+        whereStatement.addByRid(rid);
+    }
+    protected static void addById(long id) {
+        whereStatement.addById(id);
+    }
+    protected static void addByCf() {
+        whereStatement.addByCf();
+    }
+    protected static void addNotCf() {
+        whereStatement.addNotCf();
+    }
+    protected static void addByDf() {
+        whereStatement.addByDf();
+    }
+    protected static void addByArsdBefore(Date date) {
+        whereStatement.addByArsdBefore(date);
+    }
+    protected static void addByArsdAfter(Date date) {
+        whereStatement.addByArsdAfter(date);
+    }
+    protected static void addByAredBefore(Date date) {
+        whereStatement.addByAredBefore(date);
+    }
+    protected static void addByAredAfter(Date date) {
+        whereStatement.addByAredAfter(date);
+    }
+    protected static void addAtDate(Date date) {
+        whereStatement.addAtDate(date);
+    }
+    protected static void addByTid(long tid) {
+        whereStatement.addByTid(tid);
+    }
+    protected static void addByEuid(long euid) {
+        whereStatement.addByEuid(euid);
+    }
+    protected static void addByEsid(long esid) {
+        whereStatement.addByEsid(esid);
+    }
+
+    public static void resetWhere() {
+        whereStatement.reset();
+    }
+    public static String whereToString() {
+        return whereStatement.toString();
+    }
+    /* --- End Legacy --- */
 
     /**
      * Save an Entities State to persistence internally manages all insert, update and actions associated with
@@ -50,8 +98,7 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity state
      * @return S the saved entity state (without FdfEntity)
      */
-    default <S extends CommonState> S save(S state, Class<S> entityState, long userId, long systemId) {
-
+    public static <S extends CommonState> S save(S state, Class<S> entityState, long userId, long systemId) {
         return save(state, entityState, userId, systemId, 1);
     }
 
@@ -67,10 +114,9 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity state
      * @return S the saved entity state (without FdfEntity)
      */
-    default <S extends CommonState> S save(S state, Class<S> entityState) {
+    public static <S extends CommonState> S save(S state, Class<S> entityState) {
         return save(state, entityState, state.euid, state.esid, state.tid);
     }
-
 
     /**
      * Save an Entities State to persistence internally manages all insert, update and actions associated with
@@ -84,7 +130,7 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity state
      * @return S the saved entity state (without FdfEntity)
      */
-    default <S extends CommonState> S save(S state, Class<S> entityState, long userId, long systemId, long tenantId) {
+    public static <S extends CommonState> S save(S state, Class<S> entityState, long userId, long systemId, long tenantId) {
         // set the common meta fields for the new record
         state.arsd = Calendar.getInstance().getTime();
         state.ared = null;
@@ -92,42 +138,32 @@ public interface FdfCommonServices {
         state.euid = userId;
         state.esid = systemId;
         state.tid = tenantId;
-
         // check to see if this if an id is assigned (existing vs new entity)
         if(state.id <= 0) {
             // if this is a new entity, get an id for it
             state.id = getNewEntityId(entityState, tenantId);
+            if(state.id <= 0) {
+                return null;
+            }
         }
-
         // get full entity for state
         FdfEntity<S> thisEntity = auditEntityById(entityState, state.id, tenantId);
-
-
         // check to see if there is an existing entity, if not, create
         if(thisEntity == null) {
             thisEntity = new FdfEntity<>();
         }
-
         // get the previous current record and move to history
         if(thisEntity.current != null) {
             S lastCurrentState = thisEntity.current;
-
             // set the end date
             lastCurrentState.ared = Calendar.getInstance().getTime();
-
             // set the current flag
             lastCurrentState.cf = false;
-
             // move the state to history
             FdfPersistence.getInstance().update(entityState, lastCurrentState);
-
         }
-
-        // save the new state as current
-        long returnedRid = FdfPersistence.getInstance().insert(entityState, state);
-
         // get id for rid
-        return auditEntityByRid(entityState, returnedRid);
+        return auditEntityByRid(entityState, FdfPersistence.getInstance().insert(entityState, state));
     }
 
     /**
@@ -141,8 +177,7 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity state
      * @return FdfEntity that contains current and historical states for the saved entity
      */
-    default <S extends CommonState> FdfEntity<S> save(Class<S> entityState, S state, long userId, long systemId) {
-
+    public static <S extends CommonState> FdfEntity<S> save(Class<S> entityState, S state, long userId, long systemId) {
         return save(entityState, state, userId, systemId, 1);
     }
 
@@ -158,10 +193,9 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity state
      * @return FdfEntity that contains current and historical states for the saved entity
      */
-    default <S extends CommonState> FdfEntity<S> save(Class<S> entityState, S state) {
+    public static <S extends CommonState> FdfEntity<S> save(Class<S> entityState, S state) {
         return save(entityState,state, state.euid, state.esid, state.tid);
     }
-
 
     /**
      * Save an Entities State to persistence internally manages all insert, update and actions associated with
@@ -175,8 +209,7 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity state
      * @return FdfEntity that contains current and historical states for the saved entity
      */
-    default <S extends CommonState> FdfEntity<S> save(Class<S> entityState, S state,
-                                                      long userId, long systemId, long tenantId) {
+    public static <S extends CommonState> FdfEntity<S> save(Class<S> entityState, S state, long userId, long systemId, long tenantId) {
         // set the common meta fields for the new record
         state.arsd = Calendar.getInstance().getTime();
         state.ared = null;
@@ -184,47 +217,37 @@ public interface FdfCommonServices {
         state.euid = userId;
         state.esid = systemId;
         state.tid = tenantId;
-
         // check to see if this if an id is assigned (existing vs new entity)
         if(state.id <= 0) {
             // if this is a new entity, get an id for it
             state.id = getNewEntityId(entityState, tenantId);
+            if(state.id < 0) {
+                return null;
+            }
         }
-
         // get full entity for state
         FdfEntity<S> thisEntity = auditEntityById(entityState, state.id, tenantId);
-
-
         // check to see if there is an existing entity, if not, create
         if(thisEntity == null) {
             thisEntity = new FdfEntity<>();
         }
-
         // get the previous current record and move to history
         if(thisEntity.current != null) {
             S lastCurrentState = thisEntity.current;
-
             // set the end date
             lastCurrentState.ared = Calendar.getInstance().getTime();
-
             // set the current flag
             lastCurrentState.cf = false;
-
             // move the state to history
             FdfPersistence.getInstance().update(entityState, lastCurrentState);
-
         }
-
         // save the new state as current
         long returnedRid = FdfPersistence.getInstance().insert(entityState, state);
-
         // get id for rid
         S entity = auditEntityByRid(entityState, returnedRid);
-
         // get the entity and return
         return auditEntityById(entityState, entity.id, tenantId);
     }
-
 
     /**
      * Sets delete flag for entity.  In order to record the date, time, user and system requesting the record be marked
@@ -242,8 +265,7 @@ public interface FdfCommonServices {
      * @param <S> The parameterized type of the entity
      * @return FdfEntity that contains current and historical states for the saved entity
      */
-    default <S extends CommonState> FdfEntity<S> setDeleteFlag(Class<S> entityState, long id, long userId,
-                                                                long systemId) {
+    public static <S extends CommonState> FdfEntity<S> setDeleteFlag(Class<S> entityState, long id, long userId, long systemId) {
         return setDeleteFlag(entityState, id, userId, systemId, 1);
     }
 
@@ -264,22 +286,16 @@ public interface FdfCommonServices {
      * @param <S> The parameterized type of the entity
      * @return FdfEntity that contains current and historical states for the saved entity
      */
-    default <S extends CommonState> FdfEntity<S> setDeleteFlag(Class<S> entityState, long id, long userId,
-                                                                long systemId, long tenantId) {
+    public static <S extends CommonState> FdfEntity<S> setDeleteFlag(Class<S> entityState, long id, long userId, long systemId, long tenantId) {
         if(id > -1) {
-
             // get full entity for state
             FdfEntity<S> thisEntity = auditEntityById(entityState, id, tenantId);
-
             // create the new state that will maintain the deletion records from the most recent state available
             S deletedState = thisEntity.getMostRecentState();
-
             // mark the state deleted
             deletedState.df = true;
-
             // save the state
             return save(entityState, deletedState, userId, systemId, tenantId);
-
         }
         return null;
     }
@@ -302,8 +318,7 @@ public interface FdfCommonServices {
      * @param <S> The parameterized type of the entity
      * @return FdfEntity that contains current and historical states for the saved entity
      */
-    default <S extends CommonState> FdfEntity<S> removeDeleteFlag(Class<S> entityState, long id, long userId,
-                                                       long systemId) {
+    public static <S extends CommonState> FdfEntity<S> removeDeleteFlag(Class<S> entityState, long id, long userId, long systemId) {
         return removeDeleteFlag(entityState, id, userId, systemId, 1);
     }
 
@@ -326,26 +341,19 @@ public interface FdfCommonServices {
      * @param <S> The parameterized type of the entity
      * @return FdfEntity that contains current and historical states for the saved entity
      */
-    default <S extends CommonState> FdfEntity<S> removeDeleteFlag(Class<S> entityState, long id, long userId,
-                                                       long systemId, long tenantId) {
+    public static <S extends CommonState> FdfEntity<S> removeDeleteFlag(Class<S> entityState, long id, long userId, long systemId, long tenantId) {
         if(id > -1) {
-
             // get full entity for state
             FdfEntity<S> thisEntity = auditEntityById(entityState, id, tenantId);
-
             // create the new state that will maintain the deletion records from the most recent state available
             S deletedState = thisEntity.getMostRecentState();
-
             // mark the state deleted
             deletedState.df = false;
-
             // save the state
             return save(entityState, deletedState, userId, systemId, tenantId);
-
         }
         return null;
     }
-
 
     /**
      * Retrieves all entities including deleted records of type passed from persistence. Includes all current and
@@ -355,10 +363,8 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    default <S extends CommonState> List<FdfEntity<S>> auditAll(Class<S> entityState) {
-
+    public static <S extends CommonState> List<FdfEntity<S>> auditAll(Class<S> entityState) {
         return auditAll(entityState, 1);
-
     }
 
     /**
@@ -370,25 +376,9 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    default <S extends CommonState> List<FdfEntity<S>> auditAll(Class<S> entityState, long tenantId) {
-
-        // create the where statement for the query
-        List<WhereClause> whereStatement = new ArrayList<>();
-
-        WhereClause whereTid = new WhereClause();
-        whereTid.name = "tid";
-        whereTid.operator = WhereClause.Operators.EQUAL;
-        whereTid.value = Long.toString(tenantId);
-        whereTid.valueDataType = Long.class;
-
-        whereStatement.add(whereTid);
-
-        // do the query
-        List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
-
-        // create a List of entities
-        return manageReturnedEntities(returnedStates);
-
+    public static <S extends CommonState> List<FdfEntity<S>> auditAll(Class<S> entityState, long tenantId) {
+        addByTid(tenantId);
+        return manageReturnedEntities(whereStatement.run(entityState));
     }
 
     /**
@@ -399,10 +389,8 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    default <S extends CommonState> List<S> auditAllCurrent(Class<S> entityState) {
-
+    public static <S extends CommonState> List<S> auditAllCurrent(Class<S> entityState) {
         return auditAllCurrent(entityState, 1);
-
     }
 
     /**
@@ -414,32 +402,11 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    default <S extends CommonState> List<S> auditAllCurrent(Class<S> entityState, long tenantId) {
-
-        // create the where statement for the statement
-        List<WhereClause> whereStatement = new ArrayList<>();
-
-        // check that only the current records are returned
-        WhereClause whereCf = new WhereClause();
-        whereCf.name = "cf";
-        whereCf.value = "true";
-        whereCf.valueDataType = Boolean.class;
-
-        WhereClause whereTid = new WhereClause();
-        whereTid.name = "tid";
-        whereTid.operator = WhereClause.Operators.EQUAL;
-        whereTid.value = Long.toString(tenantId);
-        whereTid.valueDataType = Long.class;
-
-        whereStatement.add(whereCf);
-        whereStatement.add(whereTid);
-
-        // do the query
-        return FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
-
+    public static <S extends CommonState> List<S> auditAllCurrent(Class<S> entityState, long tenantId) {
+        addByCf();
+        addByTid(tenantId);
+        return whereStatement.run(entityState);
     }
-
-
 
     /**
      * Retrieves all entities of type passed from persistence. Includes all current and historical data for
@@ -449,10 +416,8 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    default <S extends CommonState> List<FdfEntity<S>> getAll(Class<S> entityState) {
-
+    public static <S extends CommonState> List<FdfEntity<S>> getAll(Class<S> entityState) {
         return getAll(entityState, 1);
-
     }
 
     /**
@@ -464,33 +429,10 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    default <S extends CommonState> List<FdfEntity<S>> getAll(Class<S> entityState, long tenantId) {
-
-        // create the where statement for the query
-        List<WhereClause> whereStatement = new ArrayList<>();
-
-        // check that deleted records are not returned
-        WhereClause whereDf = new WhereClause();
-        whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.IS_NOT;
-        whereDf.value = "true";
-        whereDf.valueDataType = Boolean.class;
-
-        WhereClause whereTid = new WhereClause();
-        whereTid.name = "tid";
-        whereTid.operator = WhereClause.Operators.EQUAL;
-        whereTid.value = Long.toString(tenantId);
-        whereTid.valueDataType = Long.class;
-
-        whereStatement.add(whereDf);
-        whereStatement.add(whereTid);
-
-        // do the query
-        List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
-
-        // create a List of entities
-        return manageReturnedEntities(returnedStates);
-
+    public static <S extends CommonState> List<FdfEntity<S>> getAll(Class<S> entityState, long tenantId) {
+        addByDf();
+        addByTid(tenantId);
+        return manageReturnedEntities(whereStatement.run(entityState));
     }
 
     /**
@@ -501,10 +443,8 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    default <S extends CommonState> List<S> getAllCurrent(Class<S> entityState) {
-
+    public static <S extends CommonState> List<S> getAllCurrent(Class<S> entityState) {
         return getAllCurrent(entityState, 1);
-
     }
 
     /**
@@ -516,37 +456,11 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    default <S extends CommonState> List<S> getAllCurrent(Class<S> entityState, long tenantId) {
-
-        // create the where statement for the statement
-        List<WhereClause> whereStatement = new ArrayList<>();
-
-        // check that deleted records are not returned
-        WhereClause whereDf = new WhereClause();
-        whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.IS_NOT;
-        whereDf.value = "true";
-        whereDf.valueDataType = Boolean.class;
-
-        // check that only the current records are returned
-        WhereClause whereCf = new WhereClause();
-        whereCf.name = "cf";
-        whereCf.value = "true";
-        whereCf.valueDataType = Boolean.class;
-
-        WhereClause whereTid = new WhereClause();
-        whereTid.name = "tid";
-        whereTid.operator = WhereClause.Operators.EQUAL;
-        whereTid.value = Long.toString(tenantId);
-        whereTid.valueDataType = Long.class;
-
-        whereStatement.add(whereDf);
-        whereStatement.add(whereCf);
-        whereStatement.add(whereTid);
-
-        // do the query
-        return FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
-
+    public static <S extends CommonState> List<S> getAllCurrent(Class<S> entityState, long tenantId) {
+        addByDf();
+        addByCf();
+        addByTid(tenantId);
+        return whereStatement.run(entityState);
     }
 
     /**
@@ -557,10 +471,8 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    default <S extends CommonState> List<FdfEntity<S>> getAllHistory(Class<S> entityState) {
-
+    public static <S extends CommonState> List<FdfEntity<S>> getAllHistory(Class<S> entityState) {
         return getAllHistory(entityState, 1);
-
     }
 
     /**
@@ -572,41 +484,12 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    default <S extends CommonState> List<FdfEntity<S>> getAllHistory(Class<S> entityState, long tenantId) {
-
-        // create the where statement for the statement
-        List<WhereClause> whereStatement = new ArrayList<>();
-
-        // check that deleted records are not returned
-        WhereClause whereDf = new WhereClause();
-        whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.IS_NOT;
-        whereDf.value = "true";
-        whereDf.valueDataType = Boolean.class;
-
-        // check that no current records are returned, just historical ones.
-        WhereClause whereCf = new WhereClause();
-        whereCf.name = "cf";
-        whereCf.value = "false";
-        whereCf.valueDataType = Boolean.class;
-
-        WhereClause whereTid = new WhereClause();
-        whereTid.name = "tid";
-        whereTid.operator = WhereClause.Operators.EQUAL;
-        whereTid.value = Long.toString(tenantId);
-        whereTid.valueDataType = Long.class;
-
-        whereStatement.add(whereDf);
-        whereStatement.add(whereCf);
-        whereStatement.add(whereTid);
-
-        // do the query
-        List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
-
-        // organize the results
-        return manageReturnedEntities(returnedStates);
+    public static <S extends CommonState> List<FdfEntity<S>> getAllHistory(Class<S> entityState, long tenantId) {
+        addByDf();
+        addNotCf();
+        addByTid(tenantId);
+        return manageReturnedEntities(whereStatement.run(entityState));
     }
-
 
     /**
      * Retrieves all entities of the passed type from persistence as they existed at the date passed. Only states
@@ -625,11 +508,9 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    default <S extends CommonState> List<S> getAllAtDate(Class<S> entityState, Date date) {
+    public static <S extends CommonState> List<S> getAllAtDate(Class<S> entityState, Date date) {
         return getAllAtDate(entityState, date, 1);
-
     }
-
 
     /**
      * Retrieves all entities of the passed type from persistence as they existed at the date passed. Only states
@@ -643,55 +524,11 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    default <S extends CommonState> List<S> getAllAtDate(Class<S> entityState, Date date, long tenantId) {
-
-        // create the where statement for the statement
-        List<WhereClause> whereStatement = new ArrayList<>();
-
-        // check that deleted records are not returned
-        WhereClause whereDf = new WhereClause();
-        whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.IS_NOT;
-        whereDf.value = "true";
-        whereDf.valueDataType = Boolean.class;
-
-        // check that the start date is less than or equal to the date passed
-        WhereClause startDate = new WhereClause();
-        startDate.name = "arsd";
-        startDate.operator = WhereClause.Operators.LESS_THAN_OR_EQUAL;
-        startDate.value = GeneralConstants.DB_DATE_FORMAT.format(date);
-        startDate.valueDataType = Date.class;
-
-        // check that the end date is greater than the date passed
-        WhereClause endDate = new WhereClause();
-        endDate.groupings.add(WhereClause.GROUPINGS.OPEN_PARENTHESIS);
-        endDate.name = "ared";
-        endDate.operator = WhereClause.Operators.GREATER_THAN;
-        endDate.value = GeneralConstants.DB_DATE_FORMAT.format(date);
-        endDate.valueDataType = Date.class;
-
-        // OR that the end date is null (still active)
-        WhereClause endDateNull = new WhereClause();
-        endDateNull.conditional = WhereClause.CONDITIONALS.OR;
-        endDateNull.name = "ared";
-        endDateNull.operator = WhereClause.Operators.IS;
-        endDateNull.value = WhereClause.NULL;
-        endDateNull.groupings.add(WhereClause.GROUPINGS.CLOSE_PARENTHESIS);
-
-        WhereClause whereTid = new WhereClause();
-        whereTid.name = "tid";
-        whereTid.operator = WhereClause.Operators.EQUAL;
-        whereTid.value = Long.toString(tenantId);
-        whereTid.valueDataType = Long.class;
-
-        whereStatement.add(whereDf);
-        whereStatement.add(startDate);
-        whereStatement.add(endDate);
-        whereStatement.add(endDateNull);
-        whereStatement.add(whereTid);
-
-        // do the query
-        return FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
+    public static <S extends CommonState> List<S> getAllAtDate(Class<S> entityState, Date date, long tenantId) {
+        addByDf();
+        addAtDate(date);
+        addByTid(tenantId);
+        return whereStatement.run(entityState);
     }
 
     /**
@@ -707,11 +544,9 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    default <S extends CommonState> List<S> auditAllAtDate(Class<S> entityState, Date date) {
+    public static <S extends CommonState> List<S> auditAllAtDate(Class<S> entityState, Date date) {
         return auditAllAtDate(entityState, date, 1);
-
     }
-
 
     /**
      * Retrieves all entities of the passed type from persistence as they existed at the date passed. Only states
@@ -727,48 +562,10 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    default <S extends CommonState> List<S> auditAllAtDate(Class<S> entityState, Date date, long tenantId) {
-
-        // create the where statement for the statement
-        List<WhereClause> whereStatement = new ArrayList<>();
-
-
-        // check that the start date is less than or equal to the date passed
-        WhereClause startDate = new WhereClause();
-        startDate.name = "arsd";
-        startDate.operator = WhereClause.Operators.LESS_THAN_OR_EQUAL;
-        startDate.value = GeneralConstants.DB_DATE_FORMAT.format(date);
-        startDate.valueDataType = Date.class;
-
-        // check that the end date is greater than the date passed
-        WhereClause endDate = new WhereClause();
-        endDate.groupings.add(WhereClause.GROUPINGS.OPEN_PARENTHESIS);
-        endDate.name = "ared";
-        endDate.operator = WhereClause.Operators.GREATER_THAN;
-        endDate.value = GeneralConstants.DB_DATE_FORMAT.format(date);
-        endDate.valueDataType = Date.class;
-
-        // OR that the end date is null (still active)
-        WhereClause endDateNull = new WhereClause();
-        endDateNull.conditional = WhereClause.CONDITIONALS.OR;
-        endDateNull.name = "ared";
-        endDateNull.operator = WhereClause.Operators.IS;
-        endDateNull.value = WhereClause.NULL;
-        endDateNull.groupings.add(WhereClause.GROUPINGS.CLOSE_PARENTHESIS);
-
-        WhereClause whereTid = new WhereClause();
-        whereTid.name = "tid";
-        whereTid.operator = WhereClause.Operators.EQUAL;
-        whereTid.value = Long.toString(tenantId);
-        whereTid.valueDataType = Long.class;
-
-        whereStatement.add(startDate);
-        whereStatement.add(endDate);
-        whereStatement.add(endDateNull);
-        whereStatement.add(whereTid);
-
-        // do the query
-        return FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
+    public static <S extends CommonState> List<S> auditAllAtDate(Class<S> entityState, Date date, long tenantId) {
+        addAtDate(date);
+        addByTid(tenantId);
+        return whereStatement.run(entityState);
     }
 
     /**
@@ -784,10 +581,8 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    default <S extends CommonState> List<FdfEntity<S>> getAllFromDate(Class<S> entityState, Date date) {
-
+    public static <S extends CommonState> List<FdfEntity<S>> getAllFromDate(Class<S> entityState, Date date) {
         return getAllFromDate(entityState, date, 1);
-
     }
 
     /**
@@ -804,50 +599,12 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    default <S extends CommonState> List<FdfEntity<S>> getAllFromDate(Class<S> entityState, Date date, long tenantId) {
-
-        // create the where statement for the statement
-        List<WhereClause> whereStatement = new ArrayList<>();
-
-        // check that deleted records are not returned
-        WhereClause whereDf = new WhereClause();
-        whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.IS_NOT;
-        whereDf.value = "true";
-        whereDf.valueDataType = Boolean.class;
-
-        // check that the end date is greater than or equal to the passed date
-        WhereClause endDate1 = new WhereClause();
-        endDate1.name = "ared";
-        endDate1.operator = WhereClause.Operators.GREATER_THAN_OR_EQUAL;
-        endDate1.value = GeneralConstants.DB_DATE_FORMAT.format(date);
-        endDate1.valueDataType = Date.class;
-
-        // or that the end date is null (still active)
-        WhereClause enddate2 = new WhereClause();
-        enddate2.conditional = WhereClause.CONDITIONALS.OR;
-        enddate2.name = "ared";
-        enddate2.operator = WhereClause.Operators.IS;
-        enddate2.value = WhereClause.NULL;
-
-        WhereClause whereTid = new WhereClause();
-        whereTid.name = "tid";
-        whereTid.operator = WhereClause.Operators.EQUAL;
-        whereTid.value = Long.toString(tenantId);
-        whereTid.valueDataType = Long.class;
-
-        whereStatement.add(whereDf);
-        whereStatement.add(endDate1);
-        whereStatement.add(enddate2);
-        whereStatement.add(whereTid);
-
-        // do the query
-        List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
-
-        // organize the results
-        return manageReturnedEntities(returnedStates);
+    public static <S extends CommonState> List<FdfEntity<S>> getAllFromDate(Class<S> entityState, Date date, long tenantId) {
+        addByDf();
+        addByAredAfter(date);
+        addByTid(tenantId);
+        return manageReturnedEntities(whereStatement.run(entityState));
     }
-
 
     /**
      * Retrieves all entities that have states active starting at or before at the date passed into the method.
@@ -862,10 +619,8 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    default <S extends CommonState> List<FdfEntity<S>> getAllBeforeDate(Class<S> entityState, Date date) {
-
+    public static <S extends CommonState> List<FdfEntity<S>> getAllBeforeDate(Class<S> entityState, Date date) {
         return getAllBeforeDate(entityState, date, 1);
-
     }
 
     /**
@@ -882,41 +637,11 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    default <S extends CommonState> List<FdfEntity<S>> getAllBeforeDate(Class<S> entityState,
-                                                                        Date date, long tenantId) {
-
-        // create the where statement for the statement
-        List<WhereClause> whereStatement = new ArrayList<>();
-
-        // check that deleted records are not returned
-        WhereClause whereDf = new WhereClause();
-        whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.IS_NOT;
-        whereDf.value = "true";
-        whereDf.valueDataType = Boolean.class;
-
-        // check that the start date is less than or equal to the passed date
-        WhereClause endDate1 = new WhereClause();
-        endDate1.name = "arsd";
-        endDate1.operator = WhereClause.Operators.LESS_THAN_OR_EQUAL;
-        endDate1.value = GeneralConstants.DB_DATE_FORMAT.format(date);
-        endDate1.valueDataType = Date.class;
-
-        WhereClause whereTid = new WhereClause();
-        whereTid.name = "tid";
-        whereTid.operator = WhereClause.Operators.EQUAL;
-        whereTid.value = Long.toString(tenantId);
-        whereTid.valueDataType = Long.class;
-
-        whereStatement.add(whereDf);
-        whereStatement.add(endDate1);
-        whereStatement.add(whereTid);
-
-        // do the query
-        List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
-
-        // organize the results
-        return manageReturnedEntities(returnedStates);
+    public static <S extends CommonState> List<FdfEntity<S>> getAllBeforeDate(Class<S> entityState, Date date, long tenantId) {
+        addByDf();
+        addByArsdBefore(date);
+        addByTid(tenantId);
+        return manageReturnedEntities(whereStatement.run(entityState));
     }
 
     /**
@@ -934,11 +659,8 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    default <S extends CommonState> List<FdfEntity<S>> getAllBetweenDates(Class<S> entityState,
-                                                                         Date startDate, Date endDate) {
-
+    public static <S extends CommonState> List<FdfEntity<S>> getAllBetweenDates(Class<S> entityState, Date startDate, Date endDate) {
         return getAllBetweenDates(entityState, startDate, endDate, 1);
-
     }
 
     /**
@@ -957,60 +679,12 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return List of type passed
      */
-    default <S extends CommonState> List<FdfEntity<S>> getAllBetweenDates(Class<S> entityState,
-                                                                          Date startDate, Date endDate, long tenantId) {
-
-        // create the where statement for the statement
-        List<WhereClause> whereStatement = new ArrayList<>();
-
-        // check that deleted records are not returned
-        WhereClause whereDf = new WhereClause();
-        whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.IS_NOT;
-        whereDf.value = "true";
-        whereDf.valueDataType = Boolean.class;
-
-        // check that the start date is less than or equal to the passed date
-        WhereClause startDate1 = new WhereClause();
-        startDate1.name = "arsd";
-        startDate1.operator = WhereClause.Operators.LESS_THAN_OR_EQUAL;
-        startDate1.value = GeneralConstants.DB_DATE_FORMAT.format(endDate);
-        startDate1.valueDataType = Date.class;
-
-        // check that the end date is greater than or equal to the passed date
-        WhereClause endDate1 = new WhereClause();
-        endDate1.conditional = WhereClause.CONDITIONALS.AND;
-        endDate1.groupings.add(WhereClause.GROUPINGS.OPEN_PARENTHESIS);
-        endDate1.name = "ared";
-        endDate1.operator = WhereClause.Operators.GREATER_THAN_OR_EQUAL;
-        endDate1.value = GeneralConstants.DB_DATE_FORMAT.format(startDate);
-        endDate1.valueDataType = Date.class;
-
-        // or that the end date is null (still active)
-        WhereClause enddate2 = new WhereClause();
-        enddate2.conditional = WhereClause.CONDITIONALS.OR;
-        enddate2.name = "ared";
-        enddate2.operator = WhereClause.Operators.IS;
-        enddate2.value = WhereClause.NULL;
-        enddate2.groupings.add(WhereClause.GROUPINGS.CLOSE_PARENTHESIS);
-
-        WhereClause whereTid = new WhereClause();
-        whereTid.name = "tid";
-        whereTid.operator = WhereClause.Operators.EQUAL;
-        whereTid.value = Long.toString(tenantId);
-        whereTid.valueDataType = Long.class;
-
-        whereStatement.add(whereDf);
-        whereStatement.add(startDate1);
-        whereStatement.add(endDate1);
-        whereStatement.add(enddate2);
-        whereStatement.add(whereTid);
-
-        // do the query
-        List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
-
-        // organize the results
-        return manageReturnedEntities(returnedStates);
+    public static <S extends CommonState> List<FdfEntity<S>> getAllBetweenDates(Class<S> entityState, Date startDate, Date endDate, long tenantId) {
+        addByDf();
+        addByArsdBefore(endDate);
+        addByAredAfter(startDate);
+        addByTid(tenantId);
+        return manageReturnedEntities(whereStatement.run(entityState));
     }
 
     /**
@@ -1023,40 +697,10 @@ public interface FdfCommonServices {
      * @param <S> Parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> S getEntityByRid(Class<S> entityState, long rid) {
-
-        // create the where statement for the query
-        List<WhereClause> whereStatement = new ArrayList<>();
-
-        // check that deleted records are not returned
-        WhereClause whereDf = new WhereClause();
-        whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.IS_NOT;
-        whereDf.value = "true";
-        whereDf.valueDataType = Boolean.class;
-
-        // add the id check
-        WhereClause whereId = new WhereClause();
-        whereId.conditional = WhereClause.CONDITIONALS.AND;
-        whereId.name = "rid";
-        whereId.operator = WhereClause.Operators.EQUAL;
-        whereId.value = Long.toString(rid);
-        whereId.valueDataType = Long.class;
-
-        whereStatement.add(whereDf);
-        whereStatement.add(whereId);
-
-        // do the query
-        List<S> returnedStates =
-                FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
-
-        // now that we have the state with the rid, get all of the states with the id it contains
-        if(returnedStates.size() > 0 && returnedStates.get(0) != null) {
-            return returnedStates.get(0);
-        }
-        else {
-            return null;
-        }
+    public static <S extends CommonState> S getEntityByRid(Class<S> entityState, long rid) {
+        addByDf();
+        addByRid(rid);
+        return (S) whereStatement.run(entityState).stream().findFirst().orElse(null);
     }
 
     /**
@@ -1070,32 +714,9 @@ public interface FdfCommonServices {
      * @param <S> Parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> S auditEntityByRid(Class<S> entityState, long rid) {
-
-        // create the where statement for the query
-        List<WhereClause> whereStatement = new ArrayList<>();
-
-        // add the id check
-        WhereClause whereId = new WhereClause();
-        whereId.conditional = WhereClause.CONDITIONALS.AND;
-        whereId.name = "rid";
-        whereId.operator = WhereClause.Operators.EQUAL;
-        whereId.value = Long.toString(rid);
-        whereId.valueDataType = Long.class;
-
-        whereStatement.add(whereId);
-
-        // do the query
-        List<S> returnedStates =
-                FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
-
-        // now that we have the state with the rid, get all of the states with the id it contains
-        if(returnedStates.size() > 0 && returnedStates.get(0) != null) {
-            return returnedStates.get(0);
-        }
-        else {
-            return null;
-        }
+    public static <S extends CommonState> S auditEntityByRid(Class<S> entityState, long rid) {
+        addByRid(rid);
+        return (S) whereStatement.run(entityState).stream().findFirst().orElse(null);
     }
 
     /**
@@ -1111,8 +732,7 @@ public interface FdfCommonServices {
      * @param <S> Parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> FdfEntity<S> auditEntityById(Class<S> entityState, long id) {
-
+    public static <S extends CommonState> FdfEntity<S> auditEntityById(Class<S> entityState, long id) {
         return auditEntityById(entityState, id, 1);
     }
 
@@ -1130,35 +750,10 @@ public interface FdfCommonServices {
      * @param <S> Parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> FdfEntity<S> auditEntityById(Class<S> entityState, long id, long tenantId) {
-
-        // create the where statement for the query
-        List<WhereClause> whereStatement = new ArrayList<>();
-
-        // add the id check
-        WhereClause whereId = new WhereClause();
-        whereId.conditional = WhereClause.CONDITIONALS.AND;
-        whereId.name = "id";
-        whereId.operator = WhereClause.Operators.EQUAL;
-        whereId.value = Long.toString(id);
-        whereId.valueDataType = Long.class;
-
-        WhereClause whereTid = new WhereClause();
-        whereTid.name = "tid";
-        whereTid.operator = WhereClause.Operators.EQUAL;
-        whereTid.value = Long.toString(tenantId);
-        whereTid.valueDataType = Long.class;
-
-        whereStatement.add(whereId);
-        whereStatement.add(whereTid);
-
-        // do the query
-        List<S> returnedStates =
-                FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
-
-        // create a List of entities
-        return manageReturnedEntity(returnedStates);
-
+    public static <S extends CommonState> FdfEntity<S> auditEntityById(Class<S> entityState, long id, long tenantId) {
+        addById(id);
+        addByTid(tenantId);
+        return manageReturnedEntity(whereStatement.run(entityState));
     }
 
     /**
@@ -1171,8 +766,7 @@ public interface FdfCommonServices {
      * @param <S> Parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> FdfEntity<S> getEntityById(Class<S> entityState, long id) {
-
+    public static <S extends CommonState> FdfEntity<S> getEntityById(Class<S> entityState, long id) {
         return getEntityById(entityState, id, 1);
     }
 
@@ -1187,43 +781,11 @@ public interface FdfCommonServices {
      * @param <S> Parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> FdfEntity<S> getEntityById(Class<S> entityState, long id, long tenantId) {
-
-        // create the where statement for the query
-        List<WhereClause> whereStatement = new ArrayList<>();
-
-        // check that deleted records are not returned
-        WhereClause whereDf = new WhereClause();
-        whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.IS_NOT;
-        whereDf.value = "true";
-        whereDf.valueDataType = Boolean.class;
-
-        // add the id check
-        WhereClause whereId = new WhereClause();
-        whereId.conditional = WhereClause.CONDITIONALS.AND;
-        whereId.name = "id";
-        whereId.operator = WhereClause.Operators.EQUAL;
-        whereId.value = Long.toString(id);
-        whereId.valueDataType = Long.class;
-
-        WhereClause whereTid = new WhereClause();
-        whereTid.name = "tid";
-        whereTid.operator = WhereClause.Operators.EQUAL;
-        whereTid.value = Long.toString(tenantId);
-        whereTid.valueDataType = Long.class;
-
-        whereStatement.add(whereDf);
-        whereStatement.add(whereId);
-        whereStatement.add(whereTid);
-
-        // do the query
-        List<S> returnedStates =
-                FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
-
-        // create a List of entities
-        return manageReturnedEntity(returnedStates);
-
+    public static <S extends CommonState> FdfEntity<S> getEntityById(Class<S> entityState, long id, long tenantId) {
+        addByDf();
+        addById(id);
+        addByTid(tenantId);
+        return manageReturnedEntity(whereStatement.run(entityState));
     }
 
     /**
@@ -1237,8 +799,7 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> FdfEntity<S> getEntityCurrentById(Class<S> entityState, long id) {
-
+    public static <S extends CommonState> FdfEntity<S> getEntityCurrentById(Class<S> entityState, long id) {
         return getEntityCurrentById(entityState, id, 1);
     }
 
@@ -1254,48 +815,12 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> FdfEntity<S> getEntityCurrentById(Class<S> entityState, long id, long tenantId) {
-
-        // create the where statement for the statement
-        List<WhereClause> whereStatement = new ArrayList<>();
-
-        // check that deleted records are not returned
-        WhereClause whereDf = new WhereClause();
-        whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.IS_NOT;
-        whereDf.value = "true";
-        whereDf.valueDataType = Boolean.class;
-
-        // check that only the current records are returned
-        WhereClause whereCf = new WhereClause();
-        whereCf.name = "cf";
-        whereCf.value = "true";
-        whereCf.valueDataType = Boolean.class;
-
-        // add the id check
-        WhereClause whereId = new WhereClause();
-        whereId.conditional = WhereClause.CONDITIONALS.AND;
-        whereId.name = "id";
-        whereId.operator = WhereClause.Operators.EQUAL;
-        whereId.value = Long.toString(id);
-        whereId.valueDataType = Long.class;
-
-        WhereClause whereTid = new WhereClause();
-        whereTid.name = "tid";
-        whereTid.operator = WhereClause.Operators.EQUAL;
-        whereTid.value = Long.toString(tenantId);
-        whereTid.valueDataType = Long.class;
-
-        whereStatement.add(whereDf);
-        whereStatement.add(whereCf);
-        whereStatement.add(whereId);
-        whereStatement.add(whereTid);
-
-        // do the query
-        List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
-
-        // create a List of entities
-        return manageReturnedEntity(returnedStates);
+    public static <S extends CommonState> FdfEntity<S> getEntityCurrentById(Class<S> entityState, long id, long tenantId) {
+        addByDf();
+        addByCf();
+        addById(id);
+        addByTid(tenantId);
+        return manageReturnedEntity(whereStatement.run(entityState));
 
     }
 
@@ -1310,10 +835,8 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> FdfEntity<S> getEntityHistoryById(Class<S> entityState, long id) {
-
+    public static <S extends CommonState> FdfEntity<S> getEntityHistoryById(Class<S> entityState, long id) {
         return getEntityHistoryById(entityState, id, 1);
-
     }
 
     /**
@@ -1328,48 +851,12 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> FdfEntity<S> getEntityHistoryById(Class<S> entityState, long id, long tenantId) {
-
-        // create the where statement for the statement
-        List<WhereClause> whereStatement = new ArrayList<>();
-
-        // check that deleted records are not returned
-        WhereClause whereDf = new WhereClause();
-        whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.IS_NOT;
-        whereDf.value = "true";
-        whereDf.valueDataType = Boolean.class;
-
-        // check that no current records are returned, just historical ones.
-        WhereClause whereCf = new WhereClause();
-        whereCf.name = "cf";
-        whereCf.value = "false";
-        whereCf.valueDataType = Boolean.class;
-
-        // add the id check
-        WhereClause whereId = new WhereClause();
-        whereId.conditional = WhereClause.CONDITIONALS.AND;
-        whereId.name = "id";
-        whereId.operator = WhereClause.Operators.EQUAL;
-        whereId.value = Long.toString(id);
-        whereId.valueDataType = Long.class;
-
-        WhereClause whereTid = new WhereClause();
-        whereTid.name = "tid";
-        whereTid.operator = WhereClause.Operators.EQUAL;
-        whereTid.value = Long.toString(tenantId);
-        whereTid.valueDataType = Long.class;
-
-        whereStatement.add(whereDf);
-        whereStatement.add(whereCf);
-        whereStatement.add(whereId);
-        whereStatement.add(whereTid);
-
-        // do the query
-        List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
-
-        // create a List of entities
-        return manageReturnedEntity(returnedStates);
+    public static <S extends CommonState> FdfEntity<S> getEntityHistoryById(Class<S> entityState, long id, long tenantId) {
+        addNotCf();
+        addByDf();
+        addById(id);
+        addByTid(tenantId);
+        return manageReturnedEntity(whereStatement.run(entityState));
     }
 
     /**
@@ -1384,10 +871,7 @@ public interface FdfCommonServices {
      * @param <S> Parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> List<FdfEntity<S>> getEntitiesByValueForPassedField(Class<S> entityState,
-                                                                                        String fieldName,
-                                                                                        String value) {
-
+    public static <S extends CommonState> List<FdfEntity<S>> getEntitiesByValueForPassedField(Class<S> entityState, String fieldName, String value) {
         return getEntitiesByValueForPassedField(entityState, fieldName, value, 1);
     }
 
@@ -1404,65 +888,30 @@ public interface FdfCommonServices {
      * @param <S> Parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> List<FdfEntity<S>> getEntitiesByValueForPassedField(Class<S> entityState,
-                                                                                        String fieldName, String value,
-                                                                                        long tenantId) {
-
-        Field passedField = null;
-        Type passedFieldType = null;
-
-        // check to see if the class has the field
+    public static <S extends CommonState> List<FdfEntity<S>> getEntitiesByValueForPassedField(Class<S> entityState, String fieldName, String value, long tenantId) {
         try {
-            passedField = entityState.getField(fieldName);
-
-        } catch (NoSuchFieldException e) {
-            // intentionally ignored
+            if(value != null && tenantId > 0) {
+                Field passedField = entityState.getField(fieldName);
+                if (passedField != null) {
+                    Type passedFieldType = passedField.getGenericType();
+                    if (passedFieldType != null && value != null && tenantId > 0) {
+                        WhereClause whereField = new WhereClause();
+                        whereField.name = fieldName;
+                        whereField.operator = WhereClause.Operators.EQUAL;
+                        whereField.value = value;
+                        whereField.valueDataType = passedFieldType;
+                        whereStatement.add(whereField);
+                        addByDf();
+                        addByTid(tenantId);
+                        return manageReturnedEntities(whereStatement.run(entityState));
+                    }
+                }
+            }
         }
-
-        // try to get the type of the passed field
-        if(passedField != null) {
-            passedFieldType = passedField.getGenericType();
+        finally {
+            resetWhere();
+            return new ArrayList<>();
         }
-
-        if(passedField != null && passedFieldType != null && value != null && tenantId > 0) {
-            // create the where statement for the query
-            List<WhereClause> whereStatement = new ArrayList<>();
-
-            // check that deleted records are not returned
-            WhereClause whereDf = new WhereClause();
-            whereDf.name = "df";
-            whereDf.operator = WhereClause.Operators.IS_NOT;
-            whereDf.value = "true";
-            whereDf.valueDataType = Boolean.class;
-
-            // add the id check
-            WhereClause whereId = new WhereClause();
-            whereId.conditional = WhereClause.CONDITIONALS.AND;
-            whereId.name = fieldName;
-            whereId.operator = WhereClause.Operators.EQUAL;
-            whereId.value = value;
-            whereId.valueDataType = passedFieldType;
-
-            WhereClause whereTid = new WhereClause();
-            whereTid.name = "tid";
-            whereTid.operator = WhereClause.Operators.EQUAL;
-            whereTid.value = Long.toString(tenantId);
-            whereTid.valueDataType = Long.class;
-
-            whereStatement.add(whereDf);
-            whereStatement.add(whereId);
-            whereStatement.add(whereTid);
-
-            // do the query
-            List<S> returnedStates =
-                    FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
-
-            // create a List of entities
-            return manageReturnedEntities(returnedStates);
-        }
-
-        return null;
-
     }
 
     /**
@@ -1476,10 +925,7 @@ public interface FdfCommonServices {
      * @param <S> Parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> List<FdfEntity<S>> getEntitiesByValuesForPassedFields(Class<S> entityState,
-                                                                                          HashMap<String, String>
-                                                                                                  fieldsAndValues) {
-
+    public static <S extends CommonState> List<FdfEntity<S>> getEntitiesByValuesForPassedFields(Class<S> entityState, HashMap<String, String> fieldsAndValues) {
         return getEntitiesByValuesForPassedFields(entityState, fieldsAndValues, 1);
     }
 
@@ -1495,72 +941,37 @@ public interface FdfCommonServices {
      * @param <S> Parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> List<FdfEntity<S>> getEntitiesByValuesForPassedFields(Class<S> entityState,
-                                                                                          HashMap<String, String>
-                                                                                                  fieldsAndValues,
-                                                                                          long tenantId) {
-
-        // check that at least one field/value pair was passed
-        if(fieldsAndValues != null && fieldsAndValues.size() > 0 && tenantId > 0) {
-            // create the where statement for the query
-            List<WhereClause> whereStatement = new ArrayList<>();
-
-            // check that deleted records are not returned
-            WhereClause whereDf = new WhereClause();
-            whereDf.name = "df";
-            whereDf.operator = WhereClause.Operators.IS_NOT;
-            whereDf.value = "true";
-            whereDf.valueDataType = Boolean.class;
-
-            WhereClause whereTid = new WhereClause();
-            whereTid.name = "tid";
-            whereTid.operator = WhereClause.Operators.EQUAL;
-            whereTid.value = Long.toString(tenantId);
-            whereTid.valueDataType = Long.class;
-
-            whereStatement.add(whereDf);
-            whereStatement.add(whereTid);
-
-            // add the Field / Value pairs to query by
-            for(Map.Entry<String, String> fieldValuePair: fieldsAndValues.entrySet()) {
-
-                Field passedField = null;
-                Type passedFieldType = null;
-
-                // check to see if the class has the field
-                try {
-                    passedField = entityState.getField(fieldValuePair.getKey());
-
-                } catch (NoSuchFieldException e) {
-                    // intentionally ignored
+    public static <S extends CommonState> List<FdfEntity<S>> getEntitiesByValuesForPassedFields(Class<S> entityState, HashMap<String, String> fieldsAndValues, long tenantId) {
+        for(Map.Entry<String, String> fieldValuePair: fieldsAndValues.entrySet()) {
+            try {
+                boolean valid = false;
+                if(fieldValuePair.getValue() != null && tenantId > 0) {
+                    Field passedField = entityState.getField(fieldValuePair.getKey());
+                    if(passedField != null) {
+                        Type passedFieldType = passedField.getGenericType();
+                        if(passedFieldType != null) {
+                            WhereClause whereFieldValue = new WhereClause();
+                            whereFieldValue.conditional = WhereClause.CONDITIONALS.AND;
+                            whereFieldValue.name = fieldValuePair.getKey();
+                            whereFieldValue.operator = WhereClause.Operators.EQUAL;
+                            whereFieldValue.value = fieldValuePair.getValue();
+                            whereFieldValue.valueDataType = passedFieldType;
+                            whereStatement.add(whereFieldValue);
+                            valid = true;
+                        }
+                    }
                 }
-
-                // try to get the type of the passed field
-                if(passedField != null) {
-                    passedFieldType = passedField.getGenericType();
+                if(!valid) {
+                    return new ArrayList<>();
                 }
-
-                // add the id check
-                WhereClause whereFieldValue = new WhereClause();
-                whereFieldValue.conditional = WhereClause.CONDITIONALS.AND;
-                whereFieldValue.name = fieldValuePair.getKey();
-                whereFieldValue.operator = WhereClause.Operators.EQUAL;
-                whereFieldValue.value = fieldValuePair.getValue();
-                whereFieldValue.valueDataType = passedFieldType;
-
-                whereStatement.add(whereFieldValue);
             }
-
-            // do the query
-            List<S> returnedStates =
-                    FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
-
-            // create a List of entities
-            return manageReturnedEntities(returnedStates);
+            catch (NoSuchFieldException e) {
+                return new ArrayList<>();
+            }
         }
-
-        return null;
-
+        addByDf();
+        addByTid(tenantId);
+        return manageReturnedEntities(whereStatement.run(entityState));
     }
 
     /**
@@ -1575,10 +986,8 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> S getAtDateById(Class<S> entityState, long id, Date date) {
-
+    public static <S extends CommonState> S getAtDateById(Class<S> entityState, long id, Date date) {
         return getAtDateById(entityState, id, date, 1);
-
     }
 
     /**
@@ -1595,70 +1004,12 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> S getAtDateById(Class<S> entityState, long id, Date date,
-                                                                     long tenantId) {
-
-        // create the where statement for the statement
-        List<WhereClause> whereStatement = new ArrayList<>();
-
-        // check that deleted records are not returned
-        WhereClause whereDf = new WhereClause();
-        whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.IS_NOT;
-        whereDf.value = "true";
-        whereDf.valueDataType = Boolean.class;
-
-        // add the id check
-        WhereClause whereId = new WhereClause();
-        whereId.conditional = WhereClause.CONDITIONALS.AND;
-        whereId.name = "id";
-        whereId.operator = WhereClause.Operators.EQUAL;
-        whereId.value = Long.toString(id);
-        whereId.valueDataType = Long.class;
-
-        // check that the start date is less than or equal to the date passed
-        WhereClause startDate = new WhereClause();
-        startDate.name = "arsd";
-        startDate.operator = WhereClause.Operators.LESS_THAN_OR_EQUAL;
-        startDate.value = GeneralConstants.DB_DATE_FORMAT.format(date);
-        startDate.valueDataType = Date.class;
-
-        // check that the end date is greater than the date passed
-        WhereClause endDate = new WhereClause();
-        endDate.groupings.add(WhereClause.GROUPINGS.OPEN_PARENTHESIS);
-        endDate.name = "ared";
-        endDate.operator = WhereClause.Operators.GREATER_THAN;
-        endDate.value = GeneralConstants.DB_DATE_FORMAT.format(date);
-        endDate.valueDataType = Date.class;
-
-        // OR that the end date is null (still active)
-        WhereClause endDateNull = new WhereClause();
-        endDateNull.conditional = WhereClause.CONDITIONALS.OR;
-        endDateNull.name = "ared";
-        endDateNull.operator = WhereClause.Operators.IS;
-        endDateNull.value = WhereClause.NULL;
-        endDateNull.groupings.add(WhereClause.GROUPINGS.CLOSE_PARENTHESIS);
-
-        WhereClause whereTid = new WhereClause();
-        whereTid.name = "tid";
-        whereTid.operator = WhereClause.Operators.EQUAL;
-        whereTid.value = Long.toString(tenantId);
-        whereTid.valueDataType = Long.class;
-
-        whereStatement.add(whereDf);
-        whereStatement.add(whereId);
-        whereStatement.add(startDate);
-        whereStatement.add(endDate);
-        whereStatement.add(endDateNull);
-        whereStatement.add(whereTid);
-
-        // do the query
-        List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
-        if(returnedStates.size() > 0) {
-            return returnedStates.get(0);
-        }
-
-        return null;
+    public static <S extends CommonState> S getAtDateById(Class<S> entityState, long id, Date date, long tenantId) {
+        addByDf();
+        addById(id);
+        addAtDate(date);
+        addByTid(tenantId);
+        return (S) whereStatement.run(entityState).stream().findFirst().orElse(null);
     }
 
     /**
@@ -1675,10 +1026,8 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> S auditAtDateById(Class<S> entityState, long id, Date date) {
-
+    public static <S extends CommonState> S auditAtDateById(Class<S> entityState, long id, Date date) {
         return auditAtDateById(entityState, id, date, 1);
-
     }
 
     /**
@@ -1697,63 +1046,11 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> S auditAtDateById(Class<S> entityState, long id, Date date,
-                                                          long tenantId) {
-
-        // create the where statement for the statement
-        List<WhereClause> whereStatement = new ArrayList<>();
-
-
-        // add the id check
-        WhereClause whereId = new WhereClause();
-        whereId.conditional = WhereClause.CONDITIONALS.AND;
-        whereId.name = "id";
-        whereId.operator = WhereClause.Operators.EQUAL;
-        whereId.value = Long.toString(id);
-        whereId.valueDataType = Long.class;
-
-        // check that the start date is less than or equal to the date passed
-        WhereClause startDate = new WhereClause();
-        startDate.name = "arsd";
-        startDate.operator = WhereClause.Operators.LESS_THAN_OR_EQUAL;
-        startDate.value = GeneralConstants.DB_DATE_FORMAT.format(date);
-        startDate.valueDataType = Date.class;
-
-        // check that the end date is greater than the date passed
-        WhereClause endDate = new WhereClause();
-        endDate.groupings.add(WhereClause.GROUPINGS.OPEN_PARENTHESIS);
-        endDate.name = "ared";
-        endDate.operator = WhereClause.Operators.GREATER_THAN;
-        endDate.value = GeneralConstants.DB_DATE_FORMAT.format(date);
-        endDate.valueDataType = Date.class;
-
-        // OR that the end date is null (still active)
-        WhereClause endDateNull = new WhereClause();
-        endDateNull.conditional = WhereClause.CONDITIONALS.OR;
-        endDateNull.name = "ared";
-        endDateNull.operator = WhereClause.Operators.IS;
-        endDateNull.value = WhereClause.NULL;
-        endDateNull.groupings.add(WhereClause.GROUPINGS.CLOSE_PARENTHESIS);
-
-        WhereClause whereTid = new WhereClause();
-        whereTid.name = "tid";
-        whereTid.operator = WhereClause.Operators.EQUAL;
-        whereTid.value = Long.toString(tenantId);
-        whereTid.valueDataType = Long.class;
-
-        whereStatement.add(whereId);
-        whereStatement.add(startDate);
-        whereStatement.add(endDate);
-        whereStatement.add(endDateNull);
-        whereStatement.add(whereTid);
-
-        // do the query
-        List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
-        if(returnedStates.size() > 0) {
-            return returnedStates.get(0);
-        }
-
-        return null;
+    public static <S extends CommonState> S auditAtDateById(Class<S> entityState, long id, Date date, long tenantId) {
+        addById(id);
+        addAtDate(date);
+        addByTid(tenantId);
+        return (S) whereStatement.run(entityState).stream().findFirst().orElse(null);
     }
 
     /**
@@ -1770,10 +1067,8 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> FdfEntity<S> getEntityFromDateById(Class<S> entityState, long id, Date date) {
-
+    public static <S extends CommonState> FdfEntity<S> getEntityFromDateById(Class<S> entityState, long id, Date date) {
         return getEntityFromDateById(entityState, id, date, 1);
-
     }
 
     /**
@@ -1791,58 +1086,9 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> FdfEntity<S> getEntityFromDateById(Class<S> entityState, long id, Date date,
-                                                                       long tenantId) {
-
-        // create the where statement for the statement
-        List<WhereClause> whereStatement = new ArrayList<>();
-
-        // check that deleted records are not returned
-        WhereClause whereDf = new WhereClause();
-        whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.IS_NOT;
-        whereDf.value = "true";
-        whereDf.valueDataType = Boolean.class;
-
-        // add the id check
-        WhereClause whereId = new WhereClause();
-        whereId.conditional = WhereClause.CONDITIONALS.AND;
-        whereId.name = "id";
-        whereId.operator = WhereClause.Operators.EQUAL;
-        whereId.value = Long.toString(id);
-        whereId.valueDataType = Long.class;
-
-        // check that the end date is greater than or equal to the passed date
-        WhereClause endDate1 = new WhereClause();
-        endDate1.name = "ared";
-        endDate1.operator = WhereClause.Operators.GREATER_THAN_OR_EQUAL;
-        endDate1.value = GeneralConstants.DB_DATE_FORMAT.format(date);
-        endDate1.valueDataType = Date.class;
-
-        // or that the end date is null (still active)
-        WhereClause enddate2 = new WhereClause();
-        enddate2.conditional = WhereClause.CONDITIONALS.OR;
-        enddate2.name = "ared";
-        enddate2.operator = WhereClause.Operators.IS;
-        enddate2.value = WhereClause.NULL;
-
-        WhereClause whereTid = new WhereClause();
-        whereTid.name = "tid";
-        whereTid.operator = WhereClause.Operators.EQUAL;
-        whereTid.value = Long.toString(tenantId);
-        whereTid.valueDataType = Long.class;
-
-        whereStatement.add(whereDf);
-        whereStatement.add(whereId);
-        whereStatement.add(endDate1);
-        whereStatement.add(enddate2);
-        whereStatement.add(whereTid);
-
-        // do the query
-        List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
-
-        // create a List of entities
-        return manageReturnedEntity(returnedStates);
+    public static <S extends CommonState> FdfEntity<S> getEntityFromDateById(Class<S> entityState, long id, Date date, long tenantId) {
+        addByAredAfter(date);
+        return getEntityById(entityState, id, tenantId);
     }
 
     /**
@@ -1859,10 +1105,8 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> FdfEntity<S> getEntityBeforeDateById(Class<S> entityState, long id, Date date) {
-
+    public static <S extends CommonState> FdfEntity<S> getEntityBeforeDateById(Class<S> entityState, long id, Date date) {
         return getEntityBeforeDateById(entityState, id, date, 1);
-
     }
 
     /**
@@ -1880,50 +1124,9 @@ public interface FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    default <S extends CommonState> FdfEntity<S> getEntityBeforeDateById(Class<S> entityState, long id, Date date,
-                                                                         long tenantId) {
-
-        // create the where statement for the statement
-        List<WhereClause> whereStatement = new ArrayList<>();
-
-        // check that deleted records are not returned
-        WhereClause whereDf = new WhereClause();
-        whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.IS_NOT;
-        whereDf.value = "true";
-        whereDf.valueDataType = Boolean.class;
-
-        // add the id check
-        WhereClause whereId = new WhereClause();
-        whereId.conditional = WhereClause.CONDITIONALS.AND;
-        whereId.name = "id";
-        whereId.operator = WhereClause.Operators.EQUAL;
-        whereId.value = Long.toString(id);
-        whereId.valueDataType = Long.class;
-
-        // check that the start date is less than or equal to the passed date
-        WhereClause endDate1 = new WhereClause();
-        endDate1.name = "arsd";
-        endDate1.operator = WhereClause.Operators.LESS_THAN_OR_EQUAL;
-        endDate1.value = GeneralConstants.DB_DATE_FORMAT.format(date);
-        endDate1.valueDataType = Date.class;
-
-        WhereClause whereTid = new WhereClause();
-        whereTid.name = "tid";
-        whereTid.operator = WhereClause.Operators.EQUAL;
-        whereTid.value = Long.toString(tenantId);
-        whereTid.valueDataType = Long.class;
-
-        whereStatement.add(whereDf);
-        whereStatement.add(whereId);
-        whereStatement.add(endDate1);
-        whereStatement.add(whereTid);
-
-        // do the query
-        List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
-
-        // create a List of entities
-        return manageReturnedEntity(returnedStates);
+    public static <S extends CommonState> FdfEntity<S> getEntityBeforeDateById(Class<S> entityState, long id, Date date, long tenantId) {
+        addByArsdBefore(date);
+        return getEntityById(entityState, id, tenantId);
     }
 
     /**
@@ -1942,11 +1145,8 @@ public interface FdfCommonServices {
      * @param <S> Parameterized type of entity
      * @return List of type passed
      */
-    default <S extends CommonState> FdfEntity<S> getEntityBetweenDatesById(Class<S> entityState, long id,
-                                                                           Date startDate, Date endDate) {
-
+    public static <S extends CommonState> FdfEntity<S> getEntityBetweenDatesById(Class<S> entityState, long id, Date startDate, Date endDate) {
         return getEntityBetweenDatesById(entityState, id, startDate, endDate, 1);
-
     }
 
     /**
@@ -1966,69 +1166,10 @@ public interface FdfCommonServices {
      * @param <S> Parameterized type of entity
      * @return List of type passed
      */
-    default <S extends CommonState> FdfEntity<S> getEntityBetweenDatesById(Class<S> entityState, long id,
-                                                                      Date startDate, Date endDate, long tenantId) {
-
-        // create the where statement for the statement
-        List<WhereClause> whereStatement = new ArrayList<>();
-
-        // check that deleted records are not returned
-        WhereClause whereDf = new WhereClause();
-        whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.IS_NOT;
-        whereDf.value = "true";
-        whereDf.valueDataType = Boolean.class;
-
-        // add the id check
-        WhereClause whereId = new WhereClause();
-        whereId.conditional = WhereClause.CONDITIONALS.AND;
-        whereId.name = "id";
-        whereId.operator = WhereClause.Operators.EQUAL;
-        whereId.value = Long.toString(id);
-        whereId.valueDataType = Long.class;
-
-        // check that the start date is less than or equal to the passed date
-        WhereClause startDate1 = new WhereClause();
-        startDate1.name = "arsd";
-        startDate1.operator = WhereClause.Operators.LESS_THAN_OR_EQUAL;
-        startDate1.value = GeneralConstants.DB_DATE_FORMAT.format(endDate);
-        startDate1.valueDataType = Date.class;
-
-        // check that the end date is greater than or equal to the passed date
-        WhereClause endDate1 = new WhereClause();
-        endDate1.conditional = WhereClause.CONDITIONALS.AND;
-        endDate1.groupings.add(WhereClause.GROUPINGS.OPEN_PARENTHESIS);
-        endDate1.name = "ared";
-        endDate1.operator = WhereClause.Operators.GREATER_THAN_OR_EQUAL;
-        endDate1.value = GeneralConstants.DB_DATE_FORMAT.format(startDate);
-        endDate1.valueDataType = Date.class;
-
-        // or that the end date is null (still active)
-        WhereClause enddate2 = new WhereClause();
-        enddate2.conditional = WhereClause.CONDITIONALS.OR;
-        enddate2.name = "ared";
-        enddate2.operator = WhereClause.Operators.IS;
-        enddate2.value = WhereClause.NULL;
-        enddate2.groupings.add(WhereClause.GROUPINGS.CLOSE_PARENTHESIS);
-
-        WhereClause whereTid = new WhereClause();
-        whereTid.name = "tid";
-        whereTid.operator = WhereClause.Operators.EQUAL;
-        whereTid.value = Long.toString(tenantId);
-        whereTid.valueDataType = Long.class;
-
-        whereStatement.add(whereDf);
-        whereStatement.add(whereId);
-        whereStatement.add(startDate1);
-        whereStatement.add(endDate1);
-        whereStatement.add(enddate2);
-        whereStatement.add(whereTid);
-
-        // do the query
-        List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
-
-        // create a List of entities
-        return manageReturnedEntity(returnedStates);
+    public static <S extends CommonState> FdfEntity<S> getEntityBetweenDatesById(Class<S> entityState, long id, Date startDate, Date endDate, long tenantId) {
+        addByArsdBefore(endDate);
+        addByAredAfter(startDate);
+        return getEntityById(entityState, id, tenantId);
     }
 
     /**
@@ -2038,34 +1179,27 @@ public interface FdfCommonServices {
      * @param <S> Parameterized Type of entity
      * @return List of Entities of Type passed
      */
-    default <S extends CommonState> List<FdfEntity<S>> manageReturnedEntities(List<S> rawStates) {
+    public static <S extends CommonState> List<FdfEntity<S>> manageReturnedEntities(List<S> rawStates) {
         // create a List of entities
         List<FdfEntity<S>> allEntities = new ArrayList<>();
-
         for(S state: rawStates) {
-
             // see if this states entityId has already been seen
             int flag = 0;
 
             // compare this id against existing ones
             for(FdfEntity thisEntity : allEntities) {
                 if (thisEntity.entityId == state.id) {
-
-                    // match
                     flag++;
                     addStateToEntity(state, thisEntity);
                 }
             }
-
             // state id was not found in existing entities, add a new one
             if(flag == 0) {
                 // create a entity
                 FdfEntity<S> entity = new FdfEntity<>();
                 addStateToEntity(state, entity);
                 allEntities.add(entity);
-
             }
-
         }
         return allEntities;
     }
@@ -2077,13 +1211,12 @@ public interface FdfCommonServices {
      * @param <S> Parameterized Type of entity
      * @return Entities of Type passed
      */
-    default <S extends CommonState> FdfEntity<S> manageReturnedEntity(List<S> rawStates) {
-        // create an entity
+    public static <S extends CommonState> FdfEntity<S> manageReturnedEntity(List<S> rawStates) {
+        //create an entity
         FdfEntity<S> entity = new FdfEntity<>();
-
         for(S state: rawStates) {
-                // add individual state to entity
-                addStateToEntity(state, entity);
+            //Add individual state to entity
+            addStateToEntity(state, entity);
         }
         return entity;
     }
@@ -2098,75 +1231,53 @@ public interface FdfCommonServices {
      * @param <S> Parameterized type of State
      */
     @SuppressWarnings("unchecked")
-    default <S extends CommonState> void addStateToEntity(CommonState state, FdfEntity<S> entity) {
+    public static <S extends CommonState> void addStateToEntity(CommonState state, FdfEntity<S> entity) {
         boolean flag = false;
-
-        // check to see if this is the first state being saved to the entity, if so set the entityId
+        //Check to see if this is the first state being saved to the entity, if so set the entityId
         if(entity.entityId == -1) {
             entity.entityId = state.id;
         }
-
-        // check to see that the id of the state passed matches the existing id for this entity, otherwise it does
-        // not belong here.
+        //Check to see that the id of the state passed matches the existing id for this entity, otherwise it does not belong here.
         if(entity.entityId == state.id) {
-
-            // if there is history for the entity and this is not a current state, check to see if the passed state
-            // is there already.
+            //If there is history for the entity and this is not a current state, check to see if the passed state is there already.
             if(!state.cf && entity.history.size() > 0) {
-                // check to see if this record was already in history
-
-                for (CommonState historyState: entity.history) {
+                //Check to see if this record was already in history
+                for(CommonState historyState: entity.history) {
                     if (historyState.rid == state.rid) {
                         flag = true;
                     }
                 }
             }
-
-            // set the record in the entity
-            if (state.cf) {
+            //Set the record in the entity
+            if(state.cf) {
                 entity.current = (S) state;
-
-            } else {
-                if (!flag) {
-                    entity.history.add((S) state);
-
-                }
+            } else if(!flag) {
+                entity.history.add((S) state);
             }
         }
     }
 
-
-    default <S extends CommonState> long getNewEntityId(Class<S> entityState) {
-
+    /**
+     * Uses the Default FdfTenant (when not using multi-tenant)
+     * @param entityState Class of entity to use for returned type.
+     * @param <S> Parameterized type of State.
+     * @return Entities of Type passed
+     */
+    public static <S extends CommonState> long getNewEntityId(Class<S> entityState) {
         return getNewEntityId(entityState, 1);
-
     }
 
     /**
-     *
+     * Includes specified tenant (when using multi-tenant)
      * @param entityState Class of entity to use for returned type.
      * @param tenantId Id of tenant associated with the entity
      * @param <S> Parameterized type of State.
      * @return Entities of Type passed
      */
-    default <S extends CommonState> long getNewEntityId(Class<S> entityState, long tenantId) {
-        // get the last id assigned
-        List<String> select = new ArrayList<>();
-        String maxId = "max(id) as id";
-        select.add(maxId);
-
-        // create the where statement for the statement
-        List<WhereClause> whereStatement = new ArrayList<>();
-
-        WhereClause whereTid = new WhereClause();
-        whereTid.name = "tid";
-        whereTid.operator = WhereClause.Operators.EQUAL;
-        whereTid.value = Long.toString(tenantId);
-        whereTid.valueDataType = Long.class;
-
-        whereStatement.add(whereTid);
-
-        List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, select, whereStatement);
+    public static <S extends CommonState> long getNewEntityId(Class<S> entityState, long tenantId) {
+        whereStatement.addByTid(tenantId);
+        List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, Arrays.asList("max(id) as id"), whereStatement.asList());
+        whereStatement.reset();
         if(returnedStates != null && returnedStates.size() == 1) {
             if(returnedStates.get(0).id == -1) {
                 returnedStates.get(0).id = 0;
