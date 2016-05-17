@@ -140,6 +140,12 @@ public class WhereStatement {
         whereStatement.add(whereEsid);
     }
 
+    public <S extends CommonState> List<S> run(Class<S> entityState) {
+        List<S> result = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
+        whereStatement.clear();
+        return result;
+    }
+
     public void reset() {
         whereStatement.clear();
     }
@@ -152,11 +158,5 @@ public class WhereStatement {
     }
     public List<WhereClause> asList() {
         return whereStatement;
-    }
-
-    public <S extends CommonState> List<S> run(Class<S> entityState) {
-        List<S> result = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
-        whereStatement.clear();
-        return result;
     }
 }

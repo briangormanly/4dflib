@@ -78,7 +78,6 @@ public abstract class FdfCommonServices {
     protected static void addByEsid(long esid) {
         whereStatement.addByEsid(esid);
     }
-
     public static void resetWhere() {
         whereStatement.reset();
     }
@@ -799,7 +798,7 @@ public abstract class FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    public static <S extends CommonState> FdfEntity<S> getEntityCurrentById(Class<S> entityState, long id) {
+    public static <S extends CommonState> S getEntityCurrentById(Class<S> entityState, long id) {
         return getEntityCurrentById(entityState, id, 1);
     }
 
@@ -815,13 +814,12 @@ public abstract class FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    public static <S extends CommonState> FdfEntity<S> getEntityCurrentById(Class<S> entityState, long id, long tenantId) {
+    public static <S extends CommonState> S getEntityCurrentById(Class<S> entityState, long id, long tenantId) {
         addByDf();
         addByCf();
         addById(id);
         addByTid(tenantId);
-        return manageReturnedEntity(whereStatement.run(entityState));
-
+        return whereStatement.run(entityState).stream().findFirst().orElse(null);
     }
 
     /**
