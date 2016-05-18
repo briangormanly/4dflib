@@ -887,8 +887,8 @@ public abstract class FdfCommonServices {
      * @return Entity of type passed
      */
     public static <S extends CommonState> List<FdfEntity<S>> getEntitiesByValueForPassedField(Class<S> entityState, String fieldName, String value, long tenantId) {
-        try {
-            if(value != null && tenantId > 0) {
+        if(value != null && tenantId > 0) {
+            try {
                 Field passedField = entityState.getField(fieldName);
                 if (passedField != null) {
                     Type passedFieldType = passedField.getGenericType();
@@ -904,12 +904,12 @@ public abstract class FdfCommonServices {
                         return manageReturnedEntities(whereStatement.run(entityState));
                     }
                 }
+            } catch (NoSuchFieldException e) {
+                resetWhere();
+                System.out.println(entityState.getSimpleName() + " does not contain the field, " + fieldName);
             }
         }
-        finally {
-            resetWhere();
-            return new ArrayList<>();
-        }
+        return new ArrayList<>();
     }
 
     /**
@@ -1186,7 +1186,7 @@ public abstract class FdfCommonServices {
 
             // compare this id against existing ones
             for(FdfEntity thisEntity : allEntities) {
-                if (thisEntity.entityId == state.id) {
+                if(thisEntity.entityId == state.id) {
                     flag++;
                     addStateToEntity(state, thisEntity);
                 }
