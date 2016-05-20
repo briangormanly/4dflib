@@ -15,7 +15,11 @@ public class WhereStatement {
     protected final List<WhereClause> whereStatement = new ArrayList<>();
 
     public void add(WhereClause whereClause) {
-        whereStatement.add(whereClause);
+        if(whereClause != null) {
+            whereStatement.add(whereClause);
+        } else {
+            System.out.println("Yeah, this shouldn't happen.");
+        }
     }
 
     public void addByRid(long rid) {
@@ -141,9 +145,9 @@ public class WhereStatement {
     }
 
     public <S extends CommonState> List<S> run(Class<S> entityState) {
-        List<S> result = FdfPersistence.getInstance().selectQuery(entityState, null, whereStatement);
+        List<WhereClause> query = new ArrayList<>(whereStatement);
         whereStatement.clear();
-        return result;
+        return FdfPersistence.getInstance().selectQuery(entityState, null, query);
     }
 
     public void reset() {
