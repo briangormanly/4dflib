@@ -7,12 +7,25 @@ import com.fdflib.util.GeneralConstants;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 /**
  * Created by Corley.Herman1 on 4/22/2016.
  */
 public class WhereStatement {
+    private final BlockingQueue<Boolean> whereQueue = new ArrayBlockingQueue<>(1);
     protected final List<WhereClause> whereStatement = new ArrayList<>();
+
+    public boolean register() {
+        try {
+            whereQueue.put(new Boolean(true));
+            return true;
+        } catch (InterruptedException e) {
+            System.out.println("Well, I tried...");
+            return false;
+        }
+    }
 
     public void add(WhereClause whereClause) {
         if(whereClause != null) {
@@ -146,12 +159,17 @@ public class WhereStatement {
 
     public <S extends CommonState> List<S> run(Class<S> entityState) {
         List<WhereClause> query = new ArrayList<>(whereStatement);
-        whereStatement.clear();
+        reset();
         return FdfPersistence.getInstance().selectQuery(entityState, null, query);
     }
 
     public void reset() {
         whereStatement.clear();
+        /*try {
+            whereQueue.take();
+        } catch (InterruptedException e) {
+            System.out.println("You shouldn't be getting this.");
+        }*/
     }
     public String toString() {
         String where = "WHERE 1=1";
