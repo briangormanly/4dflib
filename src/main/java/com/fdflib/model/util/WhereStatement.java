@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * Created by Corley.Herman1 on 4/22/2016.
  */
-public class WhereStatement<S extends CommonState> {
+public class WhereStatement {
     protected final List<WhereClause> whereStatement = new ArrayList<>();
 
     public void add(WhereClause whereClause) {

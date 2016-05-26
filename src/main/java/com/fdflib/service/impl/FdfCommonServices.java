@@ -908,7 +908,7 @@ public abstract class FdfCommonServices {
         addByCf(whereStatement);
         addById(id, whereStatement);
         addByTid(tenantId, whereStatement);
-        return whereStatement.run(entityState).stream().findFirst().orElse(null);
+        return (S) whereStatement.run(entityState).stream().findFirst().orElse(null);
     }
 
     /**
