@@ -21,6 +21,7 @@ import com.fdflib.model.state.CommonState;
 import com.fdflib.model.util.WhereClause;
 import com.fdflib.model.util.WhereStatement;
 import com.fdflib.persistence.FdfPersistence;
+import com.fdflib.util.GeneralConstants;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
@@ -36,56 +37,128 @@ import java.util.*;
 @SuppressWarnings("unused")
 public abstract class FdfCommonServices {
     protected final static org.slf4j.Logger fdfLog = LoggerFactory.getLogger(CommonState.class);
-    protected final static WhereStatement whereStatement = new WhereStatement();
 
-    /* --- For Legacy --- */
-    protected static void addByRid(long rid) {
-        whereStatement.addByRid(rid);
+    protected static void addByRid(long rid, WhereStatement whereStatement) {
+        WhereClause whereRid = new WhereClause();
+        whereRid.name = "rid";
+        whereRid.operator = WhereClause.Operators.EQUAL;
+        whereRid.value = Long.toString(rid);
+        whereRid.valueDataType = Long.class;
+        whereStatement.add(whereRid);
     }
-    protected static void addById(long id) {
-        whereStatement.addById(id);
+    protected static void addById(long id, WhereStatement whereStatement) {
+        WhereClause whereId = new WhereClause();
+        whereId.name = "id";
+        whereId.operator = WhereClause.Operators.EQUAL;
+        whereId.value = Long.toString(id);
+        whereId.valueDataType = Long.class;
+        whereStatement.add(whereId);
     }
-    protected static void addByCf() {
-        whereStatement.addByCf();
+    protected static void addByCf(WhereStatement whereStatement) {
+        WhereClause whereCf = new WhereClause();
+        whereCf.name = "cf";
+        whereCf.operator = WhereClause.Operators.EQUAL;
+        whereCf.value = "1";
+        whereCf.valueDataType = Integer.class;
+        whereStatement.add(whereCf);
     }
-    protected static void addNotCf() {
-        whereStatement.addNotCf();
+    protected static void addNotCf(WhereStatement whereStatement) {
+        WhereClause whereCf = new WhereClause();
+        whereCf.name = "cf";
+        whereCf.operator = WhereClause.Operators.NOT_EQUAL;
+        whereCf.value = "1";
+        whereCf.valueDataType = Integer.class;
+        whereStatement.add(whereCf);
     }
-    protected static void addByDf() {
-        whereStatement.addByDf();
+    protected static void addByDf(WhereStatement whereStatement) {
+        WhereClause whereDf = new WhereClause();
+        whereDf.name = "df";
+        whereDf.operator = WhereClause.Operators.NOT_EQUAL;
+        whereDf.value = "1";
+        whereDf.valueDataType = Integer.class;
+        whereStatement.add(whereDf);
     }
-    protected static void addByArsdBefore(Date date) {
-        whereStatement.addByArsdBefore(date);
+    protected static void addByArsdBefore(Date date, WhereStatement whereStatement) {
+        if(date != null) {
+            WhereClause whereStartBefore = new WhereClause();
+            whereStartBefore.name = "arsd";
+            whereStartBefore.operator = WhereClause.Operators.LESS_THAN_OR_EQUAL;
+            whereStartBefore.value = GeneralConstants.DB_DATE_FORMAT.format(date);
+            whereStartBefore.valueDataType = Date.class;
+            whereStatement.add(whereStartBefore);
+        }
     }
-    protected static void addByArsdAfter(Date date) {
-        whereStatement.addByArsdAfter(date);
+    protected static void addByArsdAfter(Date date, WhereStatement whereStatement) {
+        if(date != null) {
+            WhereClause whereStartAfter = new WhereClause();
+            whereStartAfter.name = "arsd";
+            whereStartAfter.operator = WhereClause.Operators.GREATER_THAN_OR_EQUAL;
+            whereStartAfter.value = GeneralConstants.DB_DATE_FORMAT.format(date);
+            whereStartAfter.valueDataType = Date.class;
+            whereStatement.add(whereStartAfter);
+        }
     }
-    protected static void addByAredBefore(Date date) {
-        whereStatement.addByAredBefore(date);
+    protected static void addByAredBefore(Date date, WhereStatement whereStatement) {
+        WhereClause whereEndBefore = new WhereClause();
+        whereEndBefore.name = "ared";
+        if(date != null) {
+            whereEndBefore.operator = WhereClause.Operators.LESS_THAN_OR_EQUAL;
+            whereEndBefore.value = GeneralConstants.DB_DATE_FORMAT.format(date);
+            whereEndBefore.valueDataType = Date.class;
+        }
+        else {
+            whereEndBefore.operator = WhereClause.Operators.IS_NOT;
+            whereEndBefore.value = WhereClause.NULL;
+        }
+        whereStatement.add(whereEndBefore);
     }
-    protected static void addByAredAfter(Date date) {
-        whereStatement.addByAredAfter(date);
-    }
-    protected static void addAtDate(Date date) {
-        whereStatement.addAtDate(date);
-    }
-    protected static void addByTid(long tid) {
-        whereStatement.addByTid(tid);
-    }
-    protected static void addByEuid(long euid) {
-        whereStatement.addByEuid(euid);
-    }
-    protected static void addByEsid(long esid) {
-        whereStatement.addByEsid(esid);
-    }
+    protected static void addByAredAfter(Date date, WhereStatement whereStatement) {
+        WhereClause whereCurrent = new WhereClause();
+        if(date != null) {
+            WhereClause whereEndAfter = new WhereClause();
+            whereEndAfter.groupings.add(WhereClause.GROUPINGS.OPEN_PARENTHESIS);
+            whereEndAfter.name = "ared";
+            whereEndAfter.operator = WhereClause.Operators.GREATER_THAN_OR_EQUAL;
+            whereEndAfter.value = GeneralConstants.DB_DATE_FORMAT.format(date);
+            whereEndAfter.valueDataType = Date.class;
+            whereStatement.add(whereEndAfter);
 
-    public static void resetWhere() {
-        whereStatement.reset();
+            whereCurrent.conditional = WhereClause.CONDITIONALS.OR;
+            whereCurrent.groupings.add(WhereClause.GROUPINGS.CLOSE_PARENTHESIS);
+        }
+        whereCurrent.name = "ared";
+        whereCurrent.operator = WhereClause.Operators.IS;
+        whereCurrent.value = WhereClause.NULL;
+        whereStatement.add(whereCurrent);
     }
-    public static String whereToString() {
-        return whereStatement.toString();
+    protected static void addAtDate(Date date, WhereStatement whereStatement) {
+        addByArsdBefore(date, whereStatement);
+        addByAredAfter(date, whereStatement);
     }
-    /* --- End Legacy --- */
+    protected static void addByTid(long tid, WhereStatement whereStatement) {
+        WhereClause whereTid = new WhereClause();
+        whereTid.name = "tid";
+        whereTid.operator = WhereClause.Operators.EQUAL;
+        whereTid.value = Long.toString(tid);
+        whereTid.valueDataType = Long.class;
+        whereStatement.add(whereTid);
+    }
+    protected static void addByEuid(long euid, WhereStatement whereStatement) {
+        WhereClause whereEuid = new WhereClause();
+        whereEuid.name = "euid";
+        whereEuid.operator = WhereClause.Operators.EQUAL;
+        whereEuid.value = Long.toString(euid);
+        whereEuid.valueDataType = Long.class;
+        whereStatement.add(whereEuid);
+    }
+    protected static void addByEsid(long esid, WhereStatement whereStatement) {
+        WhereClause whereEsid = new WhereClause();
+        whereEsid.name = "esid";
+        whereEsid.operator = WhereClause.Operators.EQUAL;
+        whereEsid.value = Long.toString(esid);
+        whereEsid.valueDataType = Long.class;
+        whereStatement.add(whereEsid);
+    }
 
     /**
      * Save an Entities State to persistence internally manages all insert, update and actions associated with
@@ -377,7 +450,8 @@ public abstract class FdfCommonServices {
      * @return List of type passed
      */
     public static <S extends CommonState> List<FdfEntity<S>> auditAll(Class<S> entityState, long tenantId) {
-        addByTid(tenantId);
+        WhereStatement whereStatement = new WhereStatement();
+        addByTid(tenantId, whereStatement);
         return manageReturnedEntities(whereStatement.run(entityState));
     }
 
@@ -403,8 +477,9 @@ public abstract class FdfCommonServices {
      * @return List of type passed
      */
     public static <S extends CommonState> List<S> auditAllCurrent(Class<S> entityState, long tenantId) {
-        addByCf();
-        addByTid(tenantId);
+        WhereStatement whereStatement = new WhereStatement();
+        addByCf(whereStatement);
+        addByTid(tenantId, whereStatement);
         return whereStatement.run(entityState);
     }
 
@@ -430,8 +505,9 @@ public abstract class FdfCommonServices {
      * @return List of type passed
      */
     public static <S extends CommonState> List<FdfEntity<S>> getAll(Class<S> entityState, long tenantId) {
-        addByDf();
-        addByTid(tenantId);
+        WhereStatement whereStatement = new WhereStatement();
+        addByDf(whereStatement);
+        addByTid(tenantId, whereStatement);
         return manageReturnedEntities(whereStatement.run(entityState));
     }
 
@@ -457,9 +533,10 @@ public abstract class FdfCommonServices {
      * @return List of type passed
      */
     public static <S extends CommonState> List<S> getAllCurrent(Class<S> entityState, long tenantId) {
-        addByDf();
-        addByCf();
-        addByTid(tenantId);
+        WhereStatement whereStatement = new WhereStatement();
+        addByDf(whereStatement);
+        addByCf(whereStatement);
+        addByTid(tenantId, whereStatement);
         return whereStatement.run(entityState);
     }
 
@@ -485,9 +562,10 @@ public abstract class FdfCommonServices {
      * @return List of type passed
      */
     public static <S extends CommonState> List<FdfEntity<S>> getAllHistory(Class<S> entityState, long tenantId) {
-        addByDf();
-        addNotCf();
-        addByTid(tenantId);
+        WhereStatement whereStatement = new WhereStatement();
+        addByDf(whereStatement);
+        addNotCf(whereStatement);
+        addByTid(tenantId, whereStatement);
         return manageReturnedEntities(whereStatement.run(entityState));
     }
 
@@ -525,9 +603,10 @@ public abstract class FdfCommonServices {
      * @return List of type passed
      */
     public static <S extends CommonState> List<S> getAllAtDate(Class<S> entityState, Date date, long tenantId) {
-        addByDf();
-        addAtDate(date);
-        addByTid(tenantId);
+        WhereStatement whereStatement = new WhereStatement();
+        addByDf(whereStatement);
+        addAtDate(date, whereStatement);
+        addByTid(tenantId, whereStatement);
         return whereStatement.run(entityState);
     }
 
@@ -563,8 +642,9 @@ public abstract class FdfCommonServices {
      * @return List of type passed
      */
     public static <S extends CommonState> List<S> auditAllAtDate(Class<S> entityState, Date date, long tenantId) {
-        addAtDate(date);
-        addByTid(tenantId);
+        WhereStatement whereStatement = new WhereStatement();
+        addAtDate(date, whereStatement);
+        addByTid(tenantId, whereStatement);
         return whereStatement.run(entityState);
     }
 
@@ -600,9 +680,10 @@ public abstract class FdfCommonServices {
      * @return List of type passed
      */
     public static <S extends CommonState> List<FdfEntity<S>> getAllFromDate(Class<S> entityState, Date date, long tenantId) {
-        addByDf();
-        addByAredAfter(date);
-        addByTid(tenantId);
+        WhereStatement whereStatement = new WhereStatement();
+        addByDf(whereStatement);
+        addByAredAfter(date, whereStatement);
+        addByTid(tenantId, whereStatement);
         return manageReturnedEntities(whereStatement.run(entityState));
     }
 
@@ -638,9 +719,10 @@ public abstract class FdfCommonServices {
      * @return List of type passed
      */
     public static <S extends CommonState> List<FdfEntity<S>> getAllBeforeDate(Class<S> entityState, Date date, long tenantId) {
-        addByDf();
-        addByArsdBefore(date);
-        addByTid(tenantId);
+        WhereStatement whereStatement = new WhereStatement();
+        addByDf(whereStatement);
+        addByArsdBefore(date, whereStatement);
+        addByTid(tenantId, whereStatement);
         return manageReturnedEntities(whereStatement.run(entityState));
     }
 
@@ -680,10 +762,11 @@ public abstract class FdfCommonServices {
      * @return List of type passed
      */
     public static <S extends CommonState> List<FdfEntity<S>> getAllBetweenDates(Class<S> entityState, Date startDate, Date endDate, long tenantId) {
-        addByDf();
-        addByArsdBefore(endDate);
-        addByAredAfter(startDate);
-        addByTid(tenantId);
+        WhereStatement whereStatement = new WhereStatement();
+        addByDf(whereStatement);
+        addByArsdBefore(endDate, whereStatement);
+        addByAredAfter(startDate, whereStatement);
+        addByTid(tenantId, whereStatement);
         return manageReturnedEntities(whereStatement.run(entityState));
     }
 
@@ -698,8 +781,9 @@ public abstract class FdfCommonServices {
      * @return Entity of type passed
      */
     public static <S extends CommonState> S getEntityByRid(Class<S> entityState, long rid) {
-        addByDf();
-        addByRid(rid);
+        WhereStatement whereStatement = new WhereStatement();
+        addByDf(whereStatement);
+        addByRid(rid, whereStatement);
         return (S) whereStatement.run(entityState).stream().findFirst().orElse(null);
     }
 
@@ -715,7 +799,8 @@ public abstract class FdfCommonServices {
      * @return Entity of type passed
      */
     public static <S extends CommonState> S auditEntityByRid(Class<S> entityState, long rid) {
-        addByRid(rid);
+        WhereStatement whereStatement = new WhereStatement();
+        addByRid(rid, whereStatement);
         return (S) whereStatement.run(entityState).stream().findFirst().orElse(null);
     }
 
@@ -751,8 +836,9 @@ public abstract class FdfCommonServices {
      * @return Entity of type passed
      */
     public static <S extends CommonState> FdfEntity<S> auditEntityById(Class<S> entityState, long id, long tenantId) {
-        addById(id);
-        addByTid(tenantId);
+        WhereStatement whereStatement = new WhereStatement();
+        addById(id, whereStatement);
+        addByTid(tenantId, whereStatement);
         return manageReturnedEntity(whereStatement.run(entityState));
     }
 
@@ -782,9 +868,10 @@ public abstract class FdfCommonServices {
      * @return Entity of type passed
      */
     public static <S extends CommonState> FdfEntity<S> getEntityById(Class<S> entityState, long id, long tenantId) {
-        addByDf();
-        addById(id);
-        addByTid(tenantId);
+        WhereStatement whereStatement = new WhereStatement();
+        addByDf(whereStatement);
+        addById(id, whereStatement);
+        addByTid(tenantId, whereStatement);
         return manageReturnedEntity(whereStatement.run(entityState));
     }
 
@@ -799,7 +886,7 @@ public abstract class FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    public static <S extends CommonState> FdfEntity<S> getEntityCurrentById(Class<S> entityState, long id) {
+    public static <S extends CommonState> S getEntityCurrentById(Class<S> entityState, long id) {
         return getEntityCurrentById(entityState, id, 1);
     }
 
@@ -815,13 +902,13 @@ public abstract class FdfCommonServices {
      * @param <S> parameterized type of entity
      * @return Entity of type passed
      */
-    public static <S extends CommonState> FdfEntity<S> getEntityCurrentById(Class<S> entityState, long id, long tenantId) {
-        addByDf();
-        addByCf();
-        addById(id);
-        addByTid(tenantId);
-        return manageReturnedEntity(whereStatement.run(entityState));
-
+    public static <S extends CommonState> S getEntityCurrentById(Class<S> entityState, long id, long tenantId) {
+        WhereStatement whereStatement = new WhereStatement();
+        addByDf(whereStatement);
+        addByCf(whereStatement);
+        addById(id, whereStatement);
+        addByTid(tenantId, whereStatement);
+        return (S) whereStatement.run(entityState).stream().findFirst().orElse(null);
     }
 
     /**
@@ -852,10 +939,11 @@ public abstract class FdfCommonServices {
      * @return Entity of type passed
      */
     public static <S extends CommonState> FdfEntity<S> getEntityHistoryById(Class<S> entityState, long id, long tenantId) {
-        addNotCf();
-        addByDf();
-        addById(id);
-        addByTid(tenantId);
+        WhereStatement whereStatement = new WhereStatement();
+        addNotCf(whereStatement);
+        addByDf(whereStatement);
+        addById(id, whereStatement);
+        addByTid(tenantId, whereStatement);
         return manageReturnedEntity(whereStatement.run(entityState));
     }
 
@@ -889,29 +977,29 @@ public abstract class FdfCommonServices {
      * @return Entity of type passed
      */
     public static <S extends CommonState> List<FdfEntity<S>> getEntitiesByValueForPassedField(Class<S> entityState, String fieldName, String value, long tenantId) {
-        try {
-            if(value != null && tenantId > 0) {
+        if(value != null && tenantId > 0) {
+            try {
                 Field passedField = entityState.getField(fieldName);
                 if (passedField != null) {
                     Type passedFieldType = passedField.getGenericType();
                     if (passedFieldType != null && value != null && tenantId > 0) {
+                        WhereStatement whereStatement = new WhereStatement();
                         WhereClause whereField = new WhereClause();
                         whereField.name = fieldName;
                         whereField.operator = WhereClause.Operators.EQUAL;
                         whereField.value = value;
                         whereField.valueDataType = passedFieldType;
                         whereStatement.add(whereField);
-                        addByDf();
-                        addByTid(tenantId);
+                        addByDf(whereStatement);
+                        addByTid(tenantId, whereStatement);
                         return manageReturnedEntities(whereStatement.run(entityState));
                     }
                 }
+            } catch (NoSuchFieldException e) {
+                System.out.println(entityState.getSimpleName() + " does not contain the field, " + fieldName);
             }
         }
-        finally {
-            resetWhere();
-            return new ArrayList<>();
-        }
+        return new ArrayList<>();
     }
 
     /**
@@ -942,6 +1030,7 @@ public abstract class FdfCommonServices {
      * @return Entity of type passed
      */
     public static <S extends CommonState> List<FdfEntity<S>> getEntitiesByValuesForPassedFields(Class<S> entityState, HashMap<String, String> fieldsAndValues, long tenantId) {
+        WhereStatement whereStatement = new WhereStatement();
         for(Map.Entry<String, String> fieldValuePair: fieldsAndValues.entrySet()) {
             try {
                 boolean valid = false;
@@ -969,8 +1058,8 @@ public abstract class FdfCommonServices {
                 return new ArrayList<>();
             }
         }
-        addByDf();
-        addByTid(tenantId);
+        addByDf(whereStatement);
+        addByTid(tenantId, whereStatement);
         return manageReturnedEntities(whereStatement.run(entityState));
     }
 
@@ -1005,10 +1094,11 @@ public abstract class FdfCommonServices {
      * @return Entity of type passed
      */
     public static <S extends CommonState> S getAtDateById(Class<S> entityState, long id, Date date, long tenantId) {
-        addByDf();
-        addById(id);
-        addAtDate(date);
-        addByTid(tenantId);
+        WhereStatement whereStatement = new WhereStatement();
+        addByDf(whereStatement);
+        addById(id, whereStatement);
+        addAtDate(date, whereStatement);
+        addByTid(tenantId, whereStatement);
         return (S) whereStatement.run(entityState).stream().findFirst().orElse(null);
     }
 
@@ -1047,9 +1137,10 @@ public abstract class FdfCommonServices {
      * @return Entity of type passed
      */
     public static <S extends CommonState> S auditAtDateById(Class<S> entityState, long id, Date date, long tenantId) {
-        addById(id);
-        addAtDate(date);
-        addByTid(tenantId);
+        WhereStatement whereStatement = new WhereStatement();
+        addById(id, whereStatement);
+        addAtDate(date, whereStatement);
+        addByTid(tenantId, whereStatement);
         return (S) whereStatement.run(entityState).stream().findFirst().orElse(null);
     }
 
@@ -1087,7 +1178,8 @@ public abstract class FdfCommonServices {
      * @return Entity of type passed
      */
     public static <S extends CommonState> FdfEntity<S> getEntityFromDateById(Class<S> entityState, long id, Date date, long tenantId) {
-        addByAredAfter(date);
+        WhereStatement whereStatement = new WhereStatement();
+        addByAredAfter(date, whereStatement);
         return getEntityById(entityState, id, tenantId);
     }
 
@@ -1125,7 +1217,8 @@ public abstract class FdfCommonServices {
      * @return Entity of type passed
      */
     public static <S extends CommonState> FdfEntity<S> getEntityBeforeDateById(Class<S> entityState, long id, Date date, long tenantId) {
-        addByArsdBefore(date);
+        WhereStatement whereStatement = new WhereStatement();
+        addByArsdBefore(date, whereStatement);
         return getEntityById(entityState, id, tenantId);
     }
 
@@ -1167,8 +1260,9 @@ public abstract class FdfCommonServices {
      * @return List of type passed
      */
     public static <S extends CommonState> FdfEntity<S> getEntityBetweenDatesById(Class<S> entityState, long id, Date startDate, Date endDate, long tenantId) {
-        addByArsdBefore(endDate);
-        addByAredAfter(startDate);
+        WhereStatement whereStatement = new WhereStatement();
+        addByArsdBefore(endDate, whereStatement);
+        addByAredAfter(startDate, whereStatement);
         return getEntityById(entityState, id, tenantId);
     }
 
@@ -1188,7 +1282,7 @@ public abstract class FdfCommonServices {
 
             // compare this id against existing ones
             for(FdfEntity thisEntity : allEntities) {
-                if (thisEntity.entityId == state.id) {
+                if(thisEntity.entityId == state.id) {
                     flag++;
                     addStateToEntity(state, thisEntity);
                 }
@@ -1275,7 +1369,8 @@ public abstract class FdfCommonServices {
      * @return Entities of Type passed
      */
     public static <S extends CommonState> long getNewEntityId(Class<S> entityState, long tenantId) {
-        whereStatement.addByTid(tenantId);
+        WhereStatement whereStatement = new WhereStatement();
+        addByTid(tenantId, whereStatement);
         List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, Arrays.asList("max(id) as id"), whereStatement.asList());
         whereStatement.reset();
         if(returnedStates != null && returnedStates.size() == 1) {
