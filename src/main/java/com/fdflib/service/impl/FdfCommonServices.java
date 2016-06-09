@@ -54,6 +54,14 @@ public abstract class FdfCommonServices {
         whereId.valueDataType = Long.class;
         whereStatement.add(whereId);
     }
+    protected static void addByIdSet(String idSet, WhereStatement whereStatement) {
+        WhereClause whereIdSet = new WhereClause();
+        whereIdSet.name = "id";
+        whereIdSet.operator = WhereClause.Operators.IN;
+        whereIdSet.value = idSet;
+        whereIdSet.valueDataType = Long.class;
+        whereStatement.add(whereIdSet);
+    }
     protected static void addByCf(WhereStatement whereStatement) {
         WhereClause whereCf = new WhereClause();
         whereCf.name = "cf";
