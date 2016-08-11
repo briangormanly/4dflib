@@ -38,6 +38,7 @@ import java.util.*;
 public abstract class FdfCommonServices {
     protected final static org.slf4j.Logger fdfLog = LoggerFactory.getLogger(CommonState.class);
 
+    //Base WhereStatement Builders
     protected static void addByRid(long rid, WhereStatement whereStatement) {
         WhereClause whereRid = new WhereClause();
         whereRid.name = "rid";
@@ -58,7 +59,7 @@ public abstract class FdfCommonServices {
         WhereClause whereIdSet = new WhereClause();
         whereIdSet.name = "id";
         whereIdSet.operator = WhereClause.Operators.IN;
-        whereIdSet.value = idSet;
+        whereIdSet.value = "(" + (idSet.matches("^(\\d+\\D)*\\d+$") ? idSet.replaceAll("\\D", ",") : "0") + ")";
         whereIdSet.valueDataType = Long.class;
         whereStatement.add(whereIdSet);
     }
@@ -168,6 +169,28 @@ public abstract class FdfCommonServices {
         whereStatement.add(whereEsid);
     }
 
+    //Bundled WhereStatement Builders
+    protected static void setForCurrent(long tenantId, WhereStatement whereStatement) {
+        addByDf(whereStatement);
+        auditForCurrent(tenantId, whereStatement);
+    }
+    protected static void setAtDate(Date date, long tenantId, WhereStatement whereStatement) {
+        addByDf(whereStatement);
+        auditAtDate(date, tenantId, whereStatement);
+    }
+    protected static void setWithHistory(long tenantId, WhereStatement whereStatement) {
+        addByDf(whereStatement);
+        addByTid(tenantId, whereStatement);
+    }
+    protected static void auditForCurrent(long tenantId, WhereStatement whereStatement) {
+        addByCf(whereStatement);
+        addByTid(tenantId, whereStatement);
+    }
+    protected static void auditAtDate(Date date, long tenantId, WhereStatement whereStatement) {
+        addAtDate(date, whereStatement);
+        addByTid(tenantId, whereStatement);
+    }
+
     /**
      * Save an Entities State to persistence internally manages all insert, update and actions associated with
      * maintaining the correct state of the data in persistence.  Uses the Default FdfTenant (when not using multi-tenant)
@@ -212,38 +235,30 @@ public abstract class FdfCommonServices {
      * @return S the saved entity state (without FdfEntity)
      */
     public static <S extends CommonState> S save(S state, Class<S> entityState, long userId, long systemId, long tenantId) {
-        // set the common meta fields for the new record
+        if(state.id <= 0) {
+            //Generate valid id for entity
+            state.id = getNewEntityId(entityState, tenantId);
+        }
+        else {
+            //Get the current record and archive it
+            S lastCurrentEntity = auditEntityCurrentById(entityState, state.id, tenantId);
+            //FdfEntity<S> thisEntity = auditEntityById(entityState, state.id, tenantId);
+            if(lastCurrentEntity != null) {
+                //Mark as inactive
+                lastCurrentEntity.cf = false;
+                //Record inactivity date
+                lastCurrentEntity.ared = Calendar.getInstance().getTime();
+                //Update old state
+                FdfPersistence.getInstance().update(entityState, lastCurrentEntity);
+            }
+        }
+        //Set generic fields for new record, save entity, then return it.
         state.arsd = Calendar.getInstance().getTime();
         state.ared = null;
         state.cf = true;
         state.euid = userId;
         state.esid = systemId;
         state.tid = tenantId;
-        // check to see if this if an id is assigned (existing vs new entity)
-        if(state.id <= 0) {
-            // if this is a new entity, get an id for it
-            state.id = getNewEntityId(entityState, tenantId);
-            if(state.id <= 0) {
-                return null;
-            }
-        }
-        // get full entity for state
-        FdfEntity<S> thisEntity = auditEntityById(entityState, state.id, tenantId);
-        // check to see if there is an existing entity, if not, create
-        if(thisEntity == null) {
-            thisEntity = new FdfEntity<>();
-        }
-        // get the previous current record and move to history
-        if(thisEntity.current != null) {
-            S lastCurrentState = thisEntity.current;
-            // set the end date
-            lastCurrentState.ared = Calendar.getInstance().getTime();
-            // set the current flag
-            lastCurrentState.cf = false;
-            // move the state to history
-            FdfPersistence.getInstance().update(entityState, lastCurrentState);
-        }
-        // get id for rid
         return auditEntityByRid(entityState, FdfPersistence.getInstance().insert(entityState, state));
     }
 
@@ -303,7 +318,7 @@ public abstract class FdfCommonServices {
             // if this is a new entity, get an id for it
             state.id = getNewEntityId(entityState, tenantId);
             if(state.id < 0) {
-                return null;
+                return new FdfEntity<>();
             }
         }
         // get full entity for state
@@ -378,7 +393,7 @@ public abstract class FdfCommonServices {
             // save the state
             return save(entityState, deletedState, userId, systemId, tenantId);
         }
-        return null;
+        return new FdfEntity<>();
     }
 
     /**
@@ -433,7 +448,7 @@ public abstract class FdfCommonServices {
             // save the state
             return save(entityState, deletedState, userId, systemId, tenantId);
         }
-        return null;
+        return new FdfEntity<>();
     }
 
     /**
@@ -486,8 +501,7 @@ public abstract class FdfCommonServices {
      */
     public static <S extends CommonState> List<S> auditAllCurrent(Class<S> entityState, long tenantId) {
         WhereStatement whereStatement = new WhereStatement();
-        addByCf(whereStatement);
-        addByTid(tenantId, whereStatement);
+        auditForCurrent(tenantId, whereStatement);
         return whereStatement.run(entityState);
     }
 
@@ -514,8 +528,7 @@ public abstract class FdfCommonServices {
      */
     public static <S extends CommonState> List<FdfEntity<S>> getAll(Class<S> entityState, long tenantId) {
         WhereStatement whereStatement = new WhereStatement();
-        addByDf(whereStatement);
-        addByTid(tenantId, whereStatement);
+        setWithHistory(tenantId, whereStatement);
         return manageReturnedEntities(whereStatement.run(entityState));
     }
 
@@ -542,9 +555,7 @@ public abstract class FdfCommonServices {
      */
     public static <S extends CommonState> List<S> getAllCurrent(Class<S> entityState, long tenantId) {
         WhereStatement whereStatement = new WhereStatement();
-        addByDf(whereStatement);
-        addByCf(whereStatement);
-        addByTid(tenantId, whereStatement);
+        setForCurrent(tenantId, whereStatement);
         return whereStatement.run(entityState);
     }
 
@@ -571,9 +582,8 @@ public abstract class FdfCommonServices {
      */
     public static <S extends CommonState> List<FdfEntity<S>> getAllHistory(Class<S> entityState, long tenantId) {
         WhereStatement whereStatement = new WhereStatement();
-        addByDf(whereStatement);
         addNotCf(whereStatement);
-        addByTid(tenantId, whereStatement);
+        setWithHistory(tenantId, whereStatement);
         return manageReturnedEntities(whereStatement.run(entityState));
     }
 
@@ -612,9 +622,7 @@ public abstract class FdfCommonServices {
      */
     public static <S extends CommonState> List<S> getAllAtDate(Class<S> entityState, Date date, long tenantId) {
         WhereStatement whereStatement = new WhereStatement();
-        addByDf(whereStatement);
-        addAtDate(date, whereStatement);
-        addByTid(tenantId, whereStatement);
+        setAtDate(date, tenantId, whereStatement);
         return whereStatement.run(entityState);
     }
 
@@ -651,8 +659,7 @@ public abstract class FdfCommonServices {
      */
     public static <S extends CommonState> List<S> auditAllAtDate(Class<S> entityState, Date date, long tenantId) {
         WhereStatement whereStatement = new WhereStatement();
-        addAtDate(date, whereStatement);
-        addByTid(tenantId, whereStatement);
+        auditAtDate(date, tenantId, whereStatement);
         return whereStatement.run(entityState);
     }
 
@@ -689,9 +696,8 @@ public abstract class FdfCommonServices {
      */
     public static <S extends CommonState> List<FdfEntity<S>> getAllFromDate(Class<S> entityState, Date date, long tenantId) {
         WhereStatement whereStatement = new WhereStatement();
-        addByDf(whereStatement);
         addByAredAfter(date, whereStatement);
-        addByTid(tenantId, whereStatement);
+        setWithHistory(tenantId, whereStatement);
         return manageReturnedEntities(whereStatement.run(entityState));
     }
 
@@ -728,9 +734,8 @@ public abstract class FdfCommonServices {
      */
     public static <S extends CommonState> List<FdfEntity<S>> getAllBeforeDate(Class<S> entityState, Date date, long tenantId) {
         WhereStatement whereStatement = new WhereStatement();
-        addByDf(whereStatement);
         addByArsdBefore(date, whereStatement);
-        addByTid(tenantId, whereStatement);
+        setWithHistory(tenantId, whereStatement);
         return manageReturnedEntities(whereStatement.run(entityState));
     }
 
@@ -771,10 +776,9 @@ public abstract class FdfCommonServices {
      */
     public static <S extends CommonState> List<FdfEntity<S>> getAllBetweenDates(Class<S> entityState, Date startDate, Date endDate, long tenantId) {
         WhereStatement whereStatement = new WhereStatement();
-        addByDf(whereStatement);
         addByArsdBefore(endDate, whereStatement);
         addByAredAfter(startDate, whereStatement);
-        addByTid(tenantId, whereStatement);
+        setWithHistory(tenantId, whereStatement);
         return manageReturnedEntities(whereStatement.run(entityState));
     }
 
@@ -792,7 +796,7 @@ public abstract class FdfCommonServices {
         WhereStatement whereStatement = new WhereStatement();
         addByDf(whereStatement);
         addByRid(rid, whereStatement);
-        return (S) whereStatement.run(entityState).stream().findFirst().orElse(null);
+        return whereStatement.run(entityState).stream().findFirst().orElse(null);
     }
 
     /**
@@ -809,7 +813,7 @@ public abstract class FdfCommonServices {
     public static <S extends CommonState> S auditEntityByRid(Class<S> entityState, long rid) {
         WhereStatement whereStatement = new WhereStatement();
         addByRid(rid, whereStatement);
-        return (S) whereStatement.run(entityState).stream().findFirst().orElse(null);
+        return whereStatement.run(entityState).stream().findFirst().orElse(null);
     }
 
     /**
@@ -877,9 +881,8 @@ public abstract class FdfCommonServices {
      */
     public static <S extends CommonState> FdfEntity<S> getEntityById(Class<S> entityState, long id, long tenantId) {
         WhereStatement whereStatement = new WhereStatement();
-        addByDf(whereStatement);
         addById(id, whereStatement);
-        addByTid(tenantId, whereStatement);
+        setWithHistory(tenantId, whereStatement);
         return manageReturnedEntity(whereStatement.run(entityState));
     }
 
@@ -912,11 +915,16 @@ public abstract class FdfCommonServices {
      */
     public static <S extends CommonState> S getEntityCurrentById(Class<S> entityState, long id, long tenantId) {
         WhereStatement whereStatement = new WhereStatement();
-        addByDf(whereStatement);
-        addByCf(whereStatement);
         addById(id, whereStatement);
-        addByTid(tenantId, whereStatement);
-        return (S) whereStatement.run(entityState).stream().findFirst().orElse(null);
+        setForCurrent(tenantId, whereStatement);
+        return whereStatement.run(entityState).stream().findAny().orElse(null);
+    }
+
+    public static <S extends CommonState> S auditEntityCurrentById(Class<S> entityState, long id, long tenantId) {
+        WhereStatement whereStatement = new WhereStatement();
+        addById(id, whereStatement);
+        auditForCurrent(tenantId, whereStatement);
+        return whereStatement.run(entityState).stream().findAny().orElse(null);
     }
 
     /**
@@ -949,9 +957,8 @@ public abstract class FdfCommonServices {
     public static <S extends CommonState> FdfEntity<S> getEntityHistoryById(Class<S> entityState, long id, long tenantId) {
         WhereStatement whereStatement = new WhereStatement();
         addNotCf(whereStatement);
-        addByDf(whereStatement);
         addById(id, whereStatement);
-        addByTid(tenantId, whereStatement);
+        setWithHistory(tenantId, whereStatement);
         return manageReturnedEntity(whereStatement.run(entityState));
     }
 
@@ -985,27 +992,21 @@ public abstract class FdfCommonServices {
      * @return Entity of type passed
      */
     public static <S extends CommonState> List<FdfEntity<S>> getEntitiesByValueForPassedField(Class<S> entityState, String fieldName, String value, long tenantId) {
-        if(value != null && tenantId > 0) {
-            try {
-                Field passedField = entityState.getField(fieldName);
-                if (passedField != null) {
-                    Type passedFieldType = passedField.getGenericType();
-                    if (passedFieldType != null && value != null && tenantId > 0) {
-                        WhereStatement whereStatement = new WhereStatement();
-                        WhereClause whereField = new WhereClause();
-                        whereField.name = fieldName;
-                        whereField.operator = WhereClause.Operators.EQUAL;
-                        whereField.value = value;
-                        whereField.valueDataType = passedFieldType;
-                        whereStatement.add(whereField);
-                        addByDf(whereStatement);
-                        addByTid(tenantId, whereStatement);
-                        return manageReturnedEntities(whereStatement.run(entityState));
-                    }
-                }
-            } catch (NoSuchFieldException e) {
-                System.out.println(entityState.getSimpleName() + " does not contain the field, " + fieldName);
+        if(value != null && tenantId > 0) try {
+            Type passedFieldType = entityState.getField(fieldName).getGenericType();
+            if(passedFieldType != null) {
+                WhereStatement whereStatement = new WhereStatement();
+                WhereClause whereField = new WhereClause();
+                whereField.name = fieldName;
+                whereField.operator = WhereClause.Operators.EQUAL;
+                whereField.value = value;
+                whereField.valueDataType = passedFieldType;
+                whereStatement.add(whereField);
+                setWithHistory(tenantId, whereStatement);
+                return manageReturnedEntities(whereStatement.run(entityState));
             }
+        } catch (NoSuchFieldException e) {
+            System.out.println(entityState.getSimpleName() + " does not contain the field, " + fieldName);
         }
         return new ArrayList<>();
     }
@@ -1066,8 +1067,7 @@ public abstract class FdfCommonServices {
                 return new ArrayList<>();
             }
         }
-        addByDf(whereStatement);
-        addByTid(tenantId, whereStatement);
+        setWithHistory(tenantId, whereStatement);
         return manageReturnedEntities(whereStatement.run(entityState));
     }
 
@@ -1103,11 +1103,9 @@ public abstract class FdfCommonServices {
      */
     public static <S extends CommonState> S getAtDateById(Class<S> entityState, long id, Date date, long tenantId) {
         WhereStatement whereStatement = new WhereStatement();
-        addByDf(whereStatement);
         addById(id, whereStatement);
-        addAtDate(date, whereStatement);
-        addByTid(tenantId, whereStatement);
-        return (S) whereStatement.run(entityState).stream().findFirst().orElse(null);
+        setAtDate(date, tenantId, whereStatement);
+        return whereStatement.run(entityState).stream().findFirst().orElse(null);
     }
 
     /**
@@ -1147,9 +1145,8 @@ public abstract class FdfCommonServices {
     public static <S extends CommonState> S auditAtDateById(Class<S> entityState, long id, Date date, long tenantId) {
         WhereStatement whereStatement = new WhereStatement();
         addById(id, whereStatement);
-        addAtDate(date, whereStatement);
-        addByTid(tenantId, whereStatement);
-        return (S) whereStatement.run(entityState).stream().findFirst().orElse(null);
+        auditAtDate(date, tenantId, whereStatement);
+        return whereStatement.run(entityState).stream().findFirst().orElse(null);
     }
 
     /**
@@ -1378,15 +1375,8 @@ public abstract class FdfCommonServices {
      */
     public static <S extends CommonState> long getNewEntityId(Class<S> entityState, long tenantId) {
         WhereStatement whereStatement = new WhereStatement();
-        addByTid(tenantId, whereStatement);
-        List<S> returnedStates = FdfPersistence.getInstance().selectQuery(entityState, Arrays.asList("max(id) as id"), whereStatement.asList());
-        whereStatement.reset();
-        if(returnedStates != null && returnedStates.size() == 1) {
-            if(returnedStates.get(0).id == -1) {
-                returnedStates.get(0).id = 0;
-            }
-            return returnedStates.get(0).id + 1;
-        }
-        return -1;
+        auditForCurrent(tenantId, whereStatement);
+        S returnedState = whereStatement.run(Collections.singletonList("max(id) as id"), entityState).stream().findAny().orElse(null);
+        return (returnedState != null && returnedState.id > 0 ? returnedState.id + 1 : 1);
     }
 }

@@ -27,16 +27,11 @@ public class FdfTenantServices extends FdfCommonServices {
     }
 
     public FdfEntity<FdfTenant> deleteTenant(long userId, long tenantId, long callingUserId, long callingSystemId) {
-        // get all with history
-        GenericService gs = new GenericService();
-        return gs.setDeleteFlag(FdfTenant.class, userId, callingUserId, callingSystemId, tenantId);
-
+        return setDeleteFlag(FdfTenant.class, userId, callingUserId, callingSystemId, tenantId);
     }
 
     public FdfEntity<FdfTenant> unDeleteTenant(long userId, long tenantId, long callingUserId, long callingSystemId) {
-        // get all with history
-        GenericService gs = new GenericService();
-        return gs.removeDeleteFlag(FdfTenant.class, userId, callingUserId, callingSystemId, tenantId);
+        return removeDeleteFlag(FdfTenant.class, userId, callingUserId, callingSystemId, tenantId);
 
     }
 
@@ -50,13 +45,7 @@ public class FdfTenantServices extends FdfCommonServices {
     }
 
     public FdfEntity<FdfTenant> getTenantByIdWithHistory(long tenantId) {
-
-        // get the tenant
-        if(tenantId > 0) {
-            return getEntityById(FdfTenant.class, tenantId);
-        }
-
-        return null;
+        return (tenantId > 0 ? getEntityById(FdfTenant.class, tenantId) : new FdfEntity<>());
     }
 
     public FdfTenant getDefaultTenant() {

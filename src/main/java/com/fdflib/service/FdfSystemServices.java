@@ -22,17 +22,11 @@ public class FdfSystemServices extends FdfCommonServices {
     }
 
     public FdfEntity<FdfSystem> deleteSystem(long userId, long tenantId, long callingUserId, long callingSystemId) {
-        // get all with history
-        GenericService gs = new GenericService();
-        return gs.setDeleteFlag(FdfSystem.class, userId, callingUserId, callingSystemId, tenantId);
-
+        return setDeleteFlag(FdfSystem.class, userId, callingUserId, callingSystemId, tenantId);
     }
 
     public FdfEntity<FdfSystem> unDeleteSystem(long userId, long tenantId, long callingUserId, long callingSystemId) {
-        // get all with history
-        GenericService gs = new GenericService();
-        return gs.removeDeleteFlag(FdfSystem.class, userId, callingUserId, callingSystemId, tenantId);
-
+        return removeDeleteFlag(FdfSystem.class, userId, callingUserId, callingSystemId, tenantId);
     }
 
     public List<FdfSystem> getAllSystems() {
@@ -56,22 +50,14 @@ public class FdfSystemServices extends FdfCommonServices {
     }
 
     public List<FdfEntity<FdfSystem>> getAllSystemsWithHistory(long tenantId) {
-
-        return this.getAll(FdfSystem.class, tenantId);
+        return getAll(FdfSystem.class, tenantId);
     }
 
     public FdfSystem getSystemById(long systemId) {
-        return getSystemByIdWithHistory(systemId).current;
+        return (systemId > 0 ? getEntityCurrentById(FdfSystem.class, systemId) : null);
     }
-
     public FdfEntity<FdfSystem> getSystemByIdWithHistory(long systemId) {
-
-        // get the system
-        if(systemId > 0) {
-            return getEntityById(FdfSystem.class, systemId);
-        }
-
-        return null;
+        return (systemId > 0 ? getEntityById(FdfSystem.class, systemId) : new FdfEntity<>());
     }
 
     public FdfSystem getDefaultSystem() {
