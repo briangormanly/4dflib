@@ -17,7 +17,7 @@
 package com.fdflib.persistence;
 
 import com.fdflib.model.state.CommonState;
-import com.fdflib.model.util.WhereClause;
+import com.fdflib.model.util.SqlStatement;
 import com.fdflib.persistence.connection.DbConnectionManager;
 import com.fdflib.persistence.impl.CorePersistenceImpl;
 
@@ -69,8 +69,7 @@ public class FdfPersistence extends DbConnectionManager implements CorePersisten
     }
 
     @Override
-    public <S extends CommonState> List<S> selectQuery(Class c, List<String> select, List<WhereClause> where) {
-        return persistence.selectQuery(c, select, where);
+    public <S extends CommonState> List<S> selectQuery(Class c, SqlStatement sqlStatement) {
+        return persistence.selectQuery(c, sqlStatement);
     }
-
 }

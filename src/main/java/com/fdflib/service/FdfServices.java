@@ -116,7 +116,7 @@ public class FdfServices {
 
 
         } else {
-            fdfLog.error("4DFLIB (initializeFdfDataModel): Unable to connect to or create database, "
+            fdfLog.error("4DFLIB (initializeFdfDataModel): Unable to connect to or build database, "
                     + " See errors above");
         }
 

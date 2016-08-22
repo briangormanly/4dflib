@@ -35,7 +35,7 @@ public class WhereClause {
     /**
      * Data type of primary value
      */
-    public Type valueDataType;
+    public Class valueDataType;
 
     /**
      * Primary value to check against.

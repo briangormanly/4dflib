@@ -17,7 +17,7 @@
 package com.fdflib.persistence.impl;
 
 import com.fdflib.model.state.CommonState;
-import com.fdflib.model.util.WhereClause;
+import com.fdflib.model.util.SqlStatement;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -33,7 +33,7 @@ public interface CorePersistenceImpl {
     void checkFields() throws SQLException;
     void checkDefaultEntries() throws SQLException;
 
-    <S extends CommonState> List<S> selectQuery(Class c, List<String> select, List<WhereClause> where);
+    <S extends CommonState> List<S> selectQuery(Class c, SqlStatement sqlStatement);
     <S> Long insert(Class<S> entityState, S state);
     <S> void update(Class<S> c, S state);
 }
