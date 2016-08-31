@@ -33,16 +33,16 @@ public class    FdfSettings {
     static Logger fdfLog = LoggerFactory.getLogger(FdfSettings.class);
 
     public List<Class> modelClasses = new ArrayList<>();
-    public static DatabaseUtil.DatabaseType PERSISTENCE = DatabaseUtil.DatabaseType.MYSQL;
+    public static DatabaseUtil.DatabaseType PERSISTENCE = DatabaseUtil.DatabaseType.HSQL;
 
-    public static DatabaseUtil.DatabaseProtocol DB_PROTOCOL = DatabaseUtil.DatabaseProtocol.JDBC_MYSQL;
+    public static DatabaseUtil.DatabaseProtocol DB_PROTOCOL = DatabaseUtil.DatabaseProtocol.JDBC_HSQL;
     public static String DB_HOST = "localhost";
     public static String DB_NAME = "fdfapplication";
     public static DatabaseUtil.DatabaseEncoding DB_ENCODING = DatabaseUtil.DatabaseEncoding.UTF8;
 
     public static String DB_USER = "fdfUser";
     public static String DB_PASSWORD = "fdfUserPassword";
-    public static String DB_ROOT_USER = "root";
+    public static String DB_ROOT_USER = "SA";
     public static String DB_ROOT_PASSWORD = "";
 
     public static String DEFAULT_TENANT_NAME = "Default FdfTenant";

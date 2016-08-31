@@ -1,9 +1,13 @@
 package com.fdflib.persistence.database;
 
 import com.fdflib.util.FdfSettings;
+import org.hsqldb.Server;
+import org.hsqldb.persist.HsqlProperties;
+import org.hsqldb.server.ServerAcl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -16,6 +20,8 @@ public class HSqlConnection {
     private static final HSqlConnection INSTANCE = new HSqlConnection();
     static Logger fdfLog = LoggerFactory.getLogger(HSqlConnection.class);
 
+    Server server = new Server();
+
     private HSqlConnection() {
 
     }
@@ -26,6 +32,7 @@ public class HSqlConnection {
 
     public Connection getSession() throws SQLException {
         fdfLog.debug("Establishing hsql connection with regular credentials");
+
         try {
             Class.forName("org.hsqldb.jdbc.JDBCDriver");
         } catch (ClassNotFoundException e) {
@@ -33,21 +40,44 @@ public class HSqlConnection {
             e.printStackTrace();
         }
 
+        HsqlProperties p = new HsqlProperties();
+        p.setProperty("server.database.0", "file:hsql/4dflibdb");
+        p.setProperty("server.dbname.0", "4dfdb");
+        p.setProperty("server.port", "9998");
+
+
         try {
-            Connection connection = DriverManager.getConnection(FdfSettings.returnDBConnectionString(),
-                    FdfSettings.DB_USER, FdfSettings.DB_PASSWORD);
-            return connection;
+            server.setProperties(p);
+            server.setLogWriter(null); // can use custom writer
+            server.setErrWriter(null); // can use custom writer
+            server.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ServerAcl.AclFormatException e) {
+            e.printStackTrace();
+        }
 
-        } catch (SQLException e) {
-            fdfLog.warn("SQL Error: {}\nDescription: ", e.getErrorCode(), e.getMessage());
+        System.out.println("The server state is::: " + server.getState());
+        if(server.getState() > 0) {
 
-            // - Unknown database 'testing_db'
-            if(e.getErrorCode() == 1049) {
-                fdfLog.error("Database did not exist: {}", e.getMessage());
+            try {
+                Connection connection = DriverManager.getConnection(FdfSettings.returnDBConnectionString(),
+                        FdfSettings.DB_USER, FdfSettings.DB_PASSWORD);
+                return connection;
+
+            } catch (SQLException e) {
+                fdfLog.warn("SQL Error: {}\nDescription: ", e.getErrorCode(), e.getMessage());
+
+                // - Unknown database 'testing_db'
+                if (e.getErrorCode() == 1049) {
+                    fdfLog.error("Database did not exist: {}", e.getMessage());
+                } else {
+                    fdfLog.error(e.getStackTrace().toString());
+                }
             }
-            else {
-                fdfLog.error(e.getStackTrace().toString());
-            }
+        }
+        else {
+            fdfLog.error("hsql server not running!");
         }
 
         return null;
@@ -62,21 +92,43 @@ public class HSqlConnection {
             e.printStackTrace();
         }
 
+        HsqlProperties p = new HsqlProperties();
+        p.setProperty("server.database.0", "file:4dflibdb");
+        p.setProperty("server.dbname.0", "4dfdb");
+        p.setProperty("server.port", "9998");
+
         try {
-            Connection connection = DriverManager.getConnection(FdfSettings.returnDBConnectionStringWithoutDatabase(),
-                    FdfSettings.DB_ROOT_USER, FdfSettings.DB_ROOT_PASSWORD);
-            return connection;
+            server.setProperties(p);
+            server.setLogWriter(null); // can use custom writer
+            server.setErrWriter(null); // can use custom writer
+            server.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ServerAcl.AclFormatException e) {
+            e.printStackTrace();
+        }
 
-        } catch (SQLException e) {
-            fdfLog.warn("SQL Error: {}\nDescription: ", e.getErrorCode(), e.getMessage());
+        System.out.println("The server state is::: " + server.getState());
+        if(server.getState() > 0) {
 
-            // - Unknown database 'testing_db'
-            if(e.getErrorCode() == 1049) {
-                fdfLog.error("Database did not exist: {}", e.getMessage());
+            try {
+                Connection connection = DriverManager.getConnection(FdfSettings.returnDBConnectionStringWithoutDatabase(),
+                        FdfSettings.DB_ROOT_USER, FdfSettings.DB_ROOT_PASSWORD);
+                return connection;
+
+            } catch (SQLException e) {
+                fdfLog.warn("SQL Error: {}\nDescription: ", e.getErrorCode(), e.getMessage());
+
+                // - Unknown database 'testing_db'
+                if (e.getErrorCode() == 1049) {
+                    fdfLog.error("Database did not exist: {}", e.getMessage());
+                } else {
+                    fdfLog.error(e.getStackTrace().toString());
+                }
             }
-            else {
-                fdfLog.error(e.getStackTrace().toString());
-            }
+        }
+        else {
+            fdfLog.error("hsql server not running!");
         }
         return null;
     }
@@ -88,6 +140,8 @@ public class HSqlConnection {
             connection.close();
         }
         connection = null;
+
+        server.shutdownCatalogs(1);
 
     }
 
