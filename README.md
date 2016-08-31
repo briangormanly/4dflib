@@ -3,7 +3,7 @@
 Author: Brian Gormanly
 bgormanly@gmail.com
 4dflib.com
-Copyright &copy; 2015
+Copyright &copy; 2015-2016
 
 <h2>0. Introduction</h2>
 What is 4DF????
