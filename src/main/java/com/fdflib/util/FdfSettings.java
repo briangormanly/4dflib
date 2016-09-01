@@ -26,7 +26,7 @@ import java.util.List;
 /**
  * Created by brian.gormanly on 5/19/15.
  */
-public class    FdfSettings {
+public class FdfSettings {
 
     private static final FdfSettings INSTANCE = new FdfSettings();
 
@@ -41,7 +41,7 @@ public class    FdfSettings {
     public static Integer DB_PORT = 9001;
     public static DatabaseUtil.DatabaseEncoding DB_ENCODING = DatabaseUtil.DatabaseEncoding.UTF8;
 
-    // HyperSQL user information
+    // default general user information
     public static String DB_USER = "SA";
     public static String DB_PASSWORD = "";
 
@@ -90,20 +90,20 @@ public class    FdfSettings {
             protocolString = "jdbc:mysql://";
 
             if(DB_ENCODING == DatabaseUtil.DatabaseEncoding.UTF8) {
-                encodingString = "/?characterEncoding=UTF-8";
+                encodingString = "?characterEncoding=UTF-8";
             }
 
-            connection = protocolString + DB_HOST + DB_NAME + encodingString;
+            connection = protocolString + DB_HOST + "/" + DB_NAME + encodingString;
         }
 
         if(DB_PROTOCOL == DatabaseUtil.DatabaseProtocol.JDBC_POSTGRES) {
             protocolString = "jdbc:postgresql://";
 
             if(DB_ENCODING == DatabaseUtil.DatabaseEncoding.UTF8) {
-                encodingString = "/?characterEncoding=UTF-8";
+                encodingString = "?characterEncoding=UTF-8";
             }
 
-            connection = protocolString + DB_HOST + DB_NAME + encodingString;
+            connection = protocolString + DB_HOST + "/" + DB_NAME + encodingString;
         }
 
         if(DB_PROTOCOL == DatabaseUtil.DatabaseProtocol.JDBC_HSQL) {

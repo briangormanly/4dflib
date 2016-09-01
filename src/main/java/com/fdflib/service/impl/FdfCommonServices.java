@@ -22,6 +22,7 @@ import com.fdflib.model.util.WhereClause;
 import com.fdflib.model.util.WhereStatement;
 import com.fdflib.persistence.FdfPersistence;
 import com.fdflib.util.GeneralConstants;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
@@ -67,24 +68,24 @@ public abstract class FdfCommonServices {
         WhereClause whereCf = new WhereClause();
         whereCf.name = "cf";
         whereCf.operator = WhereClause.Operators.EQUAL;
-        whereCf.value = "1";
-        whereCf.valueDataType = Integer.class;
+        whereCf.value = "true";
+        whereCf.valueDataType = Boolean.class;
         whereStatement.add(whereCf);
     }
     protected static void addNotCf(WhereStatement whereStatement) {
         WhereClause whereCf = new WhereClause();
         whereCf.name = "cf";
         whereCf.operator = WhereClause.Operators.NOT_EQUAL;
-        whereCf.value = "1";
-        whereCf.valueDataType = Integer.class;
+        whereCf.value = "true";
+        whereCf.valueDataType = Boolean.class;
         whereStatement.add(whereCf);
     }
     protected static void addByDf(WhereStatement whereStatement) {
         WhereClause whereDf = new WhereClause();
         whereDf.name = "df";
         whereDf.operator = WhereClause.Operators.NOT_EQUAL;
-        whereDf.value = "1";
-        whereDf.valueDataType = Integer.class;
+        whereDf.value = "true";
+        whereDf.valueDataType = Boolean.class;
         whereStatement.add(whereDf);
     }
     protected static void addByArsdBefore(Date date, WhereStatement whereStatement) {
