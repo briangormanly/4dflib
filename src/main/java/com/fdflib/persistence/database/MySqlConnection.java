@@ -1,6 +1,6 @@
 /**
  * 4DFLib
- * Copyright (c) 2015 Brian Gormanly
+ * Copyright (c) 2015-2016 Brian Gormanly
  * 4dflib.com
  *
  * 4DFLib is free software; you can redistribute it and/or modify it under
