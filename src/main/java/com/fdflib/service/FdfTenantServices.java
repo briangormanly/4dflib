@@ -66,8 +66,8 @@ public class FdfTenantServices extends FdfCommonServices {
         WhereClause primary = new WhereClause();
         primary.name = "isPrimary";
         primary.operator = WhereClause.Operators.EQUAL;
-        primary.value = "1";
-        primary.valueDataType = String.class;
+        primary.value = "true";
+        primary.valueDataType = Boolean.class;
 
         whereClauses.add(whereDf);
         whereClauses.add(primary);

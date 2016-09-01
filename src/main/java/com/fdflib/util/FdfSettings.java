@@ -33,17 +33,30 @@ public class    FdfSettings {
     static Logger fdfLog = LoggerFactory.getLogger(FdfSettings.class);
 
     public List<Class> modelClasses = new ArrayList<>();
-    public static DatabaseUtil.DatabaseType PERSISTENCE = DatabaseUtil.DatabaseType.MYSQL;
+    public static DatabaseUtil.DatabaseType PERSISTENCE = DatabaseUtil.DatabaseType.HSQL;
 
-    public static DatabaseUtil.DatabaseProtocol DB_PROTOCOL = DatabaseUtil.DatabaseProtocol.JDBC_MYSQL;
+    public static DatabaseUtil.DatabaseProtocol DB_PROTOCOL = DatabaseUtil.DatabaseProtocol.JDBC_HSQL;
     public static String DB_HOST = "localhost";
-    public static String DB_NAME = "fdfapplication";
+    public static String DB_NAME = "4dfapplicationdb";
+    public static Integer DB_PORT = 9001;
     public static DatabaseUtil.DatabaseEncoding DB_ENCODING = DatabaseUtil.DatabaseEncoding.UTF8;
 
-    public static String DB_USER = "fdfUser";
-    public static String DB_PASSWORD = "fdfUserPassword";
-    public static String DB_ROOT_USER = "root";
+    // HyperSQL user information
+    public static String DB_USER = "SA";
+    public static String DB_PASSWORD = "";
+
+    // Example database specific with non-root user for general db access.
+    //public static String DB_USER = "fdfUser";
+    //public static String DB_PASSWORD = "fdfUserPassword";
+
+    // Root user information
+    public static String DB_ROOT_USER = "SA";
     public static String DB_ROOT_PASSWORD = "";
+
+    // If set to true HSQL db will be written to a file to persist, if false, it will be an in-memory db only.
+    public static Boolean HSQL_DB_FILE = true;
+    //HyperSQL database file location
+    public static String HQSL_DB_FILE_LOCATION = "hsql/";
 
     public static String DEFAULT_TENANT_NAME = "Default FdfTenant";
     public static String DEFAULT_TENANT_DESRIPTION = "Default FdfTenant is created by 4dflib, if you do not intent to use "
@@ -70,38 +83,83 @@ public class    FdfSettings {
 
     public static String returnDBConnectionString() {
         String protocolString = "";
+        String encodingString = "";
+        String connection = "";
+
         if(DB_PROTOCOL == DatabaseUtil.DatabaseProtocol.JDBC_MYSQL) {
             protocolString = "jdbc:mysql://";
+
+            if(DB_ENCODING == DatabaseUtil.DatabaseEncoding.UTF8) {
+                encodingString = "/?characterEncoding=UTF-8";
+            }
+
+            connection = protocolString + DB_HOST + DB_NAME + encodingString;
         }
 
         if(DB_PROTOCOL == DatabaseUtil.DatabaseProtocol.JDBC_POSTGRES) {
             protocolString = "jdbc:postgresql://";
+
+            if(DB_ENCODING == DatabaseUtil.DatabaseEncoding.UTF8) {
+                encodingString = "/?characterEncoding=UTF-8";
+            }
+
+            connection = protocolString + DB_HOST + DB_NAME + encodingString;
         }
 
-        String encodingString = "";
-        if(DB_ENCODING == DatabaseUtil.DatabaseEncoding.UTF8) {
-            encodingString = "?characterEncoding=UTF-8";
+        if(DB_PROTOCOL == DatabaseUtil.DatabaseProtocol.JDBC_HSQL) {
+
+            if(HSQL_DB_FILE) {
+                protocolString = "jdbc:hsqldb:file:" + FdfSettings.HQSL_DB_FILE_LOCATION + FdfSettings.DB_NAME
+                        + ";sql.syntax_mys=true";
+            }
+            else {
+                protocolString = "jdbc:hsqldb:mem:" + FdfSettings.DB_NAME + ";sql.syntax_mys=true";
+            }
+
+            connection = protocolString;
         }
-        String connection = protocolString + DB_HOST + "/" + DB_NAME + encodingString;
+
         fdfLog.debug("Returning DB connection string: {}", connection);
         return connection;
     }
 
     public static String returnDBConnectionStringWithoutDatabase() {
         String protocolString = "";
+        String encodingString = "";
+        String connection = "";
+
         if(DB_PROTOCOL == DatabaseUtil.DatabaseProtocol.JDBC_MYSQL) {
             protocolString = "jdbc:mysql://";
+
+            if(DB_ENCODING == DatabaseUtil.DatabaseEncoding.UTF8) {
+                encodingString = "/?characterEncoding=UTF-8";
+            }
+
+            connection = protocolString + DB_HOST + encodingString;
         }
 
         if(DB_PROTOCOL == DatabaseUtil.DatabaseProtocol.JDBC_POSTGRES) {
             protocolString = "jdbc:postgresql://";
+
+            if(DB_ENCODING == DatabaseUtil.DatabaseEncoding.UTF8) {
+                encodingString = "/?characterEncoding=UTF-8";
+            }
+
+            connection = protocolString + DB_HOST + encodingString;
         }
 
-        String encodingString = "";
-        if(DB_ENCODING == DatabaseUtil.DatabaseEncoding.UTF8) {
-            encodingString = "?characterEncoding=UTF-8";
+        if(DB_PROTOCOL == DatabaseUtil.DatabaseProtocol.JDBC_HSQL) {
+            if(HSQL_DB_FILE) {
+                protocolString = "jdbc:hsqldb:file:" + FdfSettings.HQSL_DB_FILE_LOCATION + FdfSettings.DB_NAME
+                        + ";sql.syntax_mys=true";
+            }
+            else {
+                protocolString = "jdbc:hsqldb:mem:" + FdfSettings.DB_NAME + ";sql.syntax_mys=true";
+            }
+
+            connection = protocolString;
         }
-        String connection = protocolString + DB_HOST + "/" + encodingString;
+
         fdfLog.debug("Returning DB connection string: {}", connection);
         return connection;
     }
