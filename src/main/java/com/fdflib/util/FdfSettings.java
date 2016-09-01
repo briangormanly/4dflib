@@ -109,10 +109,11 @@ public class    FdfSettings {
         if(DB_PROTOCOL == DatabaseUtil.DatabaseProtocol.JDBC_HSQL) {
 
             if(HSQL_DB_FILE) {
-                protocolString = "jdbc:hsqldb:file:" + FdfSettings.HQSL_DB_FILE_LOCATION + FdfSettings.DB_NAME;
+                protocolString = "jdbc:hsqldb:file:" + FdfSettings.HQSL_DB_FILE_LOCATION + FdfSettings.DB_NAME
+                        + ";sql.syntax_mys=true";
             }
             else {
-                protocolString = "jdbc:hsqldb:mem:" + FdfSettings.DB_NAME;
+                protocolString = "jdbc:hsqldb:mem:" + FdfSettings.DB_NAME + ";sql.syntax_mys=true";
             }
 
             connection = protocolString;
@@ -149,10 +150,11 @@ public class    FdfSettings {
 
         if(DB_PROTOCOL == DatabaseUtil.DatabaseProtocol.JDBC_HSQL) {
             if(HSQL_DB_FILE) {
-                protocolString = "jdbc:hsqldb:file:" + FdfSettings.HQSL_DB_FILE_LOCATION + FdfSettings.DB_NAME;
+                protocolString = "jdbc:hsqldb:file:" + FdfSettings.HQSL_DB_FILE_LOCATION + FdfSettings.DB_NAME
+                        + ";sql.syntax_mys=true";
             }
             else {
-                protocolString = "jdbc:hsqldb:mem:" + FdfSettings.DB_NAME;
+                protocolString = "jdbc:hsqldb:mem:" + FdfSettings.DB_NAME + ";sql.syntax_mys=true";
             }
 
             connection = protocolString;

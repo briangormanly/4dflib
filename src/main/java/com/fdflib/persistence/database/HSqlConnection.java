@@ -62,7 +62,6 @@ public class HSqlConnection {
             e.printStackTrace();
         }
 
-        System.out.println("The server state is::: " + server.getState());
         if(server.getState() > 0) {
 
             try {
@@ -119,7 +118,6 @@ public class HSqlConnection {
             e.printStackTrace();
         }
 
-        System.out.println("The server state is::: " + server.getState());
         if(server.getState() > 0) {
 
             try {
@@ -130,8 +128,6 @@ public class HSqlConnection {
 
             } catch (SQLException e) {
                 fdfLog.warn("SQL Error: {}\nDescription: ", e.getErrorCode(), e.getMessage());
-                e.printStackTrace();
-                System.out.println("----------------------------------------");
 
                 // - Unknown database 'testing_db'
                 if (e.getErrorCode() == 1049) {
