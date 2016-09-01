@@ -12,7 +12,7 @@ import java.util.List;
  * Created by Corley.Herman1 on 4/22/2016.
  */
 public class WhereStatement {
-    protected final List<WhereClause> whereStatement = new ArrayList<>();
+    private final List<WhereClause> whereStatement = new ArrayList<>();
 
     public void add(WhereClause whereClause) {
         if(whereClause != null) {
@@ -23,13 +23,12 @@ public class WhereStatement {
     }
 
     public <S extends CommonState> List<S> run(Class<S> entityState) {
+        return run(null, entityState);
+    }
+    public <S extends CommonState> List<S> run(List<String> select, Class<S> entityState) {
         List<WhereClause> query = new ArrayList<>(whereStatement);
         whereStatement.clear();
-        return FdfPersistence.getInstance().selectQuery(entityState, null, query);
-    }
-
-    public void reset() {
-        whereStatement.clear();
+        return FdfPersistence.getInstance().selectQuery(entityState, select, query);
     }
 
     public String toString() {
