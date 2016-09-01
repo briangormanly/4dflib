@@ -20,7 +20,7 @@ public class HSqlConnection {
     private static final HSqlConnection INSTANCE = new HSqlConnection();
     static Logger fdfLog = LoggerFactory.getLogger(HSqlConnection.class);
 
-    Server server = new Server();
+    Server server;
 
     private HSqlConnection() {
 
@@ -41,10 +41,15 @@ public class HSqlConnection {
         }
 
         HsqlProperties p = new HsqlProperties();
-        p.setProperty("server.database.0", "file:hsql/4dflibdb");
-        p.setProperty("server.dbname.0", "4dfdb");
-        p.setProperty("server.port", "9998");
-
+        if(FdfSettings.HSQL_DB_FILE) {
+            p.setProperty("server.database.0", "file:" + FdfSettings.HQSL_DB_FILE_LOCATION + ";");
+        }
+        else {
+            p.setProperty("server.database.0", "mem:" + FdfSettings.DB_NAME + ";");
+        }
+        p.setProperty("server.dbname.0", FdfSettings.DB_NAME);
+        p.setProperty("server.port", FdfSettings.DB_PORT);
+        server = new Server();
 
         try {
             server.setProperties(p);
@@ -93,9 +98,15 @@ public class HSqlConnection {
         }
 
         HsqlProperties p = new HsqlProperties();
-        p.setProperty("server.database.0", "file:4dflibdb");
-        p.setProperty("server.dbname.0", "4dfdb");
-        p.setProperty("server.port", "9998");
+        if(FdfSettings.HSQL_DB_FILE) {
+            p.setProperty("server.database.0", "file:" + FdfSettings.HQSL_DB_FILE_LOCATION + ";");
+        }
+        else {
+            p.setProperty("server.database.0", "mem:" + FdfSettings.DB_NAME + ";");
+        }
+        p.setProperty("server.dbname.0", FdfSettings.DB_NAME);
+        p.setProperty("server.port", FdfSettings.DB_PORT);
+        server = new Server();
 
         try {
             server.setProperties(p);
@@ -112,12 +123,15 @@ public class HSqlConnection {
         if(server.getState() > 0) {
 
             try {
-                Connection connection = DriverManager.getConnection(FdfSettings.returnDBConnectionStringWithoutDatabase(),
+                Connection connection = DriverManager.getConnection(
+                        FdfSettings.returnDBConnectionStringWithoutDatabase(),
                         FdfSettings.DB_ROOT_USER, FdfSettings.DB_ROOT_PASSWORD);
                 return connection;
 
             } catch (SQLException e) {
                 fdfLog.warn("SQL Error: {}\nDescription: ", e.getErrorCode(), e.getMessage());
+                e.printStackTrace();
+                System.out.println("----------------------------------------");
 
                 // - Unknown database 'testing_db'
                 if (e.getErrorCode() == 1049) {
@@ -141,7 +155,7 @@ public class HSqlConnection {
         }
         connection = null;
 
-        server.shutdownCatalogs(1);
+        server.shutdown();
 
     }
 
