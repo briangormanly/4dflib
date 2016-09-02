@@ -62,7 +62,7 @@ desired logging framework at deployment time.
         <dependency>
             <groupId>com.fdflib</groupId>
             <artifactId>4dflib</artifactId>
-            <version>1.1</version>
+            <version>1.0</version>
         </dependency>
         ...
     </dependencies>
@@ -71,7 +71,7 @@ desired logging framework at deployment time.
 ```
 dependencies {
     ...
-    compile "com.fdflib:4dflib:1.1"
+    compile "com.fdflib:4dflib:1.0"
     ...
 }
 ```
@@ -79,7 +79,7 @@ dependencies {
 ```
 libraryDependencies ++= Seq(
   ...
-  "com.fdflib" % "4dflib" % "1.1"
+  "com.fdflib" % "4dflib" % "1.0"
   ...
 )
 ```
