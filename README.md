@@ -3,25 +3,34 @@
 Author: Brian Gormanly
 bgormanly@gmail.com
 4dflib.com
-Copyright &copy; 2015
+Copyright &copy; 2015-2016
 
 <h2>0. Introduction</h2>
 What is 4DF????
 
 4DF is a Library that manages your applications interaction with the database, providing ORM, database abstraction and
 4DF or 4th Dimensional Form data which means that all data is saved in every state in every table over time.  Nothing
-is ever deleted or updated.  It also provides a basic service layer for accessing your data through time, allowing you
-to retrieve current and historical data and filtering by time ranges.
+is ever deleted or updated, and you do not need to anything to implement this behavior, it happens automatically.  It 
+also provides a basic service layer for accessing your data through time, allowing you to retrieve current and 
+historical data and filtering by time ranges.
+
+4DFLib currently works with HyperSQL (HSQLDB), PostgreSQL and MySQL, but many more are planned soon and you can easily 
+implement your own database see:
+    com.fdflib.persistence.impl.CorePersistenceImpl;
+    and example connections in: com.fdflib.persistence.database 
+    and dynamic queries builders in: com.fdflib.persistence.queries
+    
+    We welcome pull requests with new database implementations.  4DFLib can support connecting to both relational and 
+    NoSQL persistence.
 
 For more information see the follow blog posts:
     http://www.dailydevshot.com/4df-4th-dimensional-form-normalize-your-data-with-time/
     http://www.dailydevshot.com/4df-4th-dimensional-form-building-a-relational-database-with-a-memory-longer-then-a-goldfish/
 
-And coming soon: http://4dflib.com
+Website: http://4dflib.com
 
 
 <h2>1. License</h2>
-
 
 Distributed under the LGPL License (http://www.gnu.org/licenses/lgpl-3.0.en.html)
 Please see license.txt for details.
@@ -53,7 +62,7 @@ desired logging framework at deployment time.
         <dependency>
             <groupId>com.fdflib</groupId>
             <artifactId>4dflib</artifactId>
-            <version>1.0</version>
+            <version>1.1</version>
         </dependency>
         ...
     </dependencies>
@@ -62,7 +71,7 @@ desired logging framework at deployment time.
 ```
 dependencies {
     ...
-    compile "com.fdflib:4dflib:1.0"
+    compile "com.fdflib:4dflib:1.1"
     ...
 }
 ```
@@ -70,137 +79,129 @@ dependencies {
 ```
 libraryDependencies ++= Seq(
   ...
-  "com.fdflib" % "4dflib" % "1.0"
+  "com.fdflib" % "4dflib" % "1.1"
   ...
 )
 ```
 
 <h2>Examples of Usage</h2>
-The easiest way to see how 4DFLib works is to build a very simple application that uses it.  For this example we have
-created an application called "<a href="https://github.com/briangormanly/4dflib-bcs-example">Black Car Service</a>", or BCS for short.  BCS is a simple java application that uses maven
-and run as a jar file on the command line to demonstrate how to setup 4dflib, and give you a sense of the power it can
-yield.
-
-Here is the BCS git repository for reference, you can get the source for the project there and follow along with this
-quick and dirty tutorial <a href="https://github.com/briangormanly/4dflib-bcs-example">https://github.com/briangormanly/4dflib-bcs-example</a>
-
-Taking a basic maven project to add 4DFLib as a dependency just add 4DFLib as shown in section 3 "Maven Repository 
-Information" above.  
-
-Our application is going to be very simple consisting of only a main method in our applications
-
-
-Lets say that we have a small application that only had 2 model objects which are User and Car.
-
-In order to use 4dflib in our application we only have to do the following in code that is run everytime the application
-starts up.  The database will only be created if it does not already exist, the same goes for the default data entries
-in the FdfSystem and FdfTenant 
-
-
-
-The following will initialize 4DFLib to work with your application.
+You can initialize the Library like so (the only assumptions here are that you have a model class Foo that you would like to persist, and that Foo extends com.fdflib.model.state.CommonState, there will be an example of an 4DFLib model object below this section):
 ```
-/**
- * Initialization and configuration of 4DF DB connection.
- */
-
-// get the 4dflib settings singleton
-FdfSettings fdfSettings = FdfSettings.getInstance();
-
-// set the database type and name and connection information
-fdfSettings.PERSISTENCE = DatabaseUtil.DatabaseType.MYSQL;
-fdfSettings.DB_PROTOCOL = DatabaseUtil.DatabaseProtocol.JDBC_MYSQL;
-fdfSettings.DB_ENCODING = DatabaseUtil.DatabaseEncoding.UTF8;
-fdfSettings.DB_NAME = "mydbname";
-fdfSettings.DB_HOST = "localhost";
-fdfSettings.DB_USER = "myuser";
-fdfSettings.DB_PASSWORD = "mysecurepassword";
-
-// root user settings are only required for initial database creation.  Once the database is created you
-// should remove this information
-fdfSettings.DB_ROOT_USER = "root";
-fdfSettings.DB_ROOT_PASSWORD = "myverysecurepassword";
-
-/**
- * Next you just need to create an ArrayList<Class> containing your model objects extending the 4DFLib CommonState.
- */
-
 // Create a array that will hold the classes that make up our 4df data model
 List<Class> myModel = new ArrayList<>();
 
-    Option 1 (manually add):
-        myModel.add(MyFirstClass.class);
-        myModel.add(MySecondClass.class);
-
-    Option 2 (dynamically grab all classes in a package that are subclasses of CommonState):
-        // setup a class scan
-        ClassPathScanningCandidateComponentProvider provider =
-                new ClassPathScanningCandidateComponentProvider(true);
-
-        // filter to subclasses of CommonState
-        provider.addIncludeFilter(new AssignableTypeFilter(CommonState.class));
-
-        // look in the "model" package
-        Set<BeanDefinition> components = provider.findCandidateComponents("model");
-
-        // do the scan
-        for (BeanDefinition component : components)
-        {
-            try {
-                // add the class to our array
-                Class cls = Class.forName(component.getBeanClassName());
-                myModel.add(cls);
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-        }
-
-
-/**
- * Last step call the 4DFLib initialization passing in your data model List.
- */
+// add model objects
+myModel.add(Foo.class);
 
 // call the initialization of library!
-CommonServices.initializeFdfDataModel(myModel);
+FdfServices.initializeFdfDataModel(myModel);
+```
+That is it!  Just add any classes you want to persist to myModel. If all was configured correctly, you will now have a HSQLDB database named 4dfapplicationdb with a table called Foo.  The database is written to disk by default in the hsql/ folder within your project.  HSQLDB is provided to test by default, but you can easly change 4DFLib to use MySQL and PostgreSQL as well. 
+
+Here is an example of a model class that is ready to be persisted by 4DFLib:
+```
+public class Foo extends CommonState {
+
+    public String name;
+    public List<String> coolThings;
+
+    @FdfIgnore
+    public Integer notPersisted;
+
+    public Lab1User() {
+        super();
+        coolThings = new ArrayList<>();
+    }
+}
+```
+To create and save Foo with 4DFLib you can do the following:
+```
+Foo foo = new Foo();
+foo.name = "fooboo";
+foo.coolThings.add("Ice cream");
+foo.coolThings.add("V8 Engines");
+foo.coolThings.add("First Dates");
+foo.notPersisted = 10;
+
+// save our object to the database
+GenericService genericService = new GenericService();
+genericService.save(Foo.class, foo);
+```
+If you check your fdfapplication database you should now have a saved record for fooboo.
+
+<h3>Working with your data</h3>
+4DFLib provides built in GenericServices that you can use to retrieve historical and current data, and also provides many useful retrieval methods see: <strong>com.fdflib.service.impl.FdfCommonServices</strong> for details and <strong>com.fdflib.service.FdfSystemServices</strong> and <strong>com.fdflib.service.FdfTenantServices</strong> for examples of how simple and powerful your services can be leveraging this tool.
+
+Here is an example asking 4DFLib to retrieve all instances of Foo:
+```
+GenericService genericService = new GenericService();
+        
+// get all Foo objects
+List<Foo> allFoo = genericService.getAllCurrent(Foo.class);
+        
+// get all Foo objects including audit information (all changes though time)
+List<FdfEntity<Foo>> allFooWithHistory = genericService.getAll(Foo.class);
 ```
 
+There are more super-powerful methods in there like: getEntitiesByValuesForPassedFields, getAtDateById(), getAtDateById(), getEntityBetweenDatesById() and many more!  And they are all yours to use, in all your services, free of charge!
 
-<h3>Full Example using manual class selection (Using option 2):</h3>
-
+<h3>FdfSettings</h3>
+So far, we have used all the default settings, you can can override any by investigating the following settings contained here: com.fdflib.util.FdfSettings
 ```
 // get the 4dflib settings singleton
 FdfSettings fdfSettings = FdfSettings.getInstance();
-
-// Create a array that will hold the classes that make up our 4df data model
-List<Class> myModel = new ArrayList<>();
-
-// set the database type and name and connection information
+```
+Example PostgreSQL configuration:
+```
+fdfSettings.PERSISTENCE = DatabaseUtil.DatabaseType.POSTGRES;
+fdfSettings.DB_PROTOCOL = DatabaseUtil.DatabaseProtocol.JDBC_POSTGRES;
+fdfSettings.DB_ENCODING = DatabaseUtil.DatabaseEncoding.UTF8;
+fdfSettings.DB_HOST = "localhost";
+fdfSettings.DB_NAME = "myDB";
+fdfSettings.DB_ROOT_USER = "postgres"; 
+fdfSettings.DB_ROOT_PASSWORD = "";
+fdfSettings.DB_USER = "myUser";
+fdfSettings.DB_PASSWORD = "myUserPassword";       
+```
+Example MySQL configuration:
+```
 fdfSettings.PERSISTENCE = DatabaseUtil.DatabaseType.MYSQL;
 fdfSettings.DB_PROTOCOL = DatabaseUtil.DatabaseProtocol.JDBC_MYSQL;
 fdfSettings.DB_ENCODING = DatabaseUtil.DatabaseEncoding.UTF8;
-fdfSettings.DB_NAME = "mydbname";
 fdfSettings.DB_HOST = "localhost";
-fdfSettings.DB_USER = "myuser";
-fdfSettings.DB_PASSWORD = "mysecurepassword";
-
-// root user settings are only required for initial database creation.  Once the database is created you
-// should remove this information
-fdfSettings.DB_ROOT_USER = "root";
-fdfSettings.DB_ROOT_PASSWORD = "myverysecurepassword";
-
-// Add your model to List
-myModel.add(MyFirstClass.class);
-myModel.add(MySecondClass.class);
-
-// call the initialization of library!
-CommonServices.initializeFdfDataModel(myModel);
+fdfSettings.DB_NAME = "myDB";
+fdfSettings.DB_ROOT_USER = "root"; 
+fdfSettings.DB_ROOT_PASSWORD = "";
+fdfSettings.DB_USER = "myUser";
+fdfSettings.DB_PASSWORD = "myUserPassword";       
 ```
-
-<h3>Simple  Example</h3>
-Let's Pretend that you have a 4DF object in your application called User.
-
-Here is what the class looks like
+Other configuration options:
 ```
+// If true, HSQLDB will create a file based db which will persist, false will be in memory database.
+public static Boolean HSQL_DB_FILE = true;
+//HyperSQL database file location
+public static String HQSL_DB_FILE_LOCATION = "hsql/";
 
+// 4DF gives you multitenant software for free! You can modify your default tenant if you like.
+public static String DEFAULT_TENANT_NAME = "Default FdfTenant";
+public static String DEFAULT_TENANT_DESRIPTION = "Default FdfTenant is created by 4dflib, if you do not intent to use "
+        + "built in multi-tenancy or only have one FdfTenant, all data is member of this tenant by "
+        + "default";
+public static String DEFAULT_TENANT_WEBSITE = "http://www.4dflib.com";
+public static Boolean DEFAULT_TENANT_IS_PRIMARY = true;
+
+// 4DF also lets you keep track of and manage what external systems connect to your software
+public static String DEFAULT_SYSTEM_NAME = "Default FdfSystem";
+public static String DEFAULT_SYSTEM_DESCRIPTION = "Default system represents the actual application and not"
+        + " a registered external system.";
+public static String DEFAULT_SYSTEM_PASSWORD = "4DfPassword";
+
+public static String TEST_SYSTEM_NAME = "Default Test System";
+public static String TEST_SYSTEM_DESCRIPTION = "Default test system for use connecting to the system for testing";
+public static String TEST_SYSTEM_PASSWORD = "testSystemPassword";
 ```
+<h2>Full Examples:</h2>
+
+We are working on updating the full examples to use version 1.1 of 4DFLib
+
 

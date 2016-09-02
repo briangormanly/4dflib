@@ -1,6 +1,6 @@
 /**
  * 4DFLib
- * Copyright (c) 2015 Brian Gormanly
+ * Copyright (c) 2015-2016 Brian Gormanly
  * 4dflib.com
  *
  * 4DFLib is free software; you can redistribute it and/or modify it under
@@ -20,7 +20,6 @@ import com.fdflib.model.entity.FdfEntity;
 import com.fdflib.model.state.CommonState;
 import com.fdflib.model.util.SqlStatement;
 import com.fdflib.model.util.WhereClause;
-import com.fdflib.model.util.WhereStatement;
 import com.fdflib.persistence.FdfPersistence;
 import com.fdflib.util.GeneralConstants;
 import org.slf4j.LoggerFactory;
@@ -38,171 +37,6 @@ import java.util.*;
 @SuppressWarnings("unused")
 public abstract class FdfCommonServices {
     protected final static org.slf4j.Logger fdfLog = LoggerFactory.getLogger(CommonState.class);
-
-    //Base WhereStatement Builders
-    protected static WhereClause addByRid(long rid) {
-        WhereClause whereRid = new WhereClause();
-        whereRid.name = "rid";
-        whereRid.operator = WhereClause.Operators.EQUAL;
-        whereRid.value = Long.toString(rid);
-        whereRid.valueDataType = Long.class;
-        return whereRid;
-    }
-    protected static WhereClause addById(long id) {
-        WhereClause whereId = new WhereClause();
-        whereId.name = "id";
-        whereId.operator = WhereClause.Operators.EQUAL;
-        whereId.value = Long.toString(id);
-        whereId.valueDataType = Long.class;
-        return whereId;
-    }
-    protected static WhereClause addByIdSet(String idSet) {
-        WhereClause whereIdSet = new WhereClause();
-        whereIdSet.name = "id";
-        whereIdSet.operator = WhereClause.Operators.IN;
-        whereIdSet.value = "(" + (idSet.matches("^(\\d+\\D)*\\d+$") ? idSet.replaceAll("\\D", ",") : "0") + ")";
-        whereIdSet.valueDataType = Long.class;
-        return whereIdSet;
-    }
-    protected static WhereClause addByCf() {
-        WhereClause whereCf = new WhereClause();
-        whereCf.name = "cf";
-        whereCf.operator = WhereClause.Operators.EQUAL;
-        whereCf.value = "1";
-        whereCf.valueDataType = Integer.class;
-        return whereCf;
-    }
-    protected static WhereClause addNotCf() {
-        WhereClause whereCf = new WhereClause();
-        whereCf.name = "cf";
-        whereCf.operator = WhereClause.Operators.NOT_EQUAL;
-        whereCf.value = "1";
-        whereCf.valueDataType = Integer.class;
-        return whereCf;
-    }
-    protected static WhereClause addByDf() {
-        WhereClause whereDf = new WhereClause();
-        whereDf.name = "df";
-        whereDf.operator = WhereClause.Operators.NOT_EQUAL;
-        whereDf.value = "1";
-        whereDf.valueDataType = Integer.class;
-        return whereDf;
-    }
-    protected static WhereClause addByArsdBefore(Date date) {
-        if(date != null) {
-            WhereClause whereStartBefore = new WhereClause();
-            whereStartBefore.name = "arsd";
-            whereStartBefore.operator = WhereClause.Operators.LESS_THAN_OR_EQUAL;
-            whereStartBefore.value = GeneralConstants.DB_DATE_FORMAT.format(date);
-            whereStartBefore.valueDataType = Date.class;
-            return whereStartBefore;
-        }
-        return null;
-    }
-    protected static WhereClause addByArsdAfter(Date date) {
-        if(date != null) {
-            WhereClause whereStartAfter = new WhereClause();
-            whereStartAfter.name = "arsd";
-            whereStartAfter.operator = WhereClause.Operators.GREATER_THAN_OR_EQUAL;
-            whereStartAfter.value = GeneralConstants.DB_DATE_FORMAT.format(date);
-            whereStartAfter.valueDataType = Date.class;
-            return whereStartAfter;
-        }
-        return null;
-    }
-    protected static WhereClause addByAredBefore(Date date) {
-        WhereClause whereEndBefore = new WhereClause();
-        whereEndBefore.name = "ared";
-        if(date != null) {
-            whereEndBefore.operator = WhereClause.Operators.LESS_THAN_OR_EQUAL;
-            whereEndBefore.value = GeneralConstants.DB_DATE_FORMAT.format(date);
-            whereEndBefore.valueDataType = Date.class;
-        }
-        else {
-            whereEndBefore.operator = WhereClause.Operators.IS_NOT;
-            whereEndBefore.value = WhereClause.NULL;
-        }
-        return whereEndBefore;
-    }
-    protected static List<WhereClause> addByAredAfter(Date date) {
-        List<WhereClause> whereStatement = new ArrayList<>();
-        WhereClause whereCurrent = new WhereClause();
-        if(date != null) {
-            WhereClause whereEndAfter = new WhereClause();
-            whereEndAfter.groupings.add(WhereClause.GROUPINGS.OPEN_PARENTHESIS);
-            whereEndAfter.name = "ared";
-            whereEndAfter.operator = WhereClause.Operators.GREATER_THAN_OR_EQUAL;
-            whereEndAfter.value = GeneralConstants.DB_DATE_FORMAT.format(date);
-            whereEndAfter.valueDataType = Date.class;
-            whereStatement.add(whereEndAfter);
-
-            whereCurrent.conditional = WhereClause.CONDITIONALS.OR;
-            whereCurrent.groupings.add(WhereClause.GROUPINGS.CLOSE_PARENTHESIS);
-        }
-        whereCurrent.name = "ared";
-        whereCurrent.operator = WhereClause.Operators.IS;
-        whereCurrent.value = WhereClause.NULL;
-        whereStatement.add(whereCurrent);
-        return whereStatement;
-    }
-    protected static List<WhereClause> addAtDate(Date date) {
-        List<WhereClause> whereStatement = addByAredAfter(date);
-        whereStatement.add(0, addByArsdBefore(date));
-        return whereStatement;
-    }
-    protected static WhereClause addByTid(long tid) {
-        WhereClause whereTid = new WhereClause();
-        whereTid.name = "tid";
-        whereTid.operator = WhereClause.Operators.EQUAL;
-        whereTid.value = Long.toString(tid);
-        whereTid.valueDataType = Long.class;
-        return whereTid;
-    }
-    protected static WhereClause addByEuid(long euid) {
-        WhereClause whereEuid = new WhereClause();
-        whereEuid.name = "euid";
-        whereEuid.operator = WhereClause.Operators.EQUAL;
-        whereEuid.value = Long.toString(euid);
-        whereEuid.valueDataType = Long.class;
-        return whereEuid;
-    }
-    protected static WhereClause addByEsid(long esid, WhereStatement whereStatement) {
-        WhereClause whereEsid = new WhereClause();
-        whereEsid.name = "esid";
-        whereEsid.operator = WhereClause.Operators.EQUAL;
-        whereEsid.value = Long.toString(esid);
-        whereEsid.valueDataType = Long.class;
-        return whereEsid;
-    }
-
-    //Bundled WhereStatement Builders
-    protected static List<WhereClause> setForCurrent(long tenantId) {
-        List<WhereClause> whereStatement = auditForCurrent(tenantId);
-        whereStatement.add(addByDf());
-        return whereStatement;
-    }
-    protected static List<WhereClause> setAtDate(Date date, long tenantId) {
-        List<WhereClause> whereStatement = auditAtDate(date, tenantId);
-        whereStatement.add(addByDf());
-        return whereStatement;
-    }
-    protected static List<WhereClause> setWithHistory(long tenantId) {
-        List<WhereClause> whereStatement = new ArrayList<>();
-        whereStatement.add(addByTid(tenantId));
-        whereStatement.add(addByDf());
-        return whereStatement;
-    }
-    protected static List<WhereClause> auditForCurrent(long tenantId) {
-        List<WhereClause> whereStatement = new ArrayList<>();
-        whereStatement.add(addByTid(tenantId));
-        whereStatement.add(addByCf());
-        return whereStatement;
-    }
-    protected static List<WhereClause> auditAtDate(Date date, long tenantId) {
-        List<WhereClause> whereStatement = addAtDate(date);
-        whereStatement.add(addByTid(tenantId));
-        return whereStatement;
-    }
 
     /**
      * Save an Entities State to persistence internally manages all insert, update and actions associated with
@@ -336,7 +170,7 @@ public abstract class FdfCommonServices {
         }
         // get full entity for state
         FdfEntity<S> thisEntity = auditEntityById(entityState, state.id, tenantId);
-        // check to see if there is an existing entity, if not, build
+        // check to see if there is an existing entity, if not, create
         if(thisEntity == null) {
             thisEntity = new FdfEntity<>();
         }
@@ -399,7 +233,7 @@ public abstract class FdfCommonServices {
         if(id > -1) {
             // get full entity for state
             FdfEntity<S> thisEntity = auditEntityById(entityState, id, tenantId);
-            // build the new state that will maintain the deletion records from the most recent state available
+            // create the new state that will maintain the deletion records from the most recent state available
             S deletedState = thisEntity.getMostRecentState();
             // mark the state deleted
             deletedState.df = true;
@@ -454,7 +288,7 @@ public abstract class FdfCommonServices {
         if(id > -1) {
             // get full entity for state
             FdfEntity<S> thisEntity = auditEntityById(entityState, id, tenantId);
-            // build the new state that will maintain the deletion records from the most recent state available
+            // create the new state that will maintain the deletion records from the most recent state available
             S deletedState = thisEntity.getMostRecentState();
             // mark the state deleted
             deletedState.df = false;
@@ -963,7 +797,6 @@ public abstract class FdfCommonServices {
         if(value != null && tenantId > 0) try {
             Class passedFieldType = entityState.getField(fieldName).getType();
             if(passedFieldType != null) {
-                WhereStatement whereStatement = new WhereStatement();
                 WhereClause whereField = new WhereClause();
                 whereField.name = fieldName;
                 whereField.operator = WhereClause.Operators.EQUAL;
@@ -1227,7 +1060,7 @@ public abstract class FdfCommonServices {
      * @return List of Entities of Type passed
      */
     public static <S extends CommonState> List<FdfEntity<S>> manageReturnedEntities(List<S> rawStates) {
-        // build a List of entities
+        // create a List of entities
         List<FdfEntity<S>> allEntities = new ArrayList<>();
         for(S state: rawStates) {
             // see if this states entityId has already been seen
@@ -1309,5 +1142,171 @@ public abstract class FdfCommonServices {
     public static long getNewEntityId(Class<? extends CommonState> entityState, long tenantId) {
         CommonState returnedState = SqlStatement.build().select("max(id) AS id").where(auditForCurrent(tenantId)).run(entityState).stream().findAny().orElse(null);
         return (returnedState != null && returnedState.id > 0 ? returnedState.id + 1 : 1);
+    }
+
+    /* ---- Generic Service Functions ---- */
+    //Base WhereStatement Builders
+    protected static WhereClause addByRid(long rid) {
+        WhereClause whereRid = new WhereClause();
+        whereRid.name = "rid";
+        whereRid.operator = WhereClause.Operators.EQUAL;
+        whereRid.value = Long.toString(rid);
+        whereRid.valueDataType = Long.class;
+        return whereRid;
+    }
+    protected static WhereClause addById(long id) {
+        WhereClause whereId = new WhereClause();
+        whereId.name = "id";
+        whereId.operator = WhereClause.Operators.EQUAL;
+        whereId.value = Long.toString(id);
+        whereId.valueDataType = Long.class;
+        return whereId;
+    }
+    protected static WhereClause addByIdSet(String idSet) {
+        WhereClause whereIdSet = new WhereClause();
+        whereIdSet.name = "id";
+        whereIdSet.operator = WhereClause.Operators.IN;
+        whereIdSet.value = "(" + (idSet.matches("^(\\d+\\D)*\\d+$") ? idSet.replaceAll("\\D", ",") : "0") + ")";
+        whereIdSet.valueDataType = Long.class;
+        return whereIdSet;
+    }
+    protected static WhereClause addByCf() {
+        WhereClause whereCf = new WhereClause();
+        whereCf.name = "cf";
+        whereCf.operator = WhereClause.Operators.EQUAL;
+        whereCf.value = "true";
+        whereCf.valueDataType = Boolean.class;
+        return whereCf;
+    }
+    protected static WhereClause addNotCf() {
+        WhereClause whereCf = new WhereClause();
+        whereCf.name = "cf";
+        whereCf.operator = WhereClause.Operators.NOT_EQUAL;
+        whereCf.value = "true";
+        whereCf.valueDataType = Boolean.class;
+        return whereCf;
+    }
+    protected static WhereClause addByDf() {
+        WhereClause whereDf = new WhereClause();
+        whereDf.name = "df";
+        whereDf.operator = WhereClause.Operators.NOT_EQUAL;
+        whereDf.value = "true";
+        whereDf.valueDataType = Boolean.class;
+        return whereDf;
+    }
+    protected static WhereClause addByArsdBefore(Date date) {
+        if(date != null) {
+            WhereClause whereStartBefore = new WhereClause();
+            whereStartBefore.name = "arsd";
+            whereStartBefore.operator = WhereClause.Operators.LESS_THAN_OR_EQUAL;
+            whereStartBefore.value = GeneralConstants.DB_DATE_FORMAT.format(date);
+            whereStartBefore.valueDataType = Date.class;
+            return whereStartBefore;
+        }
+        return null;
+    }
+    protected static WhereClause addByArsdAfter(Date date) {
+        if(date != null) {
+            WhereClause whereStartAfter = new WhereClause();
+            whereStartAfter.name = "arsd";
+            whereStartAfter.operator = WhereClause.Operators.GREATER_THAN_OR_EQUAL;
+            whereStartAfter.value = GeneralConstants.DB_DATE_FORMAT.format(date);
+            whereStartAfter.valueDataType = Date.class;
+            return whereStartAfter;
+        }
+        return null;
+    }
+    protected static WhereClause addByAredBefore(Date date) {
+        WhereClause whereEndBefore = new WhereClause();
+        whereEndBefore.name = "ared";
+        if(date != null) {
+            whereEndBefore.operator = WhereClause.Operators.LESS_THAN_OR_EQUAL;
+            whereEndBefore.value = GeneralConstants.DB_DATE_FORMAT.format(date);
+            whereEndBefore.valueDataType = Date.class;
+        }
+        else {
+            whereEndBefore.operator = WhereClause.Operators.IS_NOT;
+            whereEndBefore.value = WhereClause.NULL;
+        }
+        return whereEndBefore;
+    }
+    protected static List<WhereClause> addByAredAfter(Date date) {
+        List<WhereClause> whereStatement = new ArrayList<>();
+        WhereClause whereCurrent = new WhereClause();
+        if(date != null) {
+            WhereClause whereEndAfter = new WhereClause();
+            whereEndAfter.groupings.add(WhereClause.GROUPINGS.OPEN_PARENTHESIS);
+            whereEndAfter.name = "ared";
+            whereEndAfter.operator = WhereClause.Operators.GREATER_THAN_OR_EQUAL;
+            whereEndAfter.value = GeneralConstants.DB_DATE_FORMAT.format(date);
+            whereEndAfter.valueDataType = Date.class;
+            whereStatement.add(whereEndAfter);
+
+            whereCurrent.conditional = WhereClause.CONDITIONALS.OR;
+            whereCurrent.groupings.add(WhereClause.GROUPINGS.CLOSE_PARENTHESIS);
+        }
+        whereCurrent.name = "ared";
+        whereCurrent.operator = WhereClause.Operators.IS;
+        whereCurrent.value = WhereClause.NULL;
+        whereStatement.add(whereCurrent);
+        return whereStatement;
+    }
+    protected static List<WhereClause> addAtDate(Date date) {
+        List<WhereClause> whereStatement = addByAredAfter(date);
+        whereStatement.add(0, addByArsdBefore(date));
+        return whereStatement;
+    }
+    protected static WhereClause addByTid(long tid) {
+        WhereClause whereTid = new WhereClause();
+        whereTid.name = "tid";
+        whereTid.operator = WhereClause.Operators.EQUAL;
+        whereTid.value = Long.toString(tid);
+        whereTid.valueDataType = Long.class;
+        return whereTid;
+    }
+    protected static WhereClause addByEuid(long euid) {
+        WhereClause whereEuid = new WhereClause();
+        whereEuid.name = "euid";
+        whereEuid.operator = WhereClause.Operators.EQUAL;
+        whereEuid.value = Long.toString(euid);
+        whereEuid.valueDataType = Long.class;
+        return whereEuid;
+    }
+    protected static WhereClause addByEsid(long esid) {
+        WhereClause whereEsid = new WhereClause();
+        whereEsid.name = "esid";
+        whereEsid.operator = WhereClause.Operators.EQUAL;
+        whereEsid.value = Long.toString(esid);
+        whereEsid.valueDataType = Long.class;
+        return whereEsid;
+    }
+
+    //Bundled WhereStatement Builders
+    protected static List<WhereClause> setForCurrent(long tenantId) {
+        List<WhereClause> whereStatement = auditForCurrent(tenantId);
+        whereStatement.add(addByDf());
+        return whereStatement;
+    }
+    protected static List<WhereClause> setAtDate(Date date, long tenantId) {
+        List<WhereClause> whereStatement = auditAtDate(date, tenantId);
+        whereStatement.add(addByDf());
+        return whereStatement;
+    }
+    protected static List<WhereClause> setWithHistory(long tenantId) {
+        List<WhereClause> whereStatement = new ArrayList<>();
+        whereStatement.add(addByTid(tenantId));
+        whereStatement.add(addByDf());
+        return whereStatement;
+    }
+    protected static List<WhereClause> auditForCurrent(long tenantId) {
+        List<WhereClause> whereStatement = new ArrayList<>();
+        whereStatement.add(addByTid(tenantId));
+        whereStatement.add(addByCf());
+        return whereStatement;
+    }
+    protected static List<WhereClause> auditAtDate(Date date, long tenantId) {
+        List<WhereClause> whereStatement = addAtDate(date);
+        whereStatement.add(addByTid(tenantId));
+        return whereStatement;
     }
 }

@@ -1,6 +1,6 @@
 /**
  * 4DFLib
- * Copyright (c) 2015 Brian Gormanly
+ * Copyright (c) 2015-2016 Brian Gormanly
  * 4dflib.com
  *
  * 4DFLib is free software; you can redistribute it and/or modify it under
@@ -21,11 +21,11 @@ package com.fdflib.persistence.database;
  */
 public class DatabaseUtil {
     public enum DatabaseType {
-        MYSQL, POSTGRES, ORACLE, MSSQL
+        MYSQL, POSTGRES, ORACLE, MSSQL, HSQL
     }
 
     public enum DatabaseProtocol {
-        JDBC_MYSQL, JDBC_POSTGRES
+        JDBC_MYSQL, JDBC_POSTGRES, JDBC_HSQL
     }
 
     public enum DatabaseEncoding {

@@ -1,6 +1,6 @@
 /**
  * 4DFLib
- * Copyright (c) 2015 Brian Gormanly
+ * Copyright (c) 2015-2016 Brian Gormanly
  * 4dflib.com
  *
  * 4DFLib is free software; you can redistribute it and/or modify it under
@@ -18,6 +18,7 @@ package com.fdflib.persistence.connection;
 
 import com.fdflib.persistence.database.DatabaseUtil;
 import com.fdflib.persistence.impl.CorePersistenceImpl;
+import com.fdflib.persistence.queries.CoreHSqlQueries;
 import com.fdflib.persistence.queries.CoreMySqlQueries;
 import com.fdflib.persistence.queries.CorePostgreSqlQueries;
 import com.fdflib.util.FdfSettings;
@@ -38,6 +39,11 @@ public abstract class DbConnectionManager implements CorePersistenceImpl {
 
         if(FdfSettings.getInstance().PERSISTENCE == DatabaseUtil.DatabaseType.POSTGRES) {
             persistence = CorePostgreSqlQueries.getInstance();
+
+        }
+
+        if(FdfSettings.getInstance().PERSISTENCE == DatabaseUtil.DatabaseType.HSQL) {
+            persistence = CoreHSqlQueries.getInstance();
 
         }
     }
