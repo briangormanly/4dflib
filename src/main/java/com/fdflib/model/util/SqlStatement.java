@@ -40,6 +40,11 @@ public class SqlStatement {
         return this;
     }
 
+    //Commented out until valueDataType can be set this way.
+    /*public SqlStatement where(String clause) {
+        new WhereClause(clause);
+        return this;
+    }*/
     public SqlStatement where(WhereClause whereClause) {
         if(whereClause != null) {
             where.add(whereClause);

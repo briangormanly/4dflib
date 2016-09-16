@@ -101,44 +101,112 @@ public class WhereClause {
         conditional = CONDITIONALS.AND;
         operator = Operators.EQUAL;
     }
+    /**
+     * Optional constructor that takes the String representation of a WhereClause, such as "AND df &lt;&gt; true.
+     * However, there is a problem in the fact that there is no easy way to relay the value type. So for now, this bit
+     * of code is commented out.
+     *
+     * Complex regex is in case the smart people who enter the clause don't understand how to be decent human beings
+     * and instead just don't care about styling. This catches the three cases shown here, "AND)(df) (&lt;&gt;) true".
+     * Will probably be needed to update for spacing in case someone thinks "AND df&lt;&gt;true" works, which, to their
+     * credit, makes sense in this case. If they go "AND dfIS NOTtrue" then they're a hopeless case. If they enter
+     * multiple clauses, such as "WHERE df &lt;&gt; true AND cf = true", then this only parses the "WHERE df &lt;&gt; true" due
+     * to the fact that you are creating 1 WhereClause in the WhereClause constructor, not 17 thousand.
+     */
+    /*WhereClause(String where) {
+        String[] clause = where.split("(( )?\\(|(\\))? (\\()?|\\)( )?) ");
+        switch(clause[0].toUpperCase()) {
+            case "NOT":
+                conditional = CONDITIONALS.NOT;
+                break;
+            case "OR":
+                conditional = CONDITIONALS.OR;
+                break;
+            case "AND":
+                conditional = CONDITIONALS.AND;
+                break;
+            default:
+                //If case "WHERE" or left out because it is the first clause and they didn't think they needed to add it
+                conditional = CONDITIONALS.AND;
+        }
+        name = clause[1];
+        switch(clause[2].toUpperCase()) {
+            case "=":
+                operator = Operators.EQUAL;
+                break;
+            case "<>":
+                operator = Operators.NOT_EQUAL;
+                break;
+            case ">":
+                operator = Operators.GREATER_THAN;
+                break;
+            case "<":
+                operator = Operators.LESS_THAN;
+                break;
+            case ">=":
+                operator = Operators.GREATER_THAN_OR_EQUAL;
+                break;
+            case "<=":
+                operator = Operators.LESS_THAN_OR_EQUAL;
+                break;
+            case "IN":
+                operator = Operators.IN;
+                break;
+            case "BETWEEN":
+                operator = Operators.BETWEEN;
+                break;
+            case "LIKE":
+                operator = Operators.LIKE;
+                break;
+            case "IS":
+                if(clause[3].toUpperCase().equals("NOT")) {
+                    operator = Operators.IS_NOT;
+                    value = clause[4];
+                    return;
+                }
+                operator = Operators.IS;
+                break;
+            default:
+                //You know, in case they decide to go "WHERE df true" like the special people they would be...
+                operator = Operators.EQUAL;
+        }
+        value = clause[3];
+        if(clause[2].equalsIgnoreCase("BETWEEN")) {
+            if(clause[4].equalsIgnoreCase("AND")) {
+                value2 = clause[5];
+            }
+            else {
+                value2 = clause[4];
+            }
+        }
+    }*/
 
     public String getOperatorString() {
-
         switch (this.operator) {
             case EQUAL:
                 return "=";
-
             case NOT_EQUAL:
                 return "<>";
-
             case GREATER_THAN:
                 return ">";
-
             case LESS_THAN:
                 return "<";
-
             case GREATER_THAN_OR_EQUAL:
                 return ">=";
-
             case LESS_THAN_OR_EQUAL:
                 return "<=";
-
             case IN:
                 return "IN";
-
             case BETWEEN:
                 return "BETWEEN";
-
             case LIKE:
                 return "LIKE";
-
             case IS:
                 return "IS";
-
             case IS_NOT:
                 return "IS NOT";
-
+            default:
+                return null;
         }
-        return null;
     }
 }
