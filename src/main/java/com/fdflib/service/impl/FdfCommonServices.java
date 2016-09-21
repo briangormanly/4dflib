@@ -1117,7 +1117,7 @@ public abstract class FdfCommonServices {
             if(state.cf) {
                 entity.current = state;
             }
-            else if(!entity.history.isEmpty() && entity.history.stream().anyMatch(historyState -> historyState.rid == state.rid)) {
+            else if(!entity.history.stream().anyMatch(historyState -> historyState.rid == state.rid)) {
                 entity.history.add(state);
             }
         }

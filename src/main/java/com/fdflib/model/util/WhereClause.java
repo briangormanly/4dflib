@@ -102,7 +102,7 @@ public class WhereClause {
         operator = Operators.EQUAL;
     }
     /**
-     * Optional constructor that takes the String representation of a WhereClause, such as "AND df &lt;&gt; true.
+     * Optional constructor that takes the String representation of a WhereClause and parses it into a WhereClause.
      * However, there is a problem in the fact that there is no easy way to relay the value type. So for now, this bit
      * of code is commented out.
      *
