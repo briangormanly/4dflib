@@ -1,0 +1,13 @@
+com.fdflib
+com.fdflib.annotation
+com.fdflib.model.entity
+com.fdflib.model.state
+com.fdflib.model.util
+com.fdflib.persistence
+com.fdflib.persistence.connection
+com.fdflib.persistence.database
+com.fdflib.persistence.impl
+com.fdflib.persistence.queries
+com.fdflib.service
+com.fdflib.service.impl
+com.fdflib.util
