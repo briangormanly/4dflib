@@ -50,6 +50,7 @@ public class FdfSettings {
     //public static String DB_PASSWORD = "fdfUserPassword";
 
     // Root user information
+    public static Boolean USE_DB_ROOT = true;
     public static String DB_ROOT_USER = "SA";
     public static String DB_ROOT_PASSWORD = "";
 
