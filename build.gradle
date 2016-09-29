@@ -31,9 +31,6 @@ task javadocJar (type: Jar, dependsOn: javadoc) { // (1)
 }
 
 
-
-
-
 publishing {
     publications {
         fdflib(MavenPublication) {
