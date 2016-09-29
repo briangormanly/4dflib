@@ -300,6 +300,42 @@ public abstract class FdfCommonServices {
     }
 
     /**
+     * Returns a row (rid) count (equivalent of select count(rid) from ... from the class passed).
+     * @param entityState The entity type to query the count for
+     * @param <S> parameterized tipe of entity
+     * @return long representing teh number of rows in the table
+     */
+    public static <S extends CommonState> long getRowCount(Class<S> entityState) {
+        List<String> selectList = new ArrayList<>();
+        String rid = "rid";
+        selectList.add(rid);
+
+        List<S> returnedQuery = FdfPersistence.getInstance().selectQuery(entityState, selectList, null);
+        if (returnedQuery != null) {
+            return returnedQuery.size();
+        }
+        return 0;
+    }
+
+    /**
+     * Returns an entity (id) count (equivalent of select count(id) from ... from the class passed).
+     * @param entityState The entity type to query the count for
+     * @param <S> parameterized tipe of entity
+     * @return long representing teh number of rows in the table
+     */
+    public static <S extends CommonState> long getEntityCount(Class<S> entityState) {
+        List<String> selectList = new ArrayList<>();
+        String rid = "distinct id";
+        selectList.add(rid);
+
+        List<S> returnedQuery = FdfPersistence.getInstance().selectQuery(entityState, selectList, null);
+        if (returnedQuery != null) {
+            return returnedQuery.size();
+        }
+        return 0;
+    }
+
+    /**
      * Retrieves all entities including deleted records of type passed from persistence. Includes all current and
      * historical data for each entity returned.  Uses the Default FdfTenant (when not using multi-tenant)
      *
