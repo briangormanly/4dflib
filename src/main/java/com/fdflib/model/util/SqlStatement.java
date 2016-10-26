@@ -158,7 +158,7 @@ public class SqlStatement {
     }
     public String getLimit() {
         StringBuilder sql = new StringBuilder();
-        if(limit > 0) {
+        if(limit > 0 && offset > -1) {
             sql.append(" LIMIT ").append(limit);
             if(offset > 0) {
                 sql.append(" OFFSET ").append(offset);
