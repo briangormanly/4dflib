@@ -106,7 +106,9 @@ public class FdfServices {
             fdfLog.info("Database schema name: {}", settings.DB_NAME);
             fdfLog.info("--------------------------------------------------------------");
             try {
-                FdfPersistence.getInstance().checkDatabase();
+                if(settings.USE_DB_ROOT) {
+                    FdfPersistence.getInstance().checkDatabase();
+                }
                 FdfPersistence.getInstance().checkTables();
                 FdfPersistence.getInstance().checkFields();
                 FdfPersistence.getInstance().checkDefaultEntries();

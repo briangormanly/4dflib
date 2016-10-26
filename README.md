@@ -124,8 +124,7 @@ foo.coolThings.add("First Dates");
 foo.notPersisted = 10;
 
 // save our object to the database
-GenericService genericService = new GenericService();
-genericService.save(Foo.class, foo);
+FdfCommonServices.save(Foo.class, foo);
 ```
 If you check your fdfapplication database you should now have a saved record for fooboo.
 
