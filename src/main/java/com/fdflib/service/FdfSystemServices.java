@@ -18,6 +18,7 @@ package com.fdflib.service;
 
 import com.fdflib.model.entity.FdfEntity;
 import com.fdflib.model.state.FdfSystem;
+import com.fdflib.model.util.SqlStatement;
 import com.fdflib.model.util.WhereClause;
 import com.fdflib.persistence.FdfPersistence;
 import com.fdflib.service.impl.FdfCommonServices;
@@ -81,7 +82,7 @@ public class FdfSystemServices extends FdfCommonServices {
     }
 
     public FdfEntity<FdfSystem> getDefaultSystemWithHistory() {
-        // create the where statement for the query
+        // build the where statement for the query
         List<WhereClause> whereStatement = new ArrayList<>();
 
         // check that deleted records are not returned
@@ -99,15 +100,8 @@ public class FdfSystemServices extends FdfCommonServices {
         whereId.value = "1";
         whereId.valueDataType = Long.class;
 
-        whereStatement.add(whereDf);
-        whereStatement.add(whereId);
-
-        // do the query
-        List<FdfSystem> returnedService =
-                FdfPersistence.getInstance().selectQuery(FdfSystem.class, null, whereStatement);
-
-        // create a List of entities
-        return manageReturnedEntity(returnedService);
+        // build a List of entities
+        return manageReturnedEntity(SqlStatement.build().where(whereDf).where(whereId).run(FdfSystem.class));
     }
 
     public FdfSystem getTestSystem() {
@@ -115,7 +109,7 @@ public class FdfSystemServices extends FdfCommonServices {
     }
 
     public FdfEntity<FdfSystem> getTestSystemWithHistory() {
-        // create the where statement for the query
+        // build the where statement for the query
         List<WhereClause> whereStatement = new ArrayList<>();
 
         // check that deleted records are not returned
@@ -133,15 +127,8 @@ public class FdfSystemServices extends FdfCommonServices {
         whereId.value = "2";
         whereId.valueDataType = Long.class;
 
-        whereStatement.add(whereDf);
-        whereStatement.add(whereId);
-
-        // do the query
-        List<FdfSystem> returnedService =
-                FdfPersistence.getInstance().selectQuery(FdfSystem.class, null, whereStatement);
-
-        // create a List of entities
-        return manageReturnedEntity(returnedService);
+        // build a List of entities
+        return manageReturnedEntity(SqlStatement.build().where(whereDf).where(whereId).run(FdfSystem.class));
     }
 
     public List<FdfSystem> getSystemsByName(String name) {
@@ -157,7 +144,7 @@ public class FdfSystemServices extends FdfCommonServices {
     }
 
     public List<FdfEntity<FdfSystem>> getSystemsByNameWithHistory(String name) {
-        // create the where statement for the query
+        // build the where statement for the query
         List<WhereClause> whereStatement = new ArrayList<>();
 
         // check that deleted records are not returned
@@ -175,15 +162,8 @@ public class FdfSystemServices extends FdfCommonServices {
         whereId.value = name;
         whereId.valueDataType = String.class;
 
-        whereStatement.add(whereDf);
-        whereStatement.add(whereId);
-
-        // do the query
-        List<FdfSystem> returnedService =
-                FdfPersistence.getInstance().selectQuery(FdfSystem.class, null, whereStatement);
-
-        // create a List of entities
-        return manageReturnedEntities(returnedService);
+        // build a List of entities
+        return manageReturnedEntities(SqlStatement.build().where(whereDf).where(whereId).run(FdfSystem.class));
     }
 
     /**

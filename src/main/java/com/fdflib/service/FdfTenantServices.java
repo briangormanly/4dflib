@@ -18,6 +18,7 @@ package com.fdflib.service;
 
 import com.fdflib.model.entity.FdfEntity;
 import com.fdflib.model.state.FdfTenant;
+import com.fdflib.model.util.SqlStatement;
 import com.fdflib.model.util.WhereClause;
 import com.fdflib.persistence.FdfPersistence;
 import com.fdflib.service.impl.FdfCommonServices;
@@ -69,39 +70,28 @@ public class FdfTenantServices extends FdfCommonServices {
     }
 
     public FdfEntity<FdfTenant> getDefaultTenantWithHistory() {
-        List<WhereClause> whereClauses = new ArrayList<>();
-
-        // check that deleted records are not returned
+        //Check that deleted records are not returned
         WhereClause whereDf = new WhereClause();
         whereDf.name = "df";
         whereDf.operator = WhereClause.Operators.IS_NOT;
         whereDf.value = "true";
         whereDf.valueDataType = Integer.class;
 
-        // check to find results that match the name like condition
+        //Check to find results that match the name like condition
         WhereClause primary = new WhereClause();
         primary.name = "isPrimary";
         primary.operator = WhereClause.Operators.EQUAL;
         primary.value = "true";
         primary.valueDataType = Boolean.class;
 
-        whereClauses.add(whereDf);
-        whereClauses.add(primary);
-
-        List<FdfTenant> returnedStates = FdfPersistence.getInstance().selectQuery(FdfTenant.class, null, whereClauses);
-        return this.manageReturnedEntity(returnedStates);
-
+        return manageReturnedEntity(SqlStatement.build().where(whereDf).where(primary).run(FdfTenant.class));
     }
     
     public FdfTenant getTenantByName(String tenantName) {
-
         return getTenantByNameWithHistory(tenantName).current;
     }
 
     public FdfEntity<FdfTenant> getTenantByNameWithHistory(String tenantName) {
-        // create the where statement for the query
-        List<WhereClause> whereStatement = new ArrayList<>();
-
         // check that deleted records are not returned
         WhereClause whereDf = new WhereClause();
         whereDf.name = "df";
@@ -116,12 +106,7 @@ public class FdfTenantServices extends FdfCommonServices {
         nameLike.value = "%" + tenantName + "%";
         nameLike.valueDataType = String.class;
 
-        whereStatement.add(nameLike);
-
-        // do the query
-        return this.manageReturnedEntity(FdfPersistence.getInstance().selectQuery(FdfTenant.class, null, whereStatement));
-
-        //return tenantList;
+        return manageReturnedEntity(SqlStatement.build().where(nameLike).run(FdfTenant.class));
     }
 
     /**
@@ -132,8 +117,6 @@ public class FdfTenantServices extends FdfCommonServices {
      * @return tenant saved with id
      */
     public FdfEntity<FdfTenant> saveTenant(FdfTenant tenant) {
-
-
         FdfEntity<FdfTenant> returnEntity = null;
         if(tenant != null) {
             // check to see if there is a user with the passed users id and or username
@@ -143,7 +126,6 @@ public class FdfTenantServices extends FdfCommonServices {
             }
             returnEntity = this.save(FdfTenant.class, tenant);
         }
-
         return returnEntity;
     }
 

@@ -1,3 +1,18 @@
+package com.fdflib.persistence.database;
+
+import com.fdflib.util.FdfSettings;
+import org.hsqldb.Server;
+import org.hsqldb.persist.HsqlProperties;
+import org.hsqldb.server.ServerAcl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.Arrays;
+
 /**
  * 4DFLib
  * Copyright (c) 2015-2016 Brian Gormanly
@@ -13,34 +28,14 @@
  * FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
  * details.
  */
-
-package com.fdflib.persistence.database;
-
-import com.fdflib.util.FdfSettings;
-import org.hsqldb.Server;
-import org.hsqldb.persist.HsqlProperties;
-import org.hsqldb.server.ServerAcl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-
-/**
- * Created by brian.gormanly on 8/30/16.
- */
 public class HSqlConnection {
 
     private static final HSqlConnection INSTANCE = new HSqlConnection();
-    static Logger fdfLog = LoggerFactory.getLogger(HSqlConnection.class);
+    private static Logger fdfLog = LoggerFactory.getLogger(HSqlConnection.class);
 
-    Server server;
+    private Server server;
 
-    private HSqlConnection() {
-
-    }
+    private HSqlConnection() {}
 
     public static HSqlConnection getInstance() {
         return INSTANCE;
@@ -72,27 +67,24 @@ public class HSqlConnection {
             server.setLogWriter(null); // can use custom writer
             server.setErrWriter(null); // can use custom writer
             server.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ServerAcl.AclFormatException e) {
+        } catch (IOException | ServerAcl.AclFormatException e) {
             e.printStackTrace();
         }
 
         if(server.getState() > 0) {
 
             try {
-                Connection connection = DriverManager.getConnection(FdfSettings.returnDBConnectionString(),
+                return DriverManager.getConnection(FdfSettings.returnDBConnectionString(),
                         FdfSettings.DB_USER, FdfSettings.DB_PASSWORD);
-                return connection;
-
-            } catch (SQLException e) {
+            }
+            catch (SQLException e) {
                 fdfLog.warn("SQL Error: {}\nDescription: ", e.getErrorCode(), e.getMessage());
 
                 // - Unknown database 'testing_db'
                 if (e.getErrorCode() == 1049) {
                     fdfLog.error("Database did not exist: {}", e.getMessage());
                 } else {
-                    fdfLog.error(e.getStackTrace().toString());
+                    fdfLog.error(Arrays.toString(e.getStackTrace()));
                 }
             }
         }
@@ -128,28 +120,26 @@ public class HSqlConnection {
             server.setLogWriter(null); // can use custom writer
             server.setErrWriter(null); // can use custom writer
             server.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (ServerAcl.AclFormatException e) {
+        }
+        catch (IOException | ServerAcl.AclFormatException e) {
             e.printStackTrace();
         }
 
         if(server.getState() > 0) {
 
             try {
-                Connection connection = DriverManager.getConnection(
+                return DriverManager.getConnection(
                         FdfSettings.returnDBConnectionStringWithoutDatabase(),
                         FdfSettings.DB_ROOT_USER, FdfSettings.DB_ROOT_PASSWORD);
-                return connection;
-
-            } catch (SQLException e) {
+            }
+            catch (SQLException e) {
                 fdfLog.warn("SQL Error: {}\nDescription: ", e.getErrorCode(), e.getMessage());
 
                 // - Unknown database 'testing_db'
                 if (e.getErrorCode() == 1049) {
                     fdfLog.error("Database did not exist: {}", e.getMessage());
                 } else {
-                    fdfLog.error(e.getStackTrace().toString());
+                    fdfLog.error(Arrays.toString(e.getStackTrace()));
                 }
             }
         }
@@ -160,15 +150,11 @@ public class HSqlConnection {
     }
 
     public void close(Connection connection) throws SQLException {
-
         fdfLog.debug("Closing hsql database connection.");
         if (connection != null && !connection.isClosed()) {
             connection.close();
         }
-        connection = null;
-
         server.shutdown();
-
     }
 
 }

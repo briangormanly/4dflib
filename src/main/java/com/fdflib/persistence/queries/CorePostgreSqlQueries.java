@@ -20,6 +20,7 @@ import com.fdflib.annotation.FdfIgnore;
 import com.fdflib.model.state.CommonState;
 import com.fdflib.model.state.FdfSystem;
 import com.fdflib.model.state.FdfTenant;
+import com.fdflib.model.util.SqlStatement;
 import com.fdflib.model.util.WhereClause;
 import com.fdflib.persistence.connection.DbConnectionManager;
 import com.fdflib.persistence.database.PostgreSqlConnection;
@@ -54,7 +55,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
     }
 
     public void checkDatabase() throws SQLException {
-        // create database
+        // build database
         String dbexists = "SELECT * FROM pg_database WHERE datname= '" + FdfSettings.DB_NAME.toLowerCase() + "';";
 
         Connection conn = null;
@@ -73,7 +74,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
 
             if(rs != null) {
                 if(!rs.next()) {
-                    // Database does not exist, create
+                    // Database does not exist, build
                     String sqlCreate = "CREATE DATABASE " +  "\"" + FdfSettings.DB_NAME.toLowerCase() + "\""
                             +  " ENCODING '" + FdfSettings.DB_ENCODING.UTF8 + "';";
 
@@ -90,7 +91,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                         stmt2.executeUpdate(sqlCreateUser);
                         stmt2.executeUpdate(sqlUserGrant);
                         fdfLog.info("******************************************************************");
-                        fdfLog.info("4DFLib Database did not exist, attempting to create.");
+                        fdfLog.info("4DFLib Database did not exist, attempting to build.");
                         fdfLog.info("******************************************************************");
 
                         fdfLog.info("Database created.");
@@ -133,7 +134,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
         // get the 4df data model
         List<Class> classList = FdfSettings.getInstance().modelClasses;
 
-        // create the tables for the model objects
+        // build the tables for the model objects
         for(Class c: classList) {
 
             // check to see if the class has an @fdfIgonre
@@ -168,7 +169,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
 
                     if (rs != null) {
                         if (!rs.next()) {
-                            // Table does not exist, create
+                            // Table does not exist, build
                             fdfLog.info("creating table: {}", c.getSimpleName().toLowerCase());
                             // check there there is at lease one field
                             if (c.getFields().length > 0) {
@@ -231,7 +232,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
         // get the 4df data model
         List<Class> classList = FdfSettings.getInstance().modelClasses;
 
-        // create the tables for the model objects
+        // build the tables for the model objects
         for(Class c: classList) {
 
             // determine the number of fields
@@ -320,7 +321,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
         FdfSystemServices ss = new FdfSystemServices();
         FdfSystem defaultSystem = ss.getDefaultSystem();
         if(defaultSystem == null) {
-            // create the default FdfSystem entry
+            // build the default FdfSystem entry
             FdfSystem newDefaultSystem = new FdfSystem();
             newDefaultSystem.name = FdfSettings.DEFAULT_SYSTEM_NAME;
             newDefaultSystem.description = FdfSettings.DEFAULT_SYSTEM_DESCRIPTION;
@@ -335,7 +336,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
         // check to see if the test system entry exists
         FdfSystem testSystem = ss.getTestSystem();
         if(testSystem == null) {
-            // create the default FdfSystem entry
+            // build the default FdfSystem entry
             FdfSystem newTestSystem = new FdfSystem();
             newTestSystem.name = FdfSettings.TEST_SYSTEM_NAME;
             newTestSystem.description = FdfSettings.TEST_SYSTEM_DESCRIPTION;
@@ -352,7 +353,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
         FdfTenant defaultTenant = ts.getDefaultTenant();
 
         if(defaultTenant == null) {
-            // create the default FdfTenant
+            // build the default FdfTenant
             FdfTenant defaultTenantState = new FdfTenant();
             defaultSystem = ss.getDefaultSystem();
             defaultTenantState.name = FdfSettings.DEFAULT_TENANT_NAME;
@@ -911,11 +912,11 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
      *      SELECT * FROM User where firstName = 'Larry' AND lastName = 'Smith';
      *
      * @param c Class of entity to select from
-     * @param where where clauses
+     * @param sqlStatement Class that contains all the necessary fields to build the sql statement
      * @param <S> Type extending CommonState to query and return
      * @return data queried
      */
-    public <S extends CommonState> List<S> selectQuery(Class c, List<String> select, List<WhereClause> where) {
+    public <S extends CommonState> List<S> selectQuery(Class c, SqlStatement sqlStatement) {
 
         List<S> everything = new ArrayList<>();
 
@@ -923,23 +924,9 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
         if(!c.isAnnotationPresent(FdfIgnore.class)) {
 
             // start the sql statement
-            String sql = "select";
-            if (select != null) {
-                int selectCount = 0;
-                for (String selectItem : select) {
-                    sql += " " + selectItem;
-                    selectCount++;
-                    if (selectCount < select.size()) sql += ",";
-                }
-            } else {
-                sql += " *";
-            }
-
-            sql += " from " + "\"" + c.getSimpleName().toLowerCase() + "\"";
-
-            sql += parseWhere(where);
-
-            sql += ";";
+            String sql = sqlStatement.getSelect() + " FROM \"" + c.getSimpleName().toLowerCase() + "\""
+                    + sqlStatement.getWhere() + sqlStatement.getGroupBy() + sqlStatement.getOrderBy()
+                    + sqlStatement.getLimit() + ";";
 
             fdfLog.debug("select sql: {}", sql);
 
@@ -955,7 +942,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                     rs = ps.executeQuery();
                     while (rs.next()) {
 
-                        // create a new object of type passed
+                        // build a new object of type passed
                         Object thisObject = c.newInstance();
 
                         for (Field field : c.getFields()) {
@@ -1471,7 +1458,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                 sql += field.getName() + " TEXT";
             }
             else {
-                // unknown create text fields to serialize
+                // unknown build text fields to serialize
                 fdfLog.debug("Was not able to identify field: {} of type: {} ", field.getName(), field.getType());
                 sql += field.getName().toLowerCase()+ " bytea";
 
@@ -1479,7 +1466,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
 
         }
         else {
-            // unknown create text fields to serialize
+            // unknown build text fields to serialize
             fdfLog.debug("Was not able to identify field: {} of type: {} ", field.getName(), field.getType());
             sql += field.getName().toLowerCase()+ " bytea";
 
