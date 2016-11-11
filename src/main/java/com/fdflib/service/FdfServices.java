@@ -104,7 +104,7 @@ public class FdfServices {
             fdfLog.info("Database Encoding: {}", settings.DB_ENCODING);
             fdfLog.info("Database Host: {}", settings.DB_HOST);
             fdfLog.info("Database schema name: {}", settings.DB_NAME);
-            fdfLog.info("--------------------------------------------------------------");
+            fdfLog.info("------------------------------------------------------------------");
             try {
                 if(settings.USE_DB_ROOT) {
                     FdfPersistence.getInstance().checkDatabase();

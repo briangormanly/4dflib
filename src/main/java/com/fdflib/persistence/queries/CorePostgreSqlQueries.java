@@ -270,7 +270,6 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                         + c.getSimpleName().toLowerCase() + "' and column_name= '"
                                         + field.getName().toLowerCase() + "';";
 
-                                //System.out.println("checking sql---------------> " + fieldTest);
                                 if (stmt != null) {
                                     rs = stmt.executeQuery(fieldTest);
                                 }
