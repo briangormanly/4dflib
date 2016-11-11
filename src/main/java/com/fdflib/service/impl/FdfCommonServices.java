@@ -184,9 +184,12 @@ public abstract class FdfCommonServices {
             FdfPersistence.getInstance().update(entityState, lastCurrentState);
         }
         // save the new state as current
+        System.out.println("about to insert!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         long returnedRid = FdfPersistence.getInstance().insert(entityState, state);
+        System.out.println(" got back id: " + returnedRid);
         // get id for rid
         S entity = auditEntityByRid(entityState, returnedRid);
+        System.out.println("------------------ entitiy back: " + entity.id);
         // get the entity and return
         return auditEntityById(entityState, entity.id, tenantId);
     }

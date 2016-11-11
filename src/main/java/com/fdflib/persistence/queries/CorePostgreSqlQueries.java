@@ -278,8 +278,8 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                 if (rs != null) {
                                     if (!rs.next()) {
                                         // the field did not exist,
-                                        String alterSql = "alter table " + "\"" + c.getSimpleName() + "\"" + " add column "
-                                                + "\"" + this.getFieldNameAndDataType(field) + "\"" + ";";
+                                        String alterSql = "alter table " + "\"" + c.getSimpleName().toLowerCase() + "\"" + " add column "
+                                                + this.getFieldNameAndDataType(field) + ";";
 
                                         fdfLog.info("Add field sql {} : {}", c.getSimpleName().toLowerCase(), alterSql);
 
