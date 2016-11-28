@@ -75,6 +75,9 @@ public class FdfSettings {
     public static String TEST_SYSTEM_DESCRIPTION = "Default test system for use connecting to the system for testing";
     public static String TEST_SYSTEM_PASSWORD = "testSystemPassword";
 
+    // HikariCP settings
+    public static Boolean USE_HIKARICP = false;
+
     private FdfSettings() {
     }
 

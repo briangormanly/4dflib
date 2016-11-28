@@ -17,6 +17,7 @@
 package com.fdflib.persistence.database;
 
 import com.fdflib.util.FdfSettings;
+import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,21 +49,29 @@ public class MySqlConnection {
             e.printStackTrace();
         }
 
-        try {
-            Connection connection = DriverManager.getConnection(FdfSettings.returnDBConnectionString(), FdfSettings.DB_USER
-                    , FdfSettings.DB_PASSWORD);
-            return connection;
+        if(!FdfSettings.USE_HIKARICP) {
+            try {
+                Connection connection = DriverManager.getConnection(FdfSettings.returnDBConnectionString(), FdfSettings.DB_USER
+                        , FdfSettings.DB_PASSWORD);
+                return connection;
 
-        } catch (SQLException e) {
-            fdfLog.warn("SQL Error: {}\nDescription: ", e.getErrorCode(), e.getMessage());
+            } catch (SQLException e) {
+                fdfLog.warn("SQL Error: {}\nDescription: ", e.getErrorCode(), e.getMessage());
 
-            // - Unknown database 'testing_db'
-            if(e.getErrorCode() == 1049) {
-                fdfLog.error("Database did not exist: {}", e.getMessage());
+                // - Unknown database 'testing_db'
+                if (e.getErrorCode() == 1049) {
+                    fdfLog.error("Database did not exist: {}", e.getMessage());
+                } else {
+                    fdfLog.error(e.getStackTrace().toString());
+                }
             }
-            else {
-                fdfLog.error(e.getStackTrace().toString());
-            }
+        }
+        else {
+            HikariDataSource ds = new HikariDataSource();
+            ds.setJdbcUrl(FdfSettings.returnDBConnectionString());
+            ds.setUsername(FdfSettings.DB_USER);
+            ds.setPassword(FdfSettings.DB_PASSWORD);
+            return ds.getConnection();
         }
 
         return null;
@@ -76,21 +85,31 @@ public class MySqlConnection {
             e.printStackTrace();
         }
 
-        try {
-            Connection connection = DriverManager.getConnection(FdfSettings.returnDBConnectionStringWithoutDatabase(),
-                    FdfSettings.DB_ROOT_USER, FdfSettings.DB_ROOT_PASSWORD);
-            return connection;
+        if(!FdfSettings.USE_HIKARICP) {
 
-        } catch (SQLException e) {
-            fdfLog.warn("SQL Error: {}\nDescription: ", e.getErrorCode(), e.getMessage());
+            try {
+                Connection connection = DriverManager.getConnection(FdfSettings.returnDBConnectionStringWithoutDatabase(),
+                        FdfSettings.DB_ROOT_USER, FdfSettings.DB_ROOT_PASSWORD);
+                return connection;
 
-            // - Unknown database 'testing_db'
-            if(e.getErrorCode() == 1049) {
-                fdfLog.error("Database did not exist: {}", e.getMessage());
+            } catch (SQLException e) {
+                fdfLog.warn("SQL Error: {}\nDescription: ", e.getErrorCode(), e.getMessage());
+
+                // - Unknown database 'testing_db'
+                if (e.getErrorCode() == 1049) {
+                    fdfLog.error("Database did not exist: {}", e.getMessage());
+                } else {
+                    fdfLog.error(e.getStackTrace().toString());
+                }
             }
-            else {
-                fdfLog.error(e.getStackTrace().toString());
-            }
+        }
+        else {
+            HikariDataSource ds = new HikariDataSource();
+            ds.setJdbcUrl(FdfSettings.returnDBConnectionString());
+            ds.setUsername(FdfSettings.DB_ROOT_USER);
+            ds.setPassword(FdfSettings.DB_ROOT_PASSWORD);
+            ds.setMaximumPoolSize(1000);
+            return ds.getConnection();
         }
         return null;
     }
