@@ -75,8 +75,103 @@ public class FdfSettings {
     public static String TEST_SYSTEM_DESCRIPTION = "Default test system for use connecting to the system for testing";
     public static String TEST_SYSTEM_PASSWORD = "testSystemPassword";
 
-    // HikariCP settings
+    /**
+     * HikariCP settings
+     * See: https://github.com/brettwooldridge/HikariCP/wiki/Configuration
+     * HikariCP uses milliseconds for all time values
+     */
+
+    /**
+     * Turn on HIKARICP? If false use regular JDBC
+     */
     public static Boolean USE_HIKARICP = false;
+
+    /**
+     * This is the name of the DataSource class provided by the JDBC driver Consult the documentation for your specific
+     * JDBC driver to get this class name see https://github.com/brettwooldridge/HikariCP#popular-datasource-class-names
+     * Note: XA data sources are not supported. XA requires a real transaction manager like bitronix. Note that you do
+     * not need this property if you are using jdbcUrl for "old-school" DriverManager-based JDBC driver configuration.
+     * Default: none
+     */
+    public static String HIKARICP_DATASOURCE_CLASSNAME = "none";
+
+    /**
+     * This property controls the default auto-commit behavior of connections returned from the pool. It is a boolean
+     * value. Default: true
+     */
+    public static Boolean HIKARICP_AUTOCOMMIT = true;
+
+    /**
+     * This property controls the maximum number of milliseconds that a client (that's you) will wait for a connection
+     * from the pool.
+     */
+
+    public static Integer HIKARICP_CONNECTION_TIMEOUT_MS = 30000;
+
+    /**
+     * This property controls the maximum amount of time that a connection is allowed to sit idle in the pool. This
+     * setting only applies when minimumIdle is defined to be less than maximumPoolSize
+     */
+    public static Integer HIKARICP_MAX_IDLE_TIMEOUT_MS = 60000;
+
+    /**
+     * This property controls the maximum lifetime of a connection in the pool. When a connection reaches this timeout
+     * it will be retired from the pool
+     */
+    public static Integer HIKARICP_MAX_LIFETIME_MS = 287400;
+
+    /**
+     * This is for "legacy" databases that do not support the JDBC4 Connection.isValid() API HikariCP will log an error
+     * if your driver is not JDBC4 compliant to let you know. Default: none
+     */
+    public static String HIKARICP_CONNECTION_TEST_QUERY = "none";
+
+    /**
+     * This property controls the maximum size that the pool is allowed to reach, including both idle and in-use
+     * connections. Basically this value will determine the maximum number of actual connections to the database
+     * backend. A reasonable value for this is best determined by your execution environment. When the pool reaches
+     * this size, and no idle connections are available, calls to getConnection() will block for up to connectionTimeout
+     * milliseconds before timing out. Default: 10
+     */
+    public static Integer HIKARICP_MAX_POOL_SIZE = 10;
+
+    /**
+     * This property controls the minimum number of idle connections that HikariCP tries to maintain in the pool.
+     * Default: same as maximumPoolSize
+     */
+    public static Integer HIKARICP_MIN_IDLE_MS = HIKARICP_MAX_POOL_SIZE;
+
+    // This property is only available via programmatic configuration or IoC container. This property allows you to
+    // specify an instance of a Codahale/Dropwizard MetricRegistry to be used by the pool to record various metrics.
+    // See the Metrics wiki page for details. Default: none
+    public static String HIKARICP_METRIC_REG = "none";
+
+    // This property is only available via programmatic configuration or IoC container. This property allows you to
+    // specify an instance of a Codahale/Dropwizard HealthCheckRegistry to be used by the pool to report current
+    // health information. See the Health Checks wiki page for details. Default: none
+    public static String HIKARICP_HEALTH_CHECK_REG = "none";
+
+    /**
+     * This property represents a user-defined name for the connection pool and appears mainly in logging and JMX
+     * management consoles to identify pools and pool configurations. Default: auto-generated
+     */
+
+    public static String HIKARICP_POOL_NAME = "auto-generated";
+
+    /**
+     * This property controls whether the pool will "fail fast" if the pool cannot be seeded with initial connections
+     * successfully. If you want your application to start even when the database is down/unavailable, set this
+     * property to false. Default: true
+     */
+    public static Boolean HIKARICP_FAIL_FAST = true;
+
+    public static String HIKARICP_;
+
+    public static String HIKARICP_;
+
+    public static String HIKARICP_
+
+
 
     private FdfSettings() {
     }

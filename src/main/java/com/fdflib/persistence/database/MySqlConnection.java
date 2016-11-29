@@ -90,6 +90,8 @@ public class MySqlConnection {
         config.setIdleTimeout(28740000);
         config.setMaxLifetime(28740000);
         config.setConnectionTimeout(30000);
+        config.setMinimumIdle();
+        config.setConnectionTestQuery();
         config.setJdbcUrl(FdfSettings.returnDBConnectionString());
         config.setUsername(FdfSettings.DB_ROOT_USER);
         config.setPassword(FdfSettings.DB_ROOT_PASSWORD);
