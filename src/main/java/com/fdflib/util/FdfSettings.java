@@ -17,11 +17,13 @@
 package com.fdflib.util;
 
 import com.fdflib.persistence.database.DatabaseUtil;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadFactory;
 
 /**
  * Created by brian.gormanly on 5/19/15.
@@ -74,6 +76,192 @@ public class FdfSettings {
     public static String TEST_SYSTEM_NAME = "Default Test System";
     public static String TEST_SYSTEM_DESCRIPTION = "Default test system for use connecting to the system for testing";
     public static String TEST_SYSTEM_PASSWORD = "testSystemPassword";
+
+    /**
+     * HikariCP settings
+     * See: https://github.com/brettwooldridge/HikariCP/wiki/Configuration
+     * HikariCP uses milliseconds for all time values
+     */
+
+    /**
+     * Turn on HIKARICP? If false use regular JDBC
+     */
+    public static Boolean USE_HIKARICP = false;
+
+    /**
+     * This is the name of the DataSource class provided by the JDBC driver Consult the documentation for your specific
+     * JDBC driver to get this class name see https://github.com/brettwooldridge/HikariCP#popular-datasource-class-names
+     * Note: XA data sources are not supported. XA requires a real transaction manager like bitronix. Note that you do
+     * not need this property if you are using jdbcUrl for "old-school" DriverManager-based JDBC driver configuration.
+     * Default: none
+     */
+    public static String HIKARICP_DATASOURCE_CLASSNAME = "";
+
+    /**
+     * This property controls the default auto-commit behavior of connections returned from the pool. It is a boolean
+     * value. Default: true
+     */
+    public static Boolean HIKARICP_AUTOCOMMIT = true;
+
+    /**
+     * This property controls the maximum number of milliseconds that a client (that's you) will wait for a connection
+     * from the pool.
+     */
+
+    public static Integer HIKARICP_CONNECTION_TIMEOUT_MS = 30000;
+
+    /**
+     * This property controls the maximum amount of time that a connection is allowed to sit idle in the pool. This
+     * setting only applies when minimumIdle is defined to be less than maximumPoolSize
+     */
+    public static Integer HIKARICP_IDLE_TIMEOUT_MS = 60000;
+
+    /**
+     * This property controls the maximum lifetime of a connection in the pool. When a connection reaches this timeout
+     * it will be retired from the pool
+     */
+    public static Integer HIKARICP_MAX_LIFETIME_MS = 287400;
+
+    /**
+     * This is for "legacy" databases that do not support the JDBC4 Connection.isValid() API HikariCP will log an error
+     * if your driver is not JDBC4 compliant to let you know. Default: none
+     */
+    public static String HIKARICP_CONNECTION_TEST_QUERY = "";
+
+    /**
+     * This property controls the maximum size that the pool is allowed to reach, including both idle and in-use
+     * connections. Basically this value will determine the maximum number of actual connections to the database
+     * backend. A reasonable value for this is best determined by your execution environment. When the pool reaches
+     * this size, and no idle connections are available, calls to getConnection() will block for up to connectionTimeout
+     * milliseconds before timing out. Default: 10
+     */
+    public static Integer HIKARICP_MAX_POOL_SIZE = 10;
+
+    /**
+     * This property controls the minimum number of idle connections that HikariCP tries to maintain in the pool.
+     * Default: same as maximumPoolSize
+     */
+    public static Integer HIKARICP_MIN_IDLE_MS = HIKARICP_MAX_POOL_SIZE;
+
+    /**
+     * This property is only available via programmatic configuration or IoC container. This property allows you to
+     * specify an instance of a Codahale/Dropwizard MetricRegistry to be used by the pool to record various metrics.
+     * See the Metrics wiki page for details. Default: none
+     * TODO: Caused by: java.lang.ClassNotFoundException: com.codahale.metrics.MetricRegistry
+     */
+    //public static String HIKARICP_METRIC_REG = "";
+
+    /**
+     * This property is only available via programmatic configuration or IoC container. This property allows you to
+     * specify an instance of a Codahale/Dropwizard HealthCheckRegistry to be used by the pool to report current
+     * health information. See the Health Checks wiki page for details. Default: none
+     * TODO: Caused by: java.lang.ClassNotFoundException: com.codahale.metrics.MetricRegistry
+     */
+    //public static String HIKARICP_HEALTH_CHECK_REG = "";
+
+    /**
+     * This property represents a user-defined name for the connection pool and appears mainly in logging and JMX
+     * management consoles to identify pools and pool configurations. Default: auto-generated
+     */
+
+    public static String HIKARICP_POOL_NAME = "auto-generated";
+
+    /**
+     * This property controls whether the pool will "fail fast" if the pool cannot be seeded with initial connections
+     * successfully. If you want your application to start even when the database is down/unavailable, set this
+     * property to false. Default: true
+     */
+    public static Boolean HIKARICP_FAIL_FAST = true;
+
+    /**
+     * This property determines whether HikariCP isolates internal pool queries, such as the connection alive test,
+     * in their own transaction. Since these are typically read-only queries, it is rarely necessary to encapsulate
+     * them in their own transaction. This property only applies if autoCommit is disabled. Default: false
+     */
+    public static Boolean HIKARICP_ISOLATE_INTERNAL_QUERIES = false;
+
+    /**
+     * This property controls whether the pool can be suspended and resumed through JMX. This is useful for certain
+     * failover automation scenarios. When the pool is suspended, calls to getConnection() will not timeout and will
+     * be held until the pool is resumed. Default: false
+     */
+    public static Boolean HIKARICP_ALLOW_POOL_SUSPENSION = false;
+
+    /**
+     * This property controls whether Connections obtained from the pool are in read-only mode by default. Note some
+     * databases do not support the concept of read-only mode, while others provide query optimizations when the
+     * Connection is set to read-only. Whether you need this property or not will depend largely on your application
+     * and database. Default: false
+     */
+    public static Boolean HIKARICP_READ_ONLY = false;
+
+    /**
+     * This property controls whether or not JMX Management Beans ("MBeans") are registered or not. Default: false
+     */
+    public static Boolean HIKARICP_REGISTER_MBEANS = false;
+
+    /**
+     * This property sets the default catalog for databases that support the concept of catalogs. If this property
+     * is not specified, the default catalog defined by the JDBC driver is used. Default: driver default
+     * TODO: IllegalArgumentException: Invalid transaction isolation value: driver default
+     */
+    //public static String HIKARICP_CATALOG = "driver default";
+
+    /**
+     * This property sets a SQL statement that will be executed after every new connection creation before adding it
+     * to the pool. If this SQL is not valid or throws an exception, it will be treated as a connection failure and
+     * the standard retry logic will be followed. Default: none
+     */
+    public static String HIKARICP_CONNECTION_INIT_SQL = "";
+
+    /**
+     * HikariCP will attempt to resolve a driver through the DriverManager based solely on the jdbcUrl, but for some
+     * older drivers the driverClassName must also be specified. Omit this property unless you get an obvious error
+     * message indicating that the driver was not found. Default: none
+     * TODO: Caused by: java.lang.ClassNotFoundException: com.codahale.metrics.MetricRegistry
+     */
+    //public static String HIKARICP_DRIVER_CLASS_NAME = "";
+
+    /**
+     * This property controls the default transaction isolation level of connections returned from the pool. If this
+     * property is not specified, the default transaction isolation level defined by the JDBC driver is used. Only use
+     * this property if you have specific isolation requirements that are common for all queries. The value of this
+     * property is the constant name from the Connection class such as TRANSACTION_READ_COMMITTED,
+     * TRANSACTION_REPEATABLE_READ, etc. Default: driver default
+     * TODO: IllegalArgumentException: Invalid transaction isolation value: driver default
+     */
+    //public static String HIKARICP_TRANSATION_ISOLATION = "driver default";
+
+    /**
+     * This property controls the maximum amount of time that a connection will be tested for aliveness. This value
+     * must be less than the connectionTimeout. Lowest acceptable validation timeout is 250 ms. Default: 5000
+     */
+    public static Integer HIKARICP_VALIDATION_TIMEOUT = 5000;
+
+    /**
+     * This property controls the amount of time that a connection can be out of the pool before a message is logged
+     * indicating a possible connection leak. A value of 0 means leak detection is disabled. Lowest acceptable value
+     * for enabling leak detection is 2000 (2 seconds). Default: 0
+     */
+    public static Integer HIKARICP_LEAK_DETECTION_THRESHOLD = 2000;
+
+    /**
+     * This property is only available via programmatic configuration or IoC container. This property allows you to
+     * directly set the instance of the DataSource to be wrapped by the pool, rather than having HikariCP construct
+     * it via reflection. This can be useful in some dependency injection frameworks. When this property is specified,
+     * the dataSourceClassName property and all DataSource-specific properties will be ignored. Default: none
+     */
+    public static String HIKARICP_DATA_SOURCE = "";
+
+    /**
+     * This property is only available via programmatic configuration or IoC container. This property allows you to
+     * set the instance of the java.util.concurrent.ThreadFactory that will be used for creating all threads used by
+     * the pool. It is needed in some restricted execution environments where threads can only be created through a
+     * ThreadFactory provided by the application container. Default: none
+     */
+    public static ThreadFactory HIKARICP_THREAD_FACTORY = null;
+
+
 
     private FdfSettings() {
     }
