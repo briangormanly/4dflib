@@ -45,10 +45,43 @@ public class MySqlConnection {
 
     public HikariDataSource getHikariDatasource() throws SQLException {
         HikariConfig config = new HikariConfig();
-        config.setMaximumPoolSize(25);
-        config.setIdleTimeout(28740000);
-        config.setMaxLifetime(28740000);
-        config.setConnectionTimeout(30000);
+        config.setDataSourceClassName(FdfSettings.HIKARICP_DATASOURCE_CLASSNAME);
+        config.setAutoCommit(FdfSettings.HIKARICP_AUTOCOMMIT);
+        config.setConnectionTimeout(FdfSettings.HIKARICP_CONNECTION_TIMEOUT_MS);
+        config.setIdleTimeout(FdfSettings.HIKARICP_IDLE_TIMEOUT_MS);
+        config.setMaxLifetime(FdfSettings.HIKARICP_MAX_LIFETIME_MS);
+        config.setConnectionTestQuery(FdfSettings.HIKARICP_CONNECTION_TEST_QUERY);
+        config.setMaximumPoolSize(FdfSettings.HIKARICP_MAX_POOL_SIZE);
+        config.setMinimumIdle(FdfSettings.HIKARICP_MIN_IDLE_MS);
+        /* TODO: Caused by: java.lang.ClassNotFoundException: com.codahale.metrics.MetricRegistry
+        if(FdfSettings.HIKARICP_METRIC_REG != null) {
+            config.setMetricRegistry(FdfSettings.HIKARICP_METRIC_REG);
+        }
+        */
+        /* TODO: Caused by: java.lang.ClassNotFoundException: com.codahale.metrics.MetricRegistry
+        config.setHealthCheckRegistry(FdfSettings.HIKARICP_HEALTH_CHECK_REG);
+        */
+        config.setPoolName(FdfSettings.HIKARICP_POOL_NAME);
+        config.setInitializationFailFast(FdfSettings.HIKARICP_FAIL_FAST);
+        config.setIsolateInternalQueries(FdfSettings.HIKARICP_ISOLATE_INTERNAL_QUERIES);
+        config.setAllowPoolSuspension(FdfSettings.HIKARICP_ALLOW_POOL_SUSPENSION);
+        config.setReadOnly(FdfSettings.HIKARICP_READ_ONLY);
+        config.setRegisterMbeans(FdfSettings.HIKARICP_REGISTER_MBEANS);
+        /* TODO: IllegalArgumentException: Invalid transaction isolation value: driver default
+        config.setCatalog(FdfSettings.HIKARICP_CATALOG);
+         */
+        config.setConnectionInitSql(FdfSettings.HIKARICP_CONNECTION_INIT_SQL);
+        /* TODO: Caused by: java.lang.ClassNotFoundException: com.codahale.metrics.MetricRegistry
+        config.setDriverClassName(FdfSettings.HIKARICP_DRIVER_CLASS_NAME);
+        */
+        /* TODO: IllegalArgumentException: Invalid transaction isolation value: driver default
+        config.setTransactionIsolation(FdfSettings.HIKARICP_TRANSATION_ISOLATION);
+         */
+        config.setValidationTimeout(FdfSettings.HIKARICP_VALIDATION_TIMEOUT);
+        config.setLeakDetectionThreshold(FdfSettings.HIKARICP_LEAK_DETECTION_THRESHOLD);
+        config.setDataSourceClassName(FdfSettings.HIKARICP_DATA_SOURCE);
+        config.setThreadFactory(FdfSettings.HIKARICP_THREAD_FACTORY);
+
         config.setJdbcUrl(FdfSettings.returnDBConnectionString());
         config.setUsername(FdfSettings.DB_USER);
         config.setPassword(FdfSettings.DB_PASSWORD);
@@ -86,21 +119,48 @@ public class MySqlConnection {
 
     public HikariDataSource getNoDbHikariDatasource() throws SQLException {
         HikariConfig config = new HikariConfig();
-        config.setMaximumPoolSize(25);
-        config.setIdleTimeout(28740000);
-        config.setMaxLifetime(28740000);
-        config.setConnectionTimeout(30000);
-        config.setMinimumIdle();
-        config.setConnectionTestQuery();
+        config.setDataSourceClassName(FdfSettings.HIKARICP_DATASOURCE_CLASSNAME);
+        config.setAutoCommit(FdfSettings.HIKARICP_AUTOCOMMIT);
+        config.setConnectionTimeout(FdfSettings.HIKARICP_CONNECTION_TIMEOUT_MS);
+        config.setIdleTimeout(FdfSettings.HIKARICP_IDLE_TIMEOUT_MS);
+        config.setMaxLifetime(FdfSettings.HIKARICP_MAX_LIFETIME_MS);
+        config.setConnectionTestQuery(FdfSettings.HIKARICP_CONNECTION_TEST_QUERY);
+        config.setMaximumPoolSize(FdfSettings.HIKARICP_MAX_POOL_SIZE);
+        config.setMinimumIdle(FdfSettings.HIKARICP_MIN_IDLE_MS);
+        /* TODO: Caused by: java.lang.ClassNotFoundException: com.codahale.metrics.MetricRegistry
+        if(FdfSettings.HIKARICP_METRIC_REG != null) {
+            config.setMetricRegistry(FdfSettings.HIKARICP_METRIC_REG);
+        }
+        */
+        /* TODO: Caused by: java.lang.ClassNotFoundException: com.codahale.metrics.MetricRegistry
+        config.setHealthCheckRegistry(FdfSettings.HIKARICP_HEALTH_CHECK_REG);
+        */
+        config.setPoolName(FdfSettings.HIKARICP_POOL_NAME);
+        config.setInitializationFailFast(FdfSettings.HIKARICP_FAIL_FAST);
+        config.setIsolateInternalQueries(FdfSettings.HIKARICP_ISOLATE_INTERNAL_QUERIES);
+        config.setAllowPoolSuspension(FdfSettings.HIKARICP_ALLOW_POOL_SUSPENSION);
+        config.setReadOnly(FdfSettings.HIKARICP_READ_ONLY);
+        config.setRegisterMbeans(FdfSettings.HIKARICP_REGISTER_MBEANS);
+        /* TODO: IllegalArgumentException: Invalid transaction isolation value: driver default
+        config.setCatalog(FdfSettings.HIKARICP_CATALOG);
+         */
+        config.setConnectionInitSql(FdfSettings.HIKARICP_CONNECTION_INIT_SQL);
+        /* TODO: Caused by: java.lang.ClassNotFoundException: com.codahale.metrics.MetricRegistry
+        config.setDriverClassName(FdfSettings.HIKARICP_DRIVER_CLASS_NAME);
+        */
+        /* TODO: IllegalArgumentException: Invalid transaction isolation value: driver default
+        config.setTransactionIsolation(FdfSettings.HIKARICP_TRANSATION_ISOLATION);
+         */
+        config.setValidationTimeout(FdfSettings.HIKARICP_VALIDATION_TIMEOUT);
+        config.setLeakDetectionThreshold(FdfSettings.HIKARICP_LEAK_DETECTION_THRESHOLD);
+        config.setDataSourceClassName(FdfSettings.HIKARICP_DATA_SOURCE);
+        config.setThreadFactory(FdfSettings.HIKARICP_THREAD_FACTORY);
+
         config.setJdbcUrl(FdfSettings.returnDBConnectionString());
         config.setUsername(FdfSettings.DB_ROOT_USER);
         config.setPassword(FdfSettings.DB_ROOT_PASSWORD);
 
-
         HikariDataSource ds = new HikariDataSource(config);
-        ds.setJdbcUrl(FdfSettings.returnDBConnectionString());
-        ds.setUsername(FdfSettings.DB_ROOT_USER);
-        ds.setPassword(FdfSettings.DB_ROOT_PASSWORD);
         return ds;
     }
 
