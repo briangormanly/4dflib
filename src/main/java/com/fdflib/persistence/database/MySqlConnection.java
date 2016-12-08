@@ -156,7 +156,7 @@ public class MySqlConnection {
         config.setDataSourceClassName(FdfSettings.HIKARICP_DATA_SOURCE);
         config.setThreadFactory(FdfSettings.HIKARICP_THREAD_FACTORY);
 
-        config.setJdbcUrl(FdfSettings.returnDBConnectionString());
+        config.setJdbcUrl(FdfSettings.returnDBConnectionStringWithoutDatabase());
         config.setUsername(FdfSettings.DB_ROOT_USER);
         config.setPassword(FdfSettings.DB_ROOT_PASSWORD);
 
