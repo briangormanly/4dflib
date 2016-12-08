@@ -23,6 +23,7 @@ import com.fdflib.model.state.FdfTenant;
 import com.fdflib.model.util.SqlStatement;
 import com.fdflib.model.util.WhereClause;
 import com.fdflib.persistence.connection.DbConnectionManager;
+import com.fdflib.persistence.database.MySqlConnection;
 import com.fdflib.persistence.database.PostgreSqlConnection;
 import com.fdflib.persistence.impl.CorePersistenceImpl;
 import com.fdflib.service.FdfSystemServices;
@@ -65,7 +66,14 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
         ResultSet rs = null;
 
         try {
-            conn = PostgreSqlConnection.getInstance().getNoDBSession();
+            if(FdfSettings.USE_HIKARICP) {
+                hds = PostgreSqlConnection.getInstance().getHikariDatasource();
+                conn = hds.getConnection();
+            }
+            else {
+                conn = PostgreSqlConnection.getInstance().getNoDBSession();
+
+            }
             stmt = conn.createStatement();
 
             if (stmt != null) {
@@ -160,7 +168,14 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                 ResultSet rs = null;
 
                 try {
-                    conn = PostgreSqlConnection.getInstance().getSession();
+                    if(FdfSettings.USE_HIKARICP) {
+                        hds = PostgreSqlConnection.getInstance().getHikariDatasource();
+                        conn = hds.getConnection();
+                    }
+                    else {
+                        conn = PostgreSqlConnection.getInstance().getNoDBSession();
+
+                    }
                     stmt = conn.createStatement();
 
                     if (stmt != null) {
@@ -255,7 +270,14 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                     ResultSet rs = null;
 
                     try {
-                        conn = PostgreSqlConnection.getInstance().getSession();
+                        if(FdfSettings.USE_HIKARICP) {
+                            hds = PostgreSqlConnection.getInstance().getHikariDatasource();
+                            conn = hds.getConnection();
+                        }
+                        else {
+                            conn = PostgreSqlConnection.getInstance().getNoDBSession();
+
+                        }
                         stmt = conn.createStatement();
 
                         for (Field field : c.getFields()) {
