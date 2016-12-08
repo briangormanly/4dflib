@@ -30,6 +30,7 @@ import com.fdflib.service.FdfSystemServices;
 import com.fdflib.service.FdfTenantServices;
 import com.fdflib.util.FdfSettings;
 import com.fdflib.util.FdfUtil;
+import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
@@ -65,6 +66,9 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
         Statement stmt2 = null;
         ResultSet rs = null;
 
+        HikariDataSource hds = null;
+        HikariDataSource hds2 = null;
+
         try {
             if(FdfSettings.USE_HIKARICP) {
                 hds = PostgreSqlConnection.getInstance().getHikariDatasource();
@@ -91,7 +95,13 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                     String sqlUserGrant = "GRANT ALL PRIVILEGES ON DATABASE " + "\"" + FdfSettings.DB_NAME + "\""
                             + " to " + "\"" +  FdfSettings.DB_USER.toLowerCase() + "\"" +  ";";
 
-                    conn2 = PostgreSqlConnection.getInstance().getNoDBSession();
+                    if(FdfSettings.USE_HIKARICP) {
+                        hds2 = PostgreSqlConnection.getInstance().getNoDbHikariDatasource();
+                        conn2 = hds2.getConnection();
+                    }
+                    else {
+                        conn2 = PostgreSqlConnection.getInstance().getNoDBSession();
+                    }
                     stmt2 = conn2.createStatement();
 
                     if(stmt2 != null) {
@@ -124,14 +134,28 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
             if (stmt != null) {
                 stmt.close();
             }
-            if (conn != null) {
-                PostgreSqlConnection.getInstance().close(conn);
+            if(FdfSettings.USE_HIKARICP) {
+                if (conn != null) {
+                    PostgreSqlConnection.getInstance().close(hds);
+                }
+            }
+            else {
+                if (conn != null) {
+                    PostgreSqlConnection.getInstance().close(conn);
+                }
             }
             if (stmt2 != null) {
                 stmt2.close();
             }
-            if (conn2 != null) {
-                PostgreSqlConnection.getInstance().close(conn2);
+            if(FdfSettings.USE_HIKARICP) {
+                if (conn2 != null) {
+                    PostgreSqlConnection.getInstance().close(hds2);
+                }
+            }
+            else {
+                if (conn2 != null) {
+                    PostgreSqlConnection.getInstance().close(conn2);
+                }
             }
 
         }
@@ -166,6 +190,8 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                 Connection conn = null;
                 Statement stmt = null;
                 ResultSet rs = null;
+
+                HikariDataSource hds = null;
 
                 try {
                     if(FdfSettings.USE_HIKARICP) {
@@ -234,8 +260,15 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                     if (stmt != null) {
                         stmt.close();
                     }
-                    if (conn != null) {
-                        PostgreSqlConnection.getInstance().close(conn);
+                    if(FdfSettings.USE_HIKARICP) {
+                        if (conn != null) {
+                            PostgreSqlConnection.getInstance().close(hds);
+                        }
+                    }
+                    else {
+                        if (conn != null) {
+                            PostgreSqlConnection.getInstance().close(conn);
+                        }
                     }
                 }
             }
@@ -268,6 +301,8 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                     Connection conn = null;
                     Statement stmt = null;
                     ResultSet rs = null;
+
+                    HikariDataSource hds = null;
 
                     try {
                         if(FdfSettings.USE_HIKARICP) {
@@ -328,8 +363,15 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                         if (stmt != null) {
                             stmt.close();
                         }
-                        if (conn != null) {
-                            PostgreSqlConnection.getInstance().close(conn);
+                        if(FdfSettings.USE_HIKARICP) {
+                            if (conn != null) {
+                                PostgreSqlConnection.getInstance().close(hds);
+                            }
+                        }
+                        else {
+                            if (conn != null) {
+                                PostgreSqlConnection.getInstance().close(conn);
+                            }
                         }
                     }
                 }
@@ -425,11 +467,20 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
             PreparedStatement preparedStmt = null;
             ResultSet rs = null;
 
+            HikariDataSource hds = null;
+
             try {
 
                 sql += " where rid = " + c.getField("rid").get(state) + " ;";
 
-                conn = PostgreSqlConnection.getInstance().getSession();
+                if(FdfSettings.USE_HIKARICP) {
+                    hds = PostgreSqlConnection.getInstance().getHikariDatasource();
+                    conn = hds.getConnection();
+                }
+                else {
+                    conn = PostgreSqlConnection.getInstance().getNoDBSession();
+
+                }
                 preparedStmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
                 int fieldCounter3 = 1;
@@ -634,7 +685,14 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                         e.printStackTrace();
                     }
                 }
-                if (conn != null) {
+                if(FdfSettings.USE_HIKARICP) {
+                    try {
+                        PostgreSqlConnection.getInstance().close(hds);
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
+                else {
                     try {
                         PostgreSqlConnection.getInstance().close(conn);
                     } catch (SQLException e) {
@@ -703,8 +761,17 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
             PreparedStatement preparedStmt = null;
             ResultSet rs = null;
 
+            HikariDataSource hds = null;
+
             try {
-                conn = PostgreSqlConnection.getInstance().getSession();
+                if(FdfSettings.USE_HIKARICP) {
+                    hds = PostgreSqlConnection.getInstance().getHikariDatasource();
+                    conn = hds.getConnection();
+                }
+                else {
+                    conn = PostgreSqlConnection.getInstance().getNoDBSession();
+
+                }
                 preparedStmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
                 int fieldCounter3 = 1;
@@ -903,7 +970,14 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                         e.printStackTrace();
                     }
                 }
-                if (conn != null) {
+                if(FdfSettings.USE_HIKARICP) {
+                    try {
+                        PostgreSqlConnection.getInstance().close(hds);
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
+                else {
                     try {
                         PostgreSqlConnection.getInstance().close(conn);
                     } catch (SQLException e) {
@@ -955,8 +1029,17 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
             PreparedStatement ps = null;
             ResultSet rs = null;
 
+            HikariDataSource hds = null;
+
             try {
-                conn = PostgreSqlConnection.getInstance().getSession();
+                if(FdfSettings.USE_HIKARICP) {
+                    hds = PostgreSqlConnection.getInstance().getHikariDatasource();
+                    conn = hds.getConnection();
+                }
+                else {
+                    conn = PostgreSqlConnection.getInstance().getNoDBSession();
+
+                }
                 ps = conn.prepareStatement(sql);
 
                 if (ps != null) {
@@ -1406,7 +1489,14 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                         e.printStackTrace();
                     }
                 }
-                if (conn != null) {
+                if(FdfSettings.USE_HIKARICP) {
+                    try {
+                        PostgreSqlConnection.getInstance().close(hds);
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
+                else {
                     try {
                         PostgreSqlConnection.getInstance().close(conn);
                     } catch (SQLException e) {
