@@ -196,7 +196,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                         conn = hds.getConnection();
                     }
                     else {
-                        conn = PostgreSqlConnection.getInstance().getNoDBSession();
+                        conn = PostgreSqlConnection.getInstance().getSession();
 
                     }
                     stmt = conn.createStatement();
@@ -307,7 +307,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                             conn = hds.getConnection();
                         }
                         else {
-                            conn = PostgreSqlConnection.getInstance().getNoDBSession();
+                            conn = PostgreSqlConnection.getInstance().getSession();
 
                         }
                         stmt = conn.createStatement();
@@ -475,7 +475,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                     conn = hds.getConnection();
                 }
                 else {
-                    conn = PostgreSqlConnection.getInstance().getNoDBSession();
+                    conn = PostgreSqlConnection.getInstance().getSession();
 
                 }
                 preparedStmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -766,7 +766,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                     conn = hds.getConnection();
                 }
                 else {
-                    conn = PostgreSqlConnection.getInstance().getNoDBSession();
+                    conn = PostgreSqlConnection.getInstance().getSession();
 
                 }
                 preparedStmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -1034,7 +1034,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                     conn = hds.getConnection();
                 }
                 else {
-                    conn = PostgreSqlConnection.getInstance().getNoDBSession();
+                    conn = PostgreSqlConnection.getInstance().getSession();
 
                 }
                 ps = conn.prepareStatement(sql);
