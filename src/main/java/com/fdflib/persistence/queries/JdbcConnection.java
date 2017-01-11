@@ -62,7 +62,6 @@ public class JdbcConnection {
             e.printStackTrace();
         }
 
-        System.out.println("----------- 2::: " + FdfSettings.returnDBConnectionString() + " " + FdfSettings.DB_USER + " " + FdfSettings.DB_PASSWORD );
         return DriverManager.getConnection(FdfSettings.returnDBConnectionString(),
                 FdfSettings.DB_USER, FdfSettings.DB_PASSWORD);
     }
@@ -75,8 +74,6 @@ public class JdbcConnection {
             fdfLog.error("Database driver error!");
             fdfLog.error(e.getStackTrace().toString());
         }
-
-        System.out.println("----------- 1::: " + FdfSettings.returnDBConnectionStringWithoutDatabase() + " " + FdfSettings.DB_ROOT_USER + " " + FdfSettings.DB_ROOT_PASSWORD );
 
         return DriverManager.getConnection(FdfSettings.returnDBConnectionStringWithoutDatabase(),
                 FdfSettings.DB_ROOT_USER, FdfSettings.DB_ROOT_PASSWORD);
