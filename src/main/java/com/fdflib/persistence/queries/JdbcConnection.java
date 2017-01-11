@@ -1,7 +1,6 @@
 package com.fdflib.persistence.queries;
 
 import com.fdflib.util.FdfSettings;
-import com.oracle.tools.packager.Log;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.LoggerFactory;
