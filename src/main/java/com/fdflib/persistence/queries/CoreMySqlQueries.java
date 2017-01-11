@@ -28,7 +28,6 @@ import com.fdflib.service.FdfSystemServices;
 import com.fdflib.service.FdfTenantServices;
 import com.fdflib.util.FdfSettings;
 import com.fdflib.util.FdfUtil;
-import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
@@ -55,14 +54,12 @@ public class CoreMySqlQueries implements CorePersistenceImpl {
     }
 
     public void checkDatabase() throws SQLException {
-        HikariDataSource hds = null, hds2 = null;
-        Connection conn = null, conn2 = null;
-        Statement stmt = null, stmt2 = null;
+        Connection conn = null;
+        Statement stmt = null;
         ResultSet rs = null;
+
         try {
-            conn = (FdfSettings.USE_HIKARICP
-                    ? (hds = MySqlConnection.getInstance().getNoDbHikariDatasource()).getConnection()
-                    : MySqlConnection.getInstance().getNoDBSession());
+            conn = MySqlConnection.getInstance().get4dfDbRootConnection();
             stmt = conn.createStatement();
             if(stmt != null) {
                 rs = stmt.executeQuery("SELECT * FROM information_schema.SCHEMATA WHERE SCHEMA_NAME = '" + FdfSettings.DB_NAME + "';");
@@ -73,14 +70,10 @@ public class CoreMySqlQueries implements CorePersistenceImpl {
                     String sqlUserGrant = "GRANT ALL ON " + FdfSettings.DB_NAME + ".* to '" + FdfSettings.DB_USER
                             + "'@'" + FdfSettings.DB_HOST + "' IDENTIFIED BY '" + FdfSettings.DB_PASSWORD + "'";
 
-                    /*Why are we making another connection if we already have one? ~ Corley*/
-                    conn2 = (FdfSettings.USE_HIKARICP
-                            ? (hds2 = MySqlConnection.getInstance().getNoDbHikariDatasource()).getConnection()
-                            : MySqlConnection.getInstance().getNoDBSession());
-                    stmt2 = conn2.createStatement();
-                    if(stmt2 != null) {
-                        stmt2.executeUpdate(sqlCreate);
-                        stmt2.executeUpdate(sqlUserGrant);
+
+                    if(stmt != null) {
+                        stmt.executeUpdate(sqlCreate);
+                        stmt.executeUpdate(sqlUserGrant);
                         fdfLog.info("******************************************************************");
                         fdfLog.info("4DFLib Database did not exist, attempting to create.");
                         fdfLog.info("******************************************************************");
@@ -104,21 +97,7 @@ public class CoreMySqlQueries implements CorePersistenceImpl {
                 stmt.close();
             }
             if(conn != null) {
-                if(FdfSettings.USE_HIKARICP) {
-                    MySqlConnection.getInstance().close(hds);
-                } else {
-                    MySqlConnection.getInstance().close(conn);
-                }
-            }
-            if (stmt2 != null) {
-                stmt2.close();
-            }
-            if(conn2 != null) {
-                if(FdfSettings.USE_HIKARICP) {
-                    MySqlConnection.getInstance().close(hds2);
-                } else {
-                    MySqlConnection.getInstance().close(conn2);
-                }
+                MySqlConnection.getInstance().close4dfDbSession(conn);
             }
         }
     }
@@ -128,14 +107,11 @@ public class CoreMySqlQueries implements CorePersistenceImpl {
         for(Class c: FdfSettings.getInstance().modelClasses) {
             //Check if @FdfIgonre class
             if(!c.isAnnotationPresent(FdfIgnore.class)) {
-                HikariDataSource hds = null;
                 Connection conn = null;
                 Statement stmt = null;
                 ResultSet rs = null;
                 try {
-                    conn = (FdfSettings.USE_HIKARICP
-                            ? (hds = MySqlConnection.getInstance().getNoDbHikariDatasource()).getConnection()
-                            : MySqlConnection.getInstance().getNoDBSession());
+                    conn = MySqlConnection.getInstance().get4dfDbConnection();
                     stmt = conn.createStatement();
                     if (stmt != null) {
                         rs = stmt.executeQuery("SELECT * FROM information_schema.TABLES WHERE TABLE_SCHEMA = '"
@@ -177,11 +153,7 @@ public class CoreMySqlQueries implements CorePersistenceImpl {
                         stmt.close();
                     }
                     if(conn != null) {
-                        if(FdfSettings.USE_HIKARICP) {
-                            MySqlConnection.getInstance().close(hds);
-                        } else {
-                            MySqlConnection.getInstance().close(conn);
-                        }
+                        MySqlConnection.getInstance().close4dfDbSession(conn);
                     }
                 }
             }
@@ -197,14 +169,12 @@ public class CoreMySqlQueries implements CorePersistenceImpl {
                 List<Field> fields = Arrays.stream(c.getFields()).filter(field -> !field.isAnnotationPresent(FdfIgnore.class)).collect(Collectors.toList());
                 //If any fields are left
                 if(fields.size() > 0) {
-                    HikariDataSource hds = null;
+
                     Connection conn = null;
                     Statement stmt = null;
                     ResultSet rs = null;
                     try {
-                        conn = (FdfSettings.USE_HIKARICP
-                                ? (hds = MySqlConnection.getInstance().getNoDbHikariDatasource()).getConnection()
-                                : MySqlConnection.getInstance().getNoDBSession());
+                        conn = MySqlConnection.getInstance().get4dfDbConnection();
                         stmt = conn.createStatement();
                         for(Field field : fields) {
                             //Check if field exists in table
@@ -238,11 +208,7 @@ public class CoreMySqlQueries implements CorePersistenceImpl {
                             stmt.close();
                         }
                         if(conn != null) {
-                            if(FdfSettings.USE_HIKARICP) {
-                                MySqlConnection.getInstance().close(hds);
-                            } else {
-                                MySqlConnection.getInstance().close(conn);
-                            }
+                            MySqlConnection.getInstance().close4dfDbSession(conn);
                         }
                     }
                 }
@@ -307,7 +273,6 @@ public class CoreMySqlQueries implements CorePersistenceImpl {
         if(!c.isAnnotationPresent(FdfIgnore.class)) {
             Connection conn = null;
             PreparedStatement preparedStmt = null;
-            HikariDataSource hds = null;
             try {
                 //Remove @FdfIgnore Fields
                 List<Field> fields = Arrays.stream(c.getFields()).filter(field -> !field.isAnnotationPresent(FdfIgnore.class)
@@ -318,9 +283,7 @@ public class CoreMySqlQueries implements CorePersistenceImpl {
                 fields.forEach(field -> sql.append(" ").append(field.getName()).append(" = ?,"));
                 sql.deleteCharAt(sql.length() - 1).append(" WHERE rid = ").append(c.getField("rid").get(state)).append(";");
                 //Create Connection
-                conn = (FdfSettings.USE_HIKARICP
-                        ? (hds = MySqlConnection.getInstance().getNoDbHikariDatasource()).getConnection()
-                        : MySqlConnection.getInstance().getNoDBSession());
+                conn = MySqlConnection.getInstance().get4dfDbConnection();
                 preparedStmt = conn.prepareStatement(sql.toString(), Statement.RETURN_GENERATED_KEYS);
 
                 int fieldCounter3 = 1;
@@ -444,14 +407,13 @@ public class CoreMySqlQueries implements CorePersistenceImpl {
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
-                if(conn != null) try {
-                    if(FdfSettings.USE_HIKARICP) {
-                        MySqlConnection.getInstance().close(hds);
-                    } else {
-                        MySqlConnection.getInstance().close(conn);
+                if(conn != null) {
+                    try {
+                        MySqlConnection.getInstance().close4dfDbSession(conn);
                     }
-                } catch(SQLException e) {
-                    e.printStackTrace();
+                    catch (SQLException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
@@ -461,7 +423,6 @@ public class CoreMySqlQueries implements CorePersistenceImpl {
         long newId = -1L;
         //Check if @FdfIgonre class
         if(!c.isAnnotationPresent(FdfIgnore.class)) {
-            HikariDataSource hds = null;
             Connection conn = null;
             PreparedStatement preparedStmt = null;
             ResultSet rs = null;
@@ -480,9 +441,7 @@ public class CoreMySqlQueries implements CorePersistenceImpl {
                 sql.deleteCharAt(sql.length()-1).append(") VALUES (")
                         .append(val.deleteCharAt(val.length()-1).toString()).append(");");
                 //Create Connection
-                conn = (FdfSettings.USE_HIKARICP
-                        ? (hds = MySqlConnection.getInstance().getNoDbHikariDatasource()).getConnection()
-                        : MySqlConnection.getInstance().getNoDBSession());
+                conn = MySqlConnection.getInstance().get4dfDbConnection();
                 preparedStmt = conn.prepareStatement(sql.toString(), Statement.RETURN_GENERATED_KEYS);
                 int fieldCounter3 = 1;
                 for (Field field : fields) {
@@ -612,14 +571,13 @@ public class CoreMySqlQueries implements CorePersistenceImpl {
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
-                if(conn != null) try {
-                    if(FdfSettings.USE_HIKARICP) {
-                        MySqlConnection.getInstance().close(hds);
-                    } else {
-                        MySqlConnection.getInstance().close(conn);
+                if(conn != null) {
+                    try {
+                        MySqlConnection.getInstance().close4dfDbSession(conn);
                     }
-                } catch(SQLException e) {
-                    e.printStackTrace();
+                    catch (SQLException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
@@ -657,15 +615,12 @@ public class CoreMySqlQueries implements CorePersistenceImpl {
 
             fdfLog.debug("select sql: {}", sql);
 
-            HikariDataSource hds = null;
             Connection conn = null;
             PreparedStatement ps = null;
             ResultSet rs = null;
 
             try {
-                conn = (FdfSettings.USE_HIKARICP
-                        ? (hds = MySqlConnection.getInstance().getNoDbHikariDatasource()).getConnection()
-                        : MySqlConnection.getInstance().getNoDBSession());
+                conn = MySqlConnection.getInstance().get4dfDbConnection();
                 ps = conn.prepareStatement(sql);
                 if(ps != null) {
                     rs = ps.executeQuery();
@@ -1108,17 +1063,11 @@ public class CoreMySqlQueries implements CorePersistenceImpl {
                         e.printStackTrace();
                     }
                 }
-                if(FdfSettings.USE_HIKARICP) {
+                if(conn != null) {
                     try {
-                        MySqlConnection.getInstance().close(hds);
-                    } catch (SQLException e) {
-                        e.printStackTrace();
+                        MySqlConnection.getInstance().close4dfDbSession(conn);
                     }
-                }
-                else {
-                    try {
-                        MySqlConnection.getInstance().close(conn);
-                    } catch (SQLException e) {
+                    catch (SQLException e) {
                         e.printStackTrace();
                     }
                 }
