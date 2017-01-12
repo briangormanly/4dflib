@@ -54,6 +54,13 @@ Please see license.txt for details.
 4DFLib using SLF4J for logging for Logging Facade.  You can plug in your
 desired logging framework at deployment time.
 
+<h2>2.1 Connection Pool</h2>
+
+As of version 1.3 4DFLib uses HikariCP (https://github.com/brettwooldridge/HikariCP) for connection pooling.  To use it simplely add the following FdfSetting when initializing: 
+
+    fdfSettings.USE_HIKARICP = true;
+
+That is it, for additional connection pool tuning see [FdfSetting](https://github.com/briangormanly/4dflib/blob/master/src/main/java/com/fdflib/util/FdfSettings.java)
 
 <h2>3. Maven Central Repository Information</h2>
 ```
@@ -62,7 +69,7 @@ desired logging framework at deployment time.
         <dependency>
             <groupId>com.fdflib</groupId>
             <artifactId>4dflib</artifactId>
-            <version>1.1</version>
+            <version>1.3</version>
         </dependency>
         ...
     </dependencies>
@@ -71,7 +78,7 @@ desired logging framework at deployment time.
 ```
 dependencies {
     ...
-    compile "com.fdflib:4dflib:1.1"
+    compile "com.fdflib:4dflib:1.3"
     ...
 }
 ```
@@ -79,7 +86,7 @@ dependencies {
 ```
 libraryDependencies ++= Seq(
   ...
-  "com.fdflib" % "4dflib" % "1.1"
+  "com.fdflib" % "4dflib" % "1.3"
   ...
 )
 ```
@@ -201,6 +208,6 @@ public static String TEST_SYSTEM_PASSWORD = "testSystemPassword";
 ```
 <h2>Full Examples:</h2>
 
-We are working on updating the full examples to use version 1.1 of 4DFLib
+We are working on updating the full examples to use version 1.3 of 4DFLib
 
 
