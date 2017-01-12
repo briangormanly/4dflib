@@ -1,5 +1,6 @@
 package com.fdflib.persistence.queries;
 
+import com.fdflib.persistence.database.DatabaseUtil;
 import com.fdflib.util.FdfSettings;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -9,12 +10,13 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+
 /**
  * Created by brian on 1/11/17.
  */
 public class JdbcConnection {
 
-    private static HikariDataSource hds = null;
+    protected static HikariDataSource hds = null;
 
     private static org.slf4j.Logger fdfLog = LoggerFactory.getLogger(JdbcConnection.class);
 
@@ -45,12 +47,11 @@ public class JdbcConnection {
     protected Connection getHikariConnection() throws SQLException {
         // check to see if the HakariDataSource has be created
         if(hds == null) initializeHakariDatasource();
-        return hds.getConnection(FdfSettings.DB_USER, FdfSettings.DB_PASSWORD);
+        return hds.getConnection();
     }
 
     protected Connection getNoDbHikariConnection() throws SQLException {
-        if(hds == null) initializeHakariDatasource();
-        return hds.getConnection(FdfSettings.DB_ROOT_USER, FdfSettings.DB_ROOT_PASSWORD);
+        return getNoDbPlainConnection();
     }
 
     protected Connection getPlainConnection() throws SQLException {
@@ -62,7 +63,7 @@ public class JdbcConnection {
             e.printStackTrace();
         }
 
-        return DriverManager.getConnection(FdfSettings.returnDBConnectionString(),
+        return DriverManager.getConnection(DatabaseUtil.returnDBConnectionString(),
                 FdfSettings.DB_USER, FdfSettings.DB_PASSWORD);
     }
 
@@ -75,18 +76,11 @@ public class JdbcConnection {
             fdfLog.error(e.getStackTrace().toString());
         }
 
-        return DriverManager.getConnection(FdfSettings.returnDBConnectionStringWithoutDatabase(),
+        return DriverManager.getConnection(DatabaseUtil.returnDBConnectionStringWithoutDatabase(),
                 FdfSettings.DB_ROOT_USER, FdfSettings.DB_ROOT_PASSWORD);
     }
 
-    private void closeConnection(Connection connection) throws SQLException {
-        fdfLog.debug("Closing mysql database connection.");
-        if (connection != null && !connection.isClosed()) {
-            connection.close();
-        }
-    }
-
-    private HikariDataSource initializeHakariDatasource() {
+    protected void initializeHakariDatasource() {
         HikariConfig config = new HikariConfig();
         config.setDataSourceClassName(FdfSettings.HIKARICP_DATASOURCE_CLASSNAME);
         config.setAutoCommit(FdfSettings.HIKARICP_AUTOCOMMIT);
@@ -125,10 +119,19 @@ public class JdbcConnection {
         config.setDataSourceClassName(FdfSettings.HIKARICP_DATA_SOURCE);
         config.setThreadFactory(FdfSettings.HIKARICP_THREAD_FACTORY);
 
-        config.setJdbcUrl(FdfSettings.returnDBConnectionStringWithoutDatabase());
-        //config.setUsername(FdfSettings.DB_ROOT_USER);
-        //config.setPassword(FdfSettings.DB_ROOT_PASSWORD);
+        config.setJdbcUrl(DatabaseUtil.returnDBConnectionString());
+        config.setUsername(FdfSettings.DB_USER);
+        config.setPassword(FdfSettings.DB_PASSWORD);
 
-        return new HikariDataSource(config);
+        hds = new HikariDataSource(config);
+    }
+
+
+
+    private void closeConnection(Connection connection) throws SQLException {
+        fdfLog.debug("Closing mysql database connection.");
+        if (connection != null && !connection.isClosed()) {
+            connection.close();
+        }
     }
 }

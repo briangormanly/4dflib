@@ -74,9 +74,9 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                             +  " ENCODING '" + FdfSettings.DB_ENCODING.UTF8 + "';";
 
                     String sqlCreateUser = "CREATE USER " +  "\"" +  FdfSettings.DB_USER.toLowerCase() + "\""
-                            +  " WITH PASSWORD '" + FdfSettings.DB_PASSWORD + "';";
-                    String sqlUserGrant = "GRANT ALL PRIVILEGES ON DATABASE " + "\"" + FdfSettings.DB_NAME + "\""
-                            + " to " + "\"" +  FdfSettings.DB_USER.toLowerCase() + "\"" +  ";";
+                            +  " WITH PASSWORD '" + FdfSettings.DB_PASSWORD.toLowerCase() + "';";
+                    String sqlUserGrant = "GRANT ALL PRIVILEGES ON DATABASE " + "\"" + FdfSettings.DB_NAME.toLowerCase()
+                            + "\"" + " to " + "\"" +  FdfSettings.DB_USER.toLowerCase() + "\"" +  ";";
 
                     if(stmt != null) {
                         stmt.executeUpdate(sqlCreate);

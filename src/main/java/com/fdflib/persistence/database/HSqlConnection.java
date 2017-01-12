@@ -74,7 +74,7 @@ public class HSqlConnection {
         if(server.getState() > 0) {
 
             try {
-                return DriverManager.getConnection(FdfSettings.returnDBConnectionString(),
+                return DriverManager.getConnection(DatabaseUtil.returnDBConnectionString(),
                         FdfSettings.DB_USER, FdfSettings.DB_PASSWORD);
             }
             catch (SQLException e) {
@@ -129,7 +129,7 @@ public class HSqlConnection {
 
             try {
                 return DriverManager.getConnection(
-                        FdfSettings.returnDBConnectionStringWithoutDatabase(),
+                        DatabaseUtil.returnDBConnectionStringWithoutDatabase(),
                         FdfSettings.DB_ROOT_USER, FdfSettings.DB_ROOT_PASSWORD);
             }
             catch (SQLException e) {

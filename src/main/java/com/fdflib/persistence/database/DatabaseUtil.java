@@ -16,10 +16,17 @@
 
 package com.fdflib.persistence.database;
 
+import com.fdflib.persistence.queries.JdbcConnection;
+import com.fdflib.util.FdfSettings;
+import org.slf4j.LoggerFactory;
+
 /**
  * Created by brian.gormanly on 9/9/15.
  */
 public class DatabaseUtil {
+
+    private static org.slf4j.Logger fdfLog = LoggerFactory.getLogger(JdbcConnection.class);
+
     public enum DatabaseType {
         MYSQL, POSTGRES, ORACLE, MSSQL, HSQL
     }
@@ -30,5 +37,89 @@ public class DatabaseUtil {
 
     public enum DatabaseEncoding {
         UTF8
+    }
+
+    public static String returnDBConnectionString() {
+        String protocolString = "";
+        String encodingString = "";
+        String connection = "";
+
+        if(FdfSettings.DB_PROTOCOL == DatabaseUtil.DatabaseProtocol.JDBC_MYSQL) {
+            protocolString = "jdbc:mysql://";
+
+            if(FdfSettings.DB_ENCODING == DatabaseUtil.DatabaseEncoding.UTF8) {
+                encodingString = "?characterEncoding=UTF-8";
+            }
+
+            connection = protocolString + FdfSettings.DB_HOST + "/" + FdfSettings.DB_NAME + encodingString;
+        }
+
+        if(FdfSettings.DB_PROTOCOL == DatabaseUtil.DatabaseProtocol.JDBC_POSTGRES) {
+            protocolString = "jdbc:postgresql://";
+
+            if(FdfSettings.DB_ENCODING == DatabaseUtil.DatabaseEncoding.UTF8) {
+                encodingString = "?characterEncoding=UTF-8";
+            }
+
+            connection = protocolString + FdfSettings.DB_HOST + "/" + FdfSettings.DB_NAME.toLowerCase()
+                    + encodingString;
+        }
+
+        if(FdfSettings.DB_PROTOCOL == DatabaseUtil.DatabaseProtocol.JDBC_HSQL) {
+
+            if(FdfSettings.HSQL_DB_FILE) {
+                protocolString = "jdbc:hsqldb:file:" + FdfSettings.HQSL_DB_FILE_LOCATION + FdfSettings.DB_NAME
+                        + ";sql.syntax_mys=true";
+            }
+            else {
+                protocolString = "jdbc:hsqldb:mem:" + FdfSettings.DB_NAME + ";sql.syntax_mys=true";
+            }
+
+            connection = protocolString;
+        }
+
+        fdfLog.debug("Returning DB connection string: {}", connection);
+        return connection;
+    }
+
+    public static String returnDBConnectionStringWithoutDatabase() {
+        String protocolString = "";
+        String encodingString = "";
+        String connection = "";
+
+        if(FdfSettings.DB_PROTOCOL == DatabaseUtil.DatabaseProtocol.JDBC_MYSQL) {
+            protocolString = "jdbc:mysql://";
+
+            if(FdfSettings.DB_ENCODING == DatabaseUtil.DatabaseEncoding.UTF8) {
+                encodingString = "/?characterEncoding=UTF-8";
+            }
+
+            connection = protocolString + FdfSettings.DB_HOST + encodingString;
+        }
+
+        if(FdfSettings.DB_PROTOCOL == DatabaseUtil.DatabaseProtocol.JDBC_POSTGRES) {
+            protocolString = "jdbc:postgresql://";
+
+            if(FdfSettings.DB_ENCODING == DatabaseUtil.DatabaseEncoding.UTF8) {
+                encodingString = "/?characterEncoding=UTF-8";
+            }
+
+            connection = protocolString + FdfSettings.DB_HOST + encodingString;
+        }
+
+        if(FdfSettings.DB_PROTOCOL == DatabaseUtil.DatabaseProtocol.JDBC_HSQL) {
+            if(FdfSettings.HSQL_DB_FILE) {
+                protocolString = "jdbc:hsqldb:file:" + FdfSettings.HQSL_DB_FILE_LOCATION + FdfSettings.DB_NAME
+                        + ";sql.syntax_mys=true";
+            }
+            else {
+                protocolString = "jdbc:hsqldb:mem:" + FdfSettings.DB_NAME + ";sql.syntax_mys=true";
+            }
+
+            connection = protocolString;
+        }
+
+        fdfLog.debug("Returning DB connection string: {}", connection);
+        return connection;
     }
 }

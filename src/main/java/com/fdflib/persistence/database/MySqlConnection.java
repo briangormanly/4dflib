@@ -58,4 +58,5 @@ public class MySqlConnection extends JdbcConnection {
     public void close4dfDbSession(Connection connection) throws SQLException {
         super.close4dfDbSession(connection);
     }
+
 }
