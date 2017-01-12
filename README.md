@@ -3,7 +3,7 @@
 Author: Brian Gormanly
 bgormanly@gmail.com
 4dflib.com
-Copyright &copy; 2015-2016
+Copyright &copy; 2015-2017
 
 <h2>0. Introduction</h2>
 What is 4DF????
@@ -60,7 +60,7 @@ As of version 1.3 4DFLib uses HikariCP (https://github.com/brettwooldridge/Hikar
 
     fdfSettings.USE_HIKARICP = true;
 
-That is it, for additional connection pool tuning see [FdfSetting](https://github.com/briangormanly/4dflib/blob/master/src/main/java/com/fdflib/util/FdfSettings.java)
+That is it, for additional connection pool tuning see [FdfSettings](https://github.com/briangormanly/4dflib/blob/master/src/main/java/com/fdflib/util/FdfSettings.java)
 
 <h2>3. Maven Central Repository Information</h2>
 ```
@@ -152,7 +152,7 @@ List<FdfEntity<Foo>> allFooWithHistory = genericService.getAll(Foo.class);
 There are more super-powerful methods in there like: getEntitiesByValuesForPassedFields, getAtDateById(), getAtDateById(), getEntityBetweenDatesById() and many more!  And they are all yours to use, in all your services, free of charge!
 
 <h3>FdfSettings</h3>
-So far, we have used all the default settings, you can can override any by investigating the following settings contained here: com.fdflib.util.FdfSettings
+So far, we have used all the default settings, you can can override any by investigating the following settings contained here: [FdfSettings](https://github.com/briangormanly/4dflib/blob/master/src/main/java/com/fdflib/util/FdfSettings.java)
 ```
 // get the 4dflib settings singleton
 FdfSettings fdfSettings = FdfSettings.getInstance();
