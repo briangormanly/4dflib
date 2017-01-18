@@ -1090,7 +1090,7 @@ public abstract class FdfCommonServices {
             // see if this states entityId has already been seen
             boolean flag = false;
             // compare this id against existing ones
-            for(FdfEntity thisEntity : allEntities) {
+            for(FdfEntity<S> thisEntity : allEntities) {
                 if(thisEntity.entityId == state.id) {
                     flag = true;
                     addStateToEntity(state, thisEntity);
@@ -1141,7 +1141,7 @@ public abstract class FdfCommonServices {
             if(state.cf) {
                 entity.current = state;
             }
-            else if(!entity.history.stream().anyMatch(historyState -> historyState.rid == state.rid)) {
+            else if(entity.history.stream().noneMatch(historyState -> historyState.rid == state.rid)) {
                 entity.history.add(state);
             }
         }
@@ -1169,7 +1169,24 @@ public abstract class FdfCommonServices {
     }
 
     /* ---- Generic Service Functions ---- */
-    //Base WhereStatement Builders
+    protected static String parseIdSet(String idSet) {
+        if(idSet.matches(".*\\d.*")) {
+            idSet = idSet.replaceAll("-+", ",");
+        }
+        if(!idSet.startsWith("(")) {
+            idSet = "(" + idSet;
+        }
+        if(!idSet.endsWith(")")) {
+            idSet += ")";
+        }
+        return idSet;
+    }
+
+    /**
+     * Creates a WhereClause that represents <i>WHERE rid = {@param rid}</i>
+     * @param rid Value for WhereClause
+     * @return WhereClause for rid
+     */
     protected static WhereClause addByRid(long rid) {
         WhereClause whereRid = new WhereClause();
         whereRid.name = "rid";
@@ -1178,6 +1195,11 @@ public abstract class FdfCommonServices {
         whereRid.valueDataType = Long.class;
         return whereRid;
     }
+    /**
+     * Creates a WhereClause that represents <b>WHERE id = {@param id}</b>
+     * @param id Value for WhereClause
+     * @return WhereClause for id
+     */
     protected static WhereClause addById(long id) {
         WhereClause whereId = new WhereClause();
         whereId.name = "id";
@@ -1186,14 +1208,23 @@ public abstract class FdfCommonServices {
         whereId.valueDataType = Long.class;
         return whereId;
     }
+    /**
+     * Creates a WhereClause that represents <b>WHERE id IN ({@param idSet})</b>
+     * @param idSet String that will be parsed into an IN statement value
+     * @return WhereClause for id
+     */
     protected static WhereClause addByIdSet(String idSet) {
         WhereClause whereIdSet = new WhereClause();
         whereIdSet.name = "id";
         whereIdSet.operator = WhereClause.Operators.IN;
-        whereIdSet.value = "(" + (idSet.matches("^(\\d+\\D)*\\d+$") ? idSet.replaceAll("\\D", ",") : "0") + ")";
+        whereIdSet.value = parseIdSet(idSet);
         whereIdSet.valueDataType = Long.class;
         return whereIdSet;
     }
+    /**
+     * Creates a WhereClause that represents <b>WHERE cf = true</b>
+     * @return WhereClause for cf
+     */
     protected static WhereClause addByCf() {
         WhereClause whereCf = new WhereClause();
         whereCf.name = "cf";
@@ -1202,6 +1233,10 @@ public abstract class FdfCommonServices {
         whereCf.valueDataType = Boolean.class;
         return whereCf;
     }
+    /**
+     * Creates a WhereClause that represents <b>WHERE cf &lt;&gt; true</b>
+     * @return WhereClause for cf
+     */
     protected static WhereClause addNotCf() {
         WhereClause whereCf = new WhereClause();
         whereCf.name = "cf";
