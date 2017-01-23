@@ -5,6 +5,7 @@ import com.fdflib.persistence.FdfPersistence;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -51,7 +52,7 @@ public class SqlStatement {
         return this;
     }
     public SqlStatement where(List<WhereClause> whereStatement) {
-        where.addAll(whereStatement.stream().filter(whereClause -> whereClause != null).collect(Collectors.toList()));
+        where.addAll(whereStatement.stream().filter(Objects::nonNull).collect(Collectors.toList()));
         return this;
     }
 
@@ -122,7 +123,7 @@ public class SqlStatement {
                     sql.append(clause.value.toLowerCase());
                 }
                 else { //Includes String, Date, and UUID
-                    sql.append("'").append(clause.value).append("'");
+                    sql.append("'").append(clause.value.replaceAll("'", "''")).append("'");
                 }
             }
             //Check to see if there are any closing parenthesis to apply
@@ -165,5 +166,10 @@ public class SqlStatement {
             }
         }
         return sql.toString();
+    }
+    public int[] setForManualLimit() {
+        int[] manual = {offset, limit};
+        limit = offset = 0;
+        return manual;
     }
 }
