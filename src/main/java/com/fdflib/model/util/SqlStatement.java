@@ -25,10 +25,19 @@ public class SqlStatement {
         orderBy = new ArrayList<>();
         limit = offset = 0;
     }
+    private SqlStatement(SqlStatement split) {
+        select.addAll(split.select);
+        where.addAll(split.where);
+        groupBy.addAll(split.groupBy);
+        orderBy.addAll(split.orderBy);
+        limit = split.limit;
+        offset = split.offset;
+    }
 
     public static SqlStatement build() {
         return new SqlStatement();
     }
+    public SqlStatement split() { return new SqlStatement(this); }
 
     public SqlStatement select(String selectItem) {
         if(!selectItem.isEmpty()) {
