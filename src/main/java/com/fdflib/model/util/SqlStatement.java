@@ -26,6 +26,7 @@ public class SqlStatement {
         limit = offset = 0;
     }
     private SqlStatement(SqlStatement split) {
+        this();
         select.addAll(split.select);
         where.addAll(split.where);
         groupBy.addAll(split.groupBy);
