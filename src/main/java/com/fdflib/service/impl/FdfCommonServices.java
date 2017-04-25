@@ -39,7 +39,8 @@ public abstract class FdfCommonServices {
 
     /**
      * Save an Entities State to persistence internally manages all insert, update and actions associated with
-     * maintaining the correct state of the data in persistence.  Uses the Default FdfTenant (when not using multi-tenant)
+     * maintaining the correct state of the data in persistence. Uses the Default FdfTenant (when not using multi-tenant)
+     * Edit: Uses the state's FdfTenant, which is the Default FdfTenant if not already set.
      *
      * @param state state to save
      * @param entityState State Type to save
@@ -49,7 +50,7 @@ public abstract class FdfCommonServices {
      * @return S the saved entity state (without FdfEntity)
      */
     public static <S extends CommonState> S save(S state, Class<S> entityState, long userId, long systemId) {
-        return save(state, entityState, userId, systemId, 1);
+        return save(state, entityState, userId, systemId, state.tid);
     }
 
     /**
@@ -110,7 +111,8 @@ public abstract class FdfCommonServices {
 
     /**
      * Save an Entities State to persistence internally manages all insert, update and actions associated with
-     * maintaining the correct state of the data in persistence.  Uses the Default FdfTenant (when not using multi-tenant)
+     * maintaining the correct state of the data in persistence. Uses the Default FdfTenant (when not using multi-tenant)
+     * Edit: Uses the state's FdfTenant, which is the Default FdfTenant if not already set.
      *
      * @param entityState State Type to save
      * @param state state to save
@@ -120,7 +122,7 @@ public abstract class FdfCommonServices {
      * @return FdfEntity that contains current and historical states for the saved entity
      */
     public static <S extends CommonState> FdfEntity<S> save(Class<S> entityState, S state, long userId, long systemId) {
-        return save(entityState, state, userId, systemId, 1);
+        return save(entityState, state, userId, systemId, state.tid);
     }
 
     /**

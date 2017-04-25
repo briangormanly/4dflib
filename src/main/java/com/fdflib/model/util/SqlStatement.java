@@ -38,7 +38,9 @@ public class SqlStatement {
     public static SqlStatement build() {
         return new SqlStatement();
     }
-    public SqlStatement split() { return new SqlStatement(this); }
+    public SqlStatement split() {
+        return new SqlStatement(this);
+    }
 
     public SqlStatement select(String selectItem) {
         if(!selectItem.isEmpty()) {
