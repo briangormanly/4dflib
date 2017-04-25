@@ -850,7 +850,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                 preparedStmt.execute();
                 rs = preparedStmt.getGeneratedKeys();
                 rs.next();
-                newId = rs.getLong("id");
+                newId = rs.getLong("rid");
 
             } catch (SQLException e) {
                 e.printStackTrace();

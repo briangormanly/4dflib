@@ -92,7 +92,7 @@ libraryDependencies ++= Seq(
 ```
 
 <h2>Examples of Usage</h2>
-You can initialize the Library like so (the only assumptions here are that you have a model class Foo that you would like to persist, and that Foo extends com.fdflib.model.state.CommonState, there will be an example of an 4DFLib model object below this section):
+You can initialize the Library like so (the only assumptions here are that you have a model class Foo that you would like to persist with a <strong>default contstructor</strong> (for reflection), and that Foo extends com.fdflib.model.state.CommonState. There will be an example of an 4DFLib model object below this section):
 ```
 // Create a array that will hold the classes that make up our 4df data model
 List<Class> myModel = new ArrayList<>();
@@ -115,6 +115,9 @@ public class Foo extends CommonState {
     @FdfIgnore
     public Integer notPersisted;
 
+    /**
+     * Default constructor required!! (Required for Reflection calls)
+     */
     public Lab1User() {
         super();
         coolThings = new ArrayList<>();

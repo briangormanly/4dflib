@@ -325,6 +325,19 @@ public abstract class FdfCommonServices {
     }
 
     /**
+     * Allows SqlStatement generated queries to pass through to persistence calls.
+     * TODO: Will also allow a place for rank logic to be applied
+     *
+     * @param entityState
+     * @param sqlStatement
+     * @param <S>
+     * @return
+     */
+    public static <S extends CommonState> List<S> sqlStatementSelect(Class<S> entityState, SqlStatement sqlStatement) {
+        return FdfPersistence.getInstance().selectQuery(entityState, sqlStatement);
+    }
+
+    /**
      * Retrieves all entities including deleted records of type passed from persistence. Includes all current and
      * historical data for each entity returned.  Uses the Default FdfTenant (when not using multi-tenant)
      *

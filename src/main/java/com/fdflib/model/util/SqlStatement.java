@@ -2,6 +2,7 @@ package com.fdflib.model.util;
 
 import com.fdflib.model.state.CommonState;
 import com.fdflib.persistence.FdfPersistence;
+import com.fdflib.service.impl.FdfCommonServices;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -96,7 +97,7 @@ public class SqlStatement {
     }
 
     public <S extends CommonState> List<S> run(Class<S> entityState) {
-        return FdfPersistence.getInstance().selectQuery(entityState, this);
+        return FdfCommonServices.sqlStatementSelect(entityState, this);
     }
 
     public String getSelect() {
