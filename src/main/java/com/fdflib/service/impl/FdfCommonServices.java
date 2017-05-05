@@ -307,7 +307,7 @@ public abstract class FdfCommonServices {
     }
     //Sets "order" to last possible order.
     private static <S extends CommonState> double getNewOrder(Class<S> entityState, long tenantId) {
-        CommonState returnedState = SqlStatement.build().select("max(order) AS order").where(setForCurrent(tenantId)).run(entityState).stream().findAny().orElse(null);
+        CommonState returnedState = SqlStatement.build().select("max(`order`) AS `order`").where(setForCurrent(tenantId)).run(entityState).stream().findAny().orElse(null);
         return (returnedState != null && returnedState.order > 0 ? Math.floor(returnedState.order+1) : 1);
     }
 
@@ -424,7 +424,7 @@ public abstract class FdfCommonServices {
      * @return long representing teh number of rows in the table
      */
     public static <S extends CommonState> long getRowCount(Class<S> entityState) {
-        CommonState returnedState = SqlStatement.build().select("max(rid) AS rid").run(entityState).stream().findAny().orElse(null);
+        CommonState returnedState = SqlStatement.build().select("max(`rid`) AS `rid`").run(entityState).stream().findAny().orElse(null);
         return (returnedState != null ? returnedState.rid : 0);
 
         /*List<S> returnedQuery = FdfPersistence.getInstance().selectQuery(entityState, SqlStatement.build().select("rid"));
@@ -1300,7 +1300,7 @@ public abstract class FdfCommonServices {
      * @return Entities of Type passed
      */
     public static long getNewEntityId(Class<? extends CommonState> entityState, long tenantId) {
-        CommonState returnedState = SqlStatement.build().select("max(id) AS id").where(auditForCurrent(tenantId)).run(entityState).stream().findAny().orElse(null);
+        CommonState returnedState = SqlStatement.build().select("max(`id`) AS `id`").where(auditForCurrent(tenantId)).run(entityState).stream().findAny().orElse(null);
         return (returnedState != null && returnedState.id > 0 ? returnedState.id + 1 : 1);
     }
 

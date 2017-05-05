@@ -1,7 +1,6 @@
 package com.fdflib.model.util;
 
 import com.fdflib.model.state.CommonState;
-import com.fdflib.persistence.FdfPersistence;
 import com.fdflib.service.impl.FdfCommonServices;
 
 import java.util.ArrayList;
@@ -151,7 +150,7 @@ public class SqlStatement {
             else {
                 sql.append(",");
             }
-            sql.append(" ").append(group);
+            sql.append(" `").append(group).append("`");
         });
         return sql.toString();
     }
@@ -164,7 +163,7 @@ public class SqlStatement {
             else {
                 sql.append(",");
             }
-            sql.append(" ").append(order);
+            sql.append(" `").append(order).append("`");
         });
         return sql.toString();
     }
