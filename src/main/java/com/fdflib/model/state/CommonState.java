@@ -45,6 +45,6 @@ public class CommonState implements Serializable {
         this.esid = -1;
         this.euid = -1;
         this.tid = 1;
-        this.order = -1;
+        this.order = 0;
     }
 }

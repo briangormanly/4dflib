@@ -98,6 +98,21 @@ public abstract class FdfCommonServices {
                 FdfPersistence.getInstance().update(entityState, lastCurrentEntity);
             }
         }
+
+        if(state.order < 0) {
+            //this means that order was stored as a position.
+            state.order = Math.abs(state.order);
+            getOrderByPosition(state);
+        }
+        else if(state.order > 0) {
+            //this means that order was already set, so check if valid.
+            validateOrder(state);
+        }
+        else {
+            //this means that order should be set to last.
+            state.order = getNewOrder(state.getClass(), state.tid);
+        }
+
         //Set generic fields for new record, save entity, then return it.
         state.arsd = Calendar.getInstance().getTime();
         state.ared = null;
@@ -167,6 +182,21 @@ public abstract class FdfCommonServices {
                 return new FdfEntity<>();
             }
         }
+
+        if(state.order < 0) {
+            //this means that order was stored as a position.
+            state.order = Math.abs(state.order);
+            getOrderByPosition(state);
+        }
+        else if(state.order > 0) {
+            //this means that order was already set, so check if valid.
+            validateOrder(state);
+        }
+        else {
+            //this means that order should be set to last.
+            state.order = getNewOrder(state.getClass(), state.tid);
+        }
+
         // get full entity for state
         FdfEntity<S> thisEntity = auditEntityById(entityState, state.id, tenantId);
         // check to see if there is an existing entity, if not, create
@@ -189,6 +219,96 @@ public abstract class FdfCommonServices {
         S entity = auditEntityByRid(entityState, returnedRid);
         // get the entity and return
         return auditEntityById(entityState, entity.id, tenantId);
+    }
+
+    //Calculates "order" value based on the desired position.
+    private static <S extends CommonState> void getOrderByPosition(S state) {
+        SqlStatement statement = SqlStatement.build().select("id, order").where(setForCurrent(state.tid)).orderBy("order");
+        if(state.order == 1) {
+            statement.limit(1,1);
+        } else {
+            statement.limit(2, (int)state.order-1);
+        }
+        List<S> orderBetween = statement.run((Class<S>) state.getClass());
+        if(orderBetween.size() == 2) {
+            if(orderBetween.get(1).id != state.id && orderBetween.get(0).order >= state.order || state.order >= orderBetween.get(1).order) {
+                if (orderBetween.get(1).order - orderBetween.get(0).order > 1) {
+                    state.order = (orderBetween.get(0).order >= state.order
+                            ? Math.floor(orderBetween.get(0).order + 1) : Math.ceil(orderBetween.get(1).order - 1));
+                }
+                String orderCurve = Double.toString(state.order = orderBetween.get(1).order + orderBetween.get(0).order);
+                if (orderCurve.contains(".")) {
+                    double curver = Math.pow(10, (1 + orderCurve.indexOf(".") - orderCurve.length()));
+                    if (curver != orderBetween.get(1).order - orderBetween.get(0).order) {
+                        state.order += curver;
+                    }
+                }
+                state.order /= 2;
+            }
+
+        }
+        else if(!orderBetween.isEmpty() && orderBetween.get(0).id != state.id) {
+            if(state.order == 1) {
+                if(orderBetween.get(0).order <= 1) {
+                    String orderCurve = Double.toString(orderBetween.get(0).order);
+                    if(orderCurve.contains(".")) {
+                        double curver = Math.pow(10, (1 + orderCurve.indexOf(".") - orderCurve.length()));
+                        if(curver != orderBetween.get(1).order - orderBetween.get(0).order) {
+                            orderBetween.get(0).order += curver;
+                        }
+                    }
+                    state.order = orderBetween.get(0).order/2;
+                }
+            }
+            else if(orderBetween.get(0).order >= state.order) {
+                state.order = Math.floor(orderBetween.get(0).order+1);
+            }
+        }
+    }
+    //Checks if "order" is already taken, and adjusts order if it is.
+    private static <S extends CommonState> void validateOrder(S state) {
+        WhereClause whereOrder = new WhereClause();
+        whereOrder.name = "order";
+        whereOrder.operator = WhereClause.Operators.LESS_THAN_OR_EQUAL;
+        whereOrder.value = Double.toString(state.order);
+        whereOrder.valueDataType = Double.class;
+        List<S> orderBetween = SqlStatement.build().select("id, order").where(whereOrder).where(setForCurrent(state.tid))
+                .orderBy("order DESC").limit(2,1).run((Class<S>) state.getClass());
+        if(!orderBetween.isEmpty() && orderBetween.get(0).order == state.order && orderBetween.get(0).id != state.id) {
+            if(orderBetween.size() == 2) {
+                if(orderBetween.get(0).order - orderBetween.get(1).order > 1) {
+                    state.order = Math.ceil(orderBetween.get(0).order-1);
+                }
+                else {
+                    String orderCurb = Double.toString(state.order = orderBetween.get(1).order + orderBetween.get(0).order);
+                    if(orderCurb.contains(".")) {
+                        double curver = Math.pow(10, (1 + orderCurb.indexOf(".") - orderCurb.length()));
+                        if(curver != orderBetween.get(0).order - orderBetween.get(1).order) {
+                            state.order += curver;
+                        }
+                    }
+                    state.order /= 2;
+                }
+            }
+            else if(orderBetween.get(0).order <= 1) {
+                String orderCurb = Double.toString(orderBetween.get(0).order);
+                if(orderCurb.contains(".")) {
+                    double curver = Math.pow(10, (1 + orderCurb.indexOf(".") - orderCurb.length()));
+                    if(curver != orderBetween.get(0).order) {
+                        state.order += curver;
+                    }
+                }
+                state.order = orderBetween.get(0).order/2;
+            }
+            else {
+                state.order = Math.ceil(orderBetween.get(0).order-1);
+            }
+        }
+    }
+    //Sets "order" to last possible order.
+    private static <S extends CommonState> double getNewOrder(Class<S> entityState, long tenantId) {
+        CommonState returnedState = SqlStatement.build().select("max(order) AS order").where(setForCurrent(tenantId)).run(entityState).stream().findAny().orElse(null);
+        return (returnedState != null && returnedState.order > 0 ? Math.floor(returnedState.order+1) : 1);
     }
 
     /**
@@ -332,7 +452,10 @@ public abstract class FdfCommonServices {
      * @return
      */
     public static <S extends CommonState> List<S> sqlStatementSelect(Class<S> entityState, SqlStatement sqlStatement) {
-        return FdfPersistence.getInstance().selectQuery(entityState, sqlStatement);
+        sqlStatement = sqlStatement.orderBy("order");
+        List<S> res = FdfPersistence.getInstance().selectQuery(entityState, sqlStatement);
+
+        return res;
     }
 
     /**
