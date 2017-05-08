@@ -223,7 +223,7 @@ public abstract class FdfCommonServices {
 
     //Calculates "order" value based on the desired position.
     private static <S extends CommonState> void getOrderByPosition(S state) {
-        SqlStatement statement = SqlStatement.build().select("id, order").where(setForCurrent(state.tid)).orderBy("order");
+        SqlStatement statement = SqlStatement.build().select("id").select("order").where(setForCurrent(state.tid)).orderBy("`order`");
         if(state.order == 1) {
             statement.limit(1,1);
         } else {
@@ -272,8 +272,8 @@ public abstract class FdfCommonServices {
         whereOrder.operator = WhereClause.Operators.LESS_THAN_OR_EQUAL;
         whereOrder.value = Double.toString(state.order);
         whereOrder.valueDataType = Double.class;
-        List<S> orderBetween = SqlStatement.build().select("id, order").where(whereOrder).where(setForCurrent(state.tid))
-                .orderBy("order DESC").limit(2,1).run((Class<S>) state.getClass());
+        List<S> orderBetween = SqlStatement.build().select("id").select("order").where(whereOrder).where(setForCurrent(state.tid))
+                .orderBy("`order` DESC").limit(2,1).run((Class<S>) state.getClass());
         if(!orderBetween.isEmpty() && orderBetween.get(0).order == state.order && orderBetween.get(0).id != state.id) {
             if(orderBetween.size() == 2) {
                 if(orderBetween.get(0).order - orderBetween.get(1).order > 1) {
@@ -452,7 +452,7 @@ public abstract class FdfCommonServices {
      * @return
      */
     public static <S extends CommonState> List<S> sqlStatementSelect(Class<S> entityState, SqlStatement sqlStatement) {
-        sqlStatement = sqlStatement.orderBy("order");
+        sqlStatement = sqlStatement.orderBy("`order`");
         List<S> res = FdfPersistence.getInstance().selectQuery(entityState, sqlStatement);
 
         return res;

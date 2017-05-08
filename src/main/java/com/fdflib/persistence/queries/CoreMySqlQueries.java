@@ -280,7 +280,7 @@ public class CoreMySqlQueries implements CorePersistenceImpl {
                 //Start Sql Statement
                 StringBuilder sql = new StringBuilder("UPDATE ").append(FdfSettings.DB_NAME).append(".")
                         .append(c.getSimpleName().toLowerCase()).append(" SET");
-                fields.forEach(field -> sql.append(" ").append(field.getName()).append(" = ?,"));
+                fields.forEach(field -> sql.append(" `").append(field.getName()).append("` = ?,"));
                 sql.deleteCharAt(sql.length() - 1).append(" WHERE rid = ").append(c.getField("rid").get(state)).append(";");
                 //Create Connection
                 conn = MySqlConnection.getInstance().get4dfDbConnection();
@@ -435,7 +435,7 @@ public class CoreMySqlQueries implements CorePersistenceImpl {
                         .append(c.getSimpleName().toLowerCase()).append(" ("),
                         val = new StringBuilder();
                 fields.forEach(field -> {
-                    sql.append(" ").append(field.getName()).append(",");
+                    sql.append(" `").append(field.getName()).append("`,");
                     val.append(" ?,");
                 });
                 sql.deleteCharAt(sql.length()-1).append(") VALUES (")
@@ -1166,7 +1166,7 @@ public class CoreMySqlQueries implements CorePersistenceImpl {
 
                 // add the claus formatting the sql for the correct datatype
                 if(clause.operator != WhereClause.Operators.UNARY) {
-                    sql += " " + clause.name + " " + clause.getOperatorString() + " ";
+                    sql += " `" + clause.name + "` " + clause.getOperatorString() + " ";
                     if(clause.value.equals(WhereClause.NULL)) {
                         sql += clause.value;
                     }
