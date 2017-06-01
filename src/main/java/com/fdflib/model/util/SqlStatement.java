@@ -1,7 +1,6 @@
 package com.fdflib.model.util;
 
 import com.fdflib.model.state.CommonState;
-import com.fdflib.persistence.FdfPersistence;
 import com.fdflib.service.impl.FdfCommonServices;
 
 import java.util.ArrayList;
@@ -107,7 +106,24 @@ public class SqlStatement {
                 if(s > 0) {
                     sql.append(", ");
                 }
-                sql.append(select.get(s));
+                if(!select.get(s).contains("DISTINCT")
+                        && !select.get(s).contains("*")
+                        && !select.get(s).contains("`")) {
+                    if(select.get(s).contains("(")) {
+                        sql
+                                .append(select.get(s).substring(0, select.get(s).indexOf("(") + 1))
+                                .append("`")
+                                .append(select.get(s).substring(select.get(s).indexOf("(") + 1, select.get(s).indexOf(")") + 1))
+                                .append("`")
+                                .append(select.get(s).substring(select.get(s).indexOf(")") + 1, select.get(s).length()));
+                    }
+                    else {
+                        sql.append("`").append(select.get(s)).append("`");
+                    }
+                }
+                else {
+                    sql.append(select.get(s));
+                }
             }
         } else {
             sql.append("*");
@@ -128,7 +144,7 @@ public class SqlStatement {
             clause.groupings.stream().filter(grouping -> grouping.equals(WhereClause.GROUPINGS.OPEN_PARENTHESIS)).forEach(openParen -> sql.append("("));
             //Format clause by datatype
             if(clause.operator != WhereClause.Operators.UNARY) {
-                sql.append(clause.name).append(" ").append(clause.getOperatorString()).append(" ");
+                sql.append("`").append(clause.name).append("` ").append(clause.getOperatorString()).append(" ");
                 if(clause.value.equals(WhereClause.NULL) || Number.class.isAssignableFrom(clause.valueDataType)) {
                     sql.append(clause.value);
                 }
@@ -153,7 +169,7 @@ public class SqlStatement {
             else {
                 sql.append(",");
             }
-            sql.append(" ").append(group);
+            sql.append(" `").append(group).append("`");
         });
         return sql.toString();
     }

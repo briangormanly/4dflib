@@ -33,6 +33,7 @@ public class CommonState implements Serializable {
     public long euid;
     public long esid;
     public long tid;    // tenantId
+    public double order;
 
     public CommonState() {
         this.rid = -1;
@@ -44,5 +45,6 @@ public class CommonState implements Serializable {
         this.esid = -1;
         this.euid = -1;
         this.tid = 1;
+        this.order = 0;
     }
 }
