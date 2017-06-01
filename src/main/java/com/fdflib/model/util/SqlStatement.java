@@ -104,10 +104,24 @@ public class SqlStatement {
                 if(s > 0) {
                     sql.append(", ");
                 }
-                System.out.println("the mysterious is::::::::: ----------------------> " + select.get(s));
-
-                sql.append("`").append(select.get(s)).append("`");
-                System.out.println("now the mysterious is::::::::: ----------------------> " + sql.toString());
+                if(!select.get(s).contains("DISTINCT")
+                        && !select.get(s).contains("*")
+                        && !select.get(s).contains("`")) {
+                    if(select.get(s).contains("(")) {
+                        sql
+                                .append(select.get(s).substring(0, select.get(s).indexOf("(") + 1))
+                                .append("`")
+                                .append(select.get(s).substring(select.get(s).indexOf("(") + 1, select.get(s).indexOf(")") + 1))
+                                .append("`")
+                                .append(select.get(s).substring(select.get(s).indexOf(")") + 1, select.get(s).length()));
+                    }
+                    else {
+                        sql.append("`").append(select.get(s)).append("`");
+                    }
+                }
+                else {
+                    sql.append(select.get(s));
+                }
             }
         } else {
             sql.append("*");

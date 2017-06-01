@@ -452,7 +452,9 @@ public abstract class FdfCommonServices {
      * @return
      */
     public static <S extends CommonState> List<S> sqlStatementSelect(Class<S> entityState, SqlStatement sqlStatement) {
-        sqlStatement = sqlStatement.orderBy("`order`");
+        if(!sqlStatement.getOrderBy().contains("ORDER BY `order`")) {
+            sqlStatement = sqlStatement.orderBy("`order`");
+        }
         List<S> res = FdfPersistence.getInstance().selectQuery(entityState, sqlStatement);
 
         return res;
