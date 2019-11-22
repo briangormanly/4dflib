@@ -254,7 +254,6 @@ public class CoreMySqlQueries implements CorePersistenceImpl {
         //Check if default tenant exists
         FdfTenant defaultTenant = ts.getDefaultTenant();
         if(defaultTenant == null) {
-            System.out.println("Hi !!!!!!!! !!! ");
             //Create the Default FdfTenant
             FdfTenant defaultTenantState = new FdfTenant();
             defaultSystem = ss.getDefaultSystem();
