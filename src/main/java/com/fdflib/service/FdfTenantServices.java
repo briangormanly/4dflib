@@ -70,21 +70,22 @@ public class FdfTenantServices extends FdfCommonServices {
     }
 
     public FdfEntity<FdfTenant> getDefaultTenantWithHistory() {
-        //Check that deleted records are not returned
+        // check that deleted records are not returned
         WhereClause whereDf = new WhereClause();
         whereDf.name = "df";
         whereDf.operator = WhereClause.Operators.IS_NOT;
         whereDf.value = "true";
-        whereDf.valueDataType = Integer.class;
+        whereDf.valueDataType = Boolean.class;
 
-        //Check to find results that match the name like condition
-        WhereClause primary = new WhereClause();
-        primary.name = "isPrimary";
-        primary.operator = WhereClause.Operators.EQUAL;
-        primary.value = "true";
-        primary.valueDataType = Boolean.class;
+        // add the id check
+        WhereClause whereId = new WhereClause();
+        whereId.conditional = WhereClause.CONDITIONALS.AND;
+        whereId.name = "id";
+        whereId.operator = WhereClause.Operators.EQUAL;
+        whereId.value = "1";
+        whereId.valueDataType = Long.class;
 
-        return manageReturnedEntity(SqlStatement.build().where(whereDf).where(primary).run(FdfTenant.class));
+        return manageReturnedEntity(SqlStatement.build().where(whereDf).where(whereId).run(FdfTenant.class));
     }
     
     public FdfTenant getTenantByName(String tenantName) {
