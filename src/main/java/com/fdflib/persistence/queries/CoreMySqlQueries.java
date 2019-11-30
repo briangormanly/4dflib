@@ -608,6 +608,12 @@ public class CoreMySqlQueries implements CorePersistenceImpl {
         List<S> everything = new ArrayList<>();
         //Check if class is @FdfIgonre
         if(!c.isAnnotationPresent(FdfIgnore.class)) {
+
+            // if no order by was passed use id
+            if(sqlStatement.getOrderBy().length() == 0) {
+                sqlStatement.orderBy("id");
+            }
+
             //Start the sql statement
             String sql = sqlStatement.getSelect() + " FROM " + FdfSettings.DB_NAME + "." + c.getSimpleName().toLowerCase()
                     + sqlStatement.getWhere() + sqlStatement.getGroupBy()

@@ -911,6 +911,10 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
         // check to see if the class has an @fdfIgonre
         if(!c.isAnnotationPresent(FdfIgnore.class)) {
 
+            // if no order by was passed use id
+            if(sqlStatement.getOrderBy().length() == 0) {
+                sqlStatement.orderBy("id");
+            }
             // start the sql statement
             String sql = sqlStatement.getSelect() + " FROM \"" + c.getSimpleName().toLowerCase() + "\""
                     + sqlStatement.getWhere() + sqlStatement.getGroupBy() + sqlStatement.getOrderBy()

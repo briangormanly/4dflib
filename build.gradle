@@ -3,7 +3,7 @@
 }
 
 group = 'com.fdflib'
-version = '1.3.2-SNAPSHOT'
+version = '1.3.3-SNAPSHOT'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -14,7 +14,7 @@ repositories {
 
 dependencies {
     compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.12',
-            'mysql:mysql-connector-java:5.1.37',
+            'mysql:mysql-connector-java:5.1.44',
             'org.postgresql:postgresql:9.4-1200-jdbc41',
             'org.hsqldb:hsqldb:2.3.4',
             'com.zaxxer:HikariCP:2.5.1'

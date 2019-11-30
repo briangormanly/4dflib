@@ -48,7 +48,20 @@ public class DatabaseUtil {
             protocolString = "jdbc:mysql://";
 
             if(FdfSettings.DB_ENCODING == DatabaseUtil.DatabaseEncoding.UTF8) {
-                encodingString = "?characterEncoding=UTF-8";
+                if(FdfSettings.USE_SSL == true) {
+                    encodingString = "?characterEncoding=UTF-8&autoReconnect=true&useSSL=true";
+                }
+                else {
+                    encodingString = "?characterEncoding=UTF-8&autoReconnect=true&useSSL=false";
+                }
+            }
+            else {
+                if(FdfSettings.USE_SSL == true) {
+                    encodingString = "?autoReconnect=true&useSSL=true";
+                }
+                else {
+                    encodingString = "?autoReconnect=true&useSSL=false";
+                }
             }
 
             connection = protocolString + FdfSettings.DB_HOST + "/" + FdfSettings.DB_NAME + encodingString;
@@ -85,13 +98,28 @@ public class DatabaseUtil {
     public static String returnDBConnectionStringWithoutDatabase() {
         String protocolString = "";
         String encodingString = "";
+        String questionMark = "?";
+        String sslString ="";
         String connection = "";
 
         if(FdfSettings.DB_PROTOCOL == DatabaseUtil.DatabaseProtocol.JDBC_MYSQL) {
             protocolString = "jdbc:mysql://";
 
             if(FdfSettings.DB_ENCODING == DatabaseUtil.DatabaseEncoding.UTF8) {
-                encodingString = "/?characterEncoding=UTF-8";
+                if(FdfSettings.USE_SSL == true) {
+                    encodingString = "/?characterEncoding=UTF-8&autoReconnect=true&useSSL=true";
+                }
+                else {
+                    encodingString = "/?characterEncoding=UTF-8&autoReconnect=true&useSSL=false";
+                }
+            }
+            else {
+                if(FdfSettings.USE_SSL == true) {
+                    encodingString = "/?autoReconnect=true&useSSL=true";
+                }
+                else {
+                    encodingString = "/?autoReconnect=true&useSSL=false";
+                }
             }
 
             connection = protocolString + FdfSettings.DB_HOST + encodingString;

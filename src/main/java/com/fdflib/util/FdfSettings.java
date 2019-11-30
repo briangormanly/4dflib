@@ -43,6 +43,8 @@ public class FdfSettings {
     public static Integer DB_PORT = 9001;
     public static DatabaseUtil.DatabaseEncoding DB_ENCODING = DatabaseUtil.DatabaseEncoding.UTF8;
 
+    public static Boolean USE_SSL = false;
+
     // default general user information
     public static String DB_USER = "SA";
     public static String DB_PASSWORD = "";

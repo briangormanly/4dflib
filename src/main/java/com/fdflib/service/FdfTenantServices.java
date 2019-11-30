@@ -120,9 +120,14 @@ public class FdfTenantServices extends FdfCommonServices {
         FdfEntity<FdfTenant> returnEntity = null;
         if(tenant != null) {
             // check to see if there is a user with the passed users id and or username
-            FdfTenant existingTenant = this.getTenantByName(tenant.name);
+            FdfTenant existingTenant = null;
+            if(tenant.id > -1) {
+                existingTenant = this.getTenantById(tenant.id);
+            }
+
             if(existingTenant != null) {
                 tenant.id = existingTenant.id;
+                tenant.isPrimary = existingTenant.isPrimary;
             }
             returnEntity = this.save(FdfTenant.class, tenant);
         }
