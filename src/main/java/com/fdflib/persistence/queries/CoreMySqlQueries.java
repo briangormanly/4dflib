@@ -280,7 +280,7 @@ public class CoreMySqlQueries implements CorePersistenceImpl {
                 //Start Sql Statement
                 StringBuilder sql = new StringBuilder("UPDATE ").append(FdfSettings.DB_NAME).append(".")
                         .append(c.getSimpleName().toLowerCase()).append(" SET");
-                fields.forEach(field -> sql.append(" ").append(field.getName()).append(" = ?,"));
+                fields.forEach(field -> sql.append(" `").append(field.getName()).append("` = ?,"));
                 sql.deleteCharAt(sql.length() - 1).append(" WHERE rid = ").append(c.getField("rid").get(state)).append(";");
                 //Create Connection
                 conn = MySqlConnection.getInstance().get4dfDbConnection();
@@ -435,7 +435,7 @@ public class CoreMySqlQueries implements CorePersistenceImpl {
                         .append(c.getSimpleName().toLowerCase()).append(" ("),
                         val = new StringBuilder();
                 fields.forEach(field -> {
-                    sql.append(" ").append(field.getName()).append(",");
+                    sql.append(" `").append(field.getName()).append("`,");
                     val.append(" ?,");
                 });
                 sql.deleteCharAt(sql.length()-1).append(") VALUES (")
@@ -1085,58 +1085,58 @@ public class CoreMySqlQueries implements CorePersistenceImpl {
     static String getFieldNameAndDataType(Field field) {
         String sql = "";
 
-        fdfLog.debug("checking field: {} of type: {} ", field.getName(), field.getType());
+        fdfLog.debug("checking field: {} of type: {} ", "`" + field.getName() + "`", field.getType());
 
         if (field.getType() == String.class) {
-            sql += field.getName() + " TEXT";
+            sql += "`" + field.getName() + "`" + " TEXT";
         } else if (field.getType() == int.class || field.getType() == Integer.class) {
-            sql += field.getName() + " INT";
+            sql += "`" + field.getName() + "`" + " INT";
         } else if (field.getType() == Long.class || field.getType() == long.class) {
-            sql += field.getName() + " BIGINT";
+            sql += "`" + field.getName() + "`" + " BIGINT";
             if (field.getName().equals("rid")) {
                 sql += " PRIMARY KEY AUTO_INCREMENT";
             }
         } else if (field.getType() == Double.class || field.getType() == double.class) {
-            sql += field.getName() + " DOUBLE";
+            sql += "`" + field.getName() + "`" + " DOUBLE";
         } else if (field.getType() == Float.class || field.getType() == float.class) {
-            sql += field.getName() + " FLOAT";
+            sql += "`" + field.getName() + "`" + " FLOAT";
         }
         else if (field.getType() == BigDecimal.class) {
-            sql += field.getName() + " NUMERIC(10,4)";
+            sql += "`" + field.getName() + "`" + " NUMERIC(10,4)";
         } else if (field.getType() == boolean.class || field.getType() == Boolean.class) {
-            sql += field.getName() + " TINYINT(1)";
+            sql += "`" + field.getName() + "`" + " TINYINT(1)";
         } else if (field.getType() == Date.class) {
-            sql += field.getName() + " DATETIME";
+            sql += "`" + field.getName() + "`" + " DATETIME";
             if (field.getName().equals("arsd")) {
                 sql += " DEFAULT CURRENT_TIMESTAMP";
             } else {
                 sql += " NULL";
             }
         } else if (field.getType() == UUID.class) {
-            sql += field.getName() + " VARCHAR(132)";
+            sql += "`" + field.getName() + "`" + " VARCHAR(132)";
         } else if (field.getType() == Character.class || field.getType() == char.class) {
-            sql += field.getName() + " CHAR";
+            sql += "`" + field.getName() + "`" + " CHAR";
         } else if (field.getType() != null && field.getType().isEnum()) {
-            sql += field.getName() + " VARCHAR(200)";
+            sql += "`" + field.getName() + "`" + " VARCHAR(200)";
         } else if (Class.class.isAssignableFrom(field.getType())) {
-            sql += field.getName() + " VARCHAR(200)";
+            sql += "`" + field.getName() + "`" + " VARCHAR(200)";
         }
         else if (field.getGenericType() instanceof ParameterizedType) {
             ParameterizedType pt = (ParameterizedType) field.getGenericType();
             if(pt.getActualTypeArguments().length == 1 && pt.getActualTypeArguments()[0].toString()
                     .matches(".*?((L|l)ong|Integer|int|(D|d)ouble|(F|f)loat|(B|b)oolean|String).*")) {
-                sql += field.getName() + " TEXT";
+                sql += "`" + field.getName() + "`" + " TEXT";
             }
             else {
                 // unknown create text fields to serialize
                 fdfLog.debug("Was not able to identify field: {} of type: {} ", field.getName(), field.getType());
-                sql += field.getName() + " BLOB";
+                sql += "`" + field.getName() + "`" + " BLOB";
             }
         }
         else {
             // unknown create text fields to serialize
             fdfLog.debug("Was not able to identify field: {} of type: {} ", field.getName(), field.getType());
-            sql += field.getName() + " BLOB";
+            sql += "`" + field.getName() + "`" + " BLOB";
         }
         return sql;
     }
@@ -1172,7 +1172,7 @@ public class CoreMySqlQueries implements CorePersistenceImpl {
 
                 // add the claus formatting the sql for the correct datatype
                 if(clause.operator != WhereClause.Operators.UNARY) {
-                    sql += " " + clause.name + " " + clause.getOperatorString() + " ";
+                    sql += " `" + clause.name + "` " + clause.getOperatorString() + " ";
                     if(clause.value.equals(WhereClause.NULL)) {
                         sql += clause.value;
                     }
