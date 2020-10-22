@@ -3,7 +3,7 @@
 Author: Brian Gormanly
 bgormanly@gmail.com
 4dflib.com
-Copyright &copy; 2015-2017
+Copyright &copy; 2015-2020
 
 <h2>0. Introduction</h2>
 What is 4DF????
@@ -211,6 +211,6 @@ public static String TEST_SYSTEM_PASSWORD = "testSystemPassword";
 ```
 <h2>Full Examples:</h2>
 
-We are working on updating the full examples to use version 1.3 of 4DFLib
+We are working on updating the full examples to use version 1.3.2 of 4DFLib
 
 
