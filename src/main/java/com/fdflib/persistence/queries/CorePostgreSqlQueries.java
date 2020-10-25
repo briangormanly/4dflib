@@ -729,10 +729,12 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                 }
                             }
                             else if (field.getType() == boolean.class || field.getType() == Boolean.class) {
+                                System.out.println("hello 1!");
                                 if (field.get(state) != null) {
                                     preparedStmt.setBoolean(fieldCounter3, (boolean) field.get(state));
                                 } else {
-                                    preparedStmt.setNull(fieldCounter3, Types.TINYINT);
+                                    System.out.println("hello!");
+                                    preparedStmt.setNull(fieldCounter3, Types.BOOLEAN);
                                 }
 
                             } else if (field.getType() == char.class || field.getType() == Character.class) {
