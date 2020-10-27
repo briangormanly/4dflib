@@ -56,25 +56,47 @@ public class JdbcConnection {
 
     protected Connection getPlainConnection() throws SQLException {
         fdfLog.debug("Establishing mysql connection with regular credentials");
+        /*
         try {
             Class.forName("com.mysql.jdbc.Driver");
         } catch (ClassNotFoundException e) {
             fdfLog.error("Database driver error!");
             e.printStackTrace();
         }
+        */
 
         return DriverManager.getConnection(DatabaseUtil.returnDBConnectionString(),
                 FdfSettings.DB_USER, FdfSettings.DB_PASSWORD);
     }
 
     protected Connection getNoDbPlainConnection() throws SQLException {
-        fdfLog.debug("Establishing mysql connection with root credentials");
-        try {
-            Class.forName("com.mysql.jdbc.Driver");
-        } catch (ClassNotFoundException e) {
-            fdfLog.error("Database driver error!");
-            fdfLog.error(e.getStackTrace().toString());
+
+
+        if(FdfSettings.getInstance().PERSISTENCE == DatabaseUtil.DatabaseType.MYSQL) {
+            fdfLog.debug("Establishing mysql connection with root credentials");
+            /*
+            try {
+                Class.forName("com.mysql.jdbc.Driver");
+            } catch (ClassNotFoundException e) {
+                fdfLog.error("Database driver error!");
+                fdfLog.error(e.getStackTrace().toString());
+            }
+            */
         }
+        else if(FdfSettings.getInstance().PERSISTENCE == DatabaseUtil.DatabaseType.MARIADB) {
+            fdfLog.debug("Establishing MariaDb connection with root credentials");
+
+            /*
+            try {
+                Class.forName("org.mariadb.jdbc.Driver");
+            } catch (ClassNotFoundException e) {
+                fdfLog.error("Database driver error!");
+                fdfLog.error(e.getStackTrace().toString());
+            }
+            */
+        }
+
+
 
         return DriverManager.getConnection(DatabaseUtil.returnDBConnectionStringWithoutDatabase(),
                 FdfSettings.DB_ROOT_USER, FdfSettings.DB_ROOT_PASSWORD);

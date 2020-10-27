@@ -17,7 +17,6 @@
 package com.fdflib.util;
 
 import com.fdflib.persistence.database.DatabaseUtil;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -256,6 +256,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                         + FdfSettings.DB_NAME.toLowerCase() + "' and table_name= '"
                                         + c.getSimpleName().toLowerCase() + "' and column_name= '"
                                         + field.getName().toLowerCase() + "';";
+                                fdfLog.debug("Checking existence of field {} with SQL: {}", c.getSimpleName().toLowerCase(), fieldTest);
 
                                 if (stmt != null) {
                                     rs = stmt.executeQuery(fieldTest);
@@ -379,8 +380,8 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                 if(!field.isAnnotationPresent(FdfIgnore.class)) {
 
                     fieldCounter++;
-                    if (!field.getName().toLowerCase().equals("rid")) {
-                        sql += " " + field.getName().toLowerCase() + " = ?";
+                    if (!field.getName().equals("rid")) {
+                        sql += " " + field.getName() + " = ?";
                         if (numberOfFields > fieldCounter) sql += ",";
                     }
                 }
@@ -411,7 +412,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                     preparedStmt.setNull(fieldCounter3, Types.VARCHAR);
                                 }
                             } else if (field.getType() == int.class || field.getType() == Integer.class) {
-                                if (!field.getName().toLowerCase().equals("rid") && field.get(state) != null) {
+                                if (!field.getName().equals("rid") && field.get(state) != null) {
                                     if (field.get(state) != null) {
                                         preparedStmt.setInt(fieldCounter3, (int) field.get(state));
                                     } else {
@@ -419,7 +420,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                     }
                                 }
                             } else if (field.getType() == Long.class || field.getType() == long.class) {
-                                if (!field.getName().toLowerCase().equals("rid")) {
+                                if (!field.getName().equals("rid")) {
                                     if (field.get(state) != null) {
                                         preparedStmt.setLong(fieldCounter3, (long) field.get(state));
                                     } else {
@@ -427,7 +428,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                     }
                                 }
                             } else if (field.getType() == Double.class || field.getType() == double.class) {
-                                if (!field.getName().toLowerCase().equals("rid")) {
+                                if (!field.getName().equals("rid")) {
                                     if (field.get(state) != null) {
                                         preparedStmt.setDouble(fieldCounter3, (double) field.get(state));
                                     } else {
@@ -435,7 +436,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                     }
                                 }
                             } else if (field.getType() == Float.class || field.getType() == float.class) {
-                                if (!field.getName().toLowerCase().equals("rid")) {
+                                if (!field.getName().equals("rid")) {
                                     if (field.get(state) != null) {
                                         preparedStmt.setFloat(fieldCounter3, (float) field.get(state));
                                     } else {
@@ -444,7 +445,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                 }
                             }
                             else if (field.getType() == BigDecimal.class) {
-                                if (!field.getName().toLowerCase().equals("rid")) {
+                                if (!field.getName().equals("rid")) {
                                     if (field.get(state) != null) {
                                         preparedStmt.setBigDecimal(fieldCounter3, (BigDecimal) field.get(state));
                                     } else {
@@ -565,7 +566,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                 }
                             }
 
-                            if (!field.getName().toLowerCase().equals("rid")) fieldCounter3++;
+                            if (!field.getName().equals("rid")) fieldCounter3++;
 
                         } catch (IllegalAccessException e) {
                             e.printStackTrace();
@@ -640,8 +641,8 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                 if(!field.isAnnotationPresent(FdfIgnore.class)) {
 
                     fieldCounter++;
-                    if (!field.getName().toLowerCase().equals("rid")) {
-                        sql += " " + field.getName().toLowerCase();
+                    if (!field.getName().equals("rid")) {
+                        sql += " " + field.getName();
                         if (numberOfFields > fieldCounter) sql += ",";
                     }
                 }
@@ -657,7 +658,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                 if(!field.isAnnotationPresent(FdfIgnore.class)) {
 
                     fieldCounter2++;
-                    if (!field.getName().toLowerCase().equals("rid")) {
+                    if (!field.getName().equals("rid")) {
                         sql += " ?";
                         if (numberOfFields > fieldCounter2) sql += ",";
                     }
@@ -688,7 +689,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                 }
                             } else if (field.getType() == int.class || field.getType() == Integer.class) {
                                 if (field.get(state) != null) {
-                                    if (!field.getName().toLowerCase().equals("rid")) {
+                                    if (!field.getName().equals("rid")) {
                                         preparedStmt.setInt(fieldCounter3, (int) field.get(state));
                                     }
                                 } else {
@@ -696,7 +697,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                 }
                             } else if (field.getType() == Long.class || field.getType() == long.class) {
                                 if (field.get(state) != null) {
-                                    if (!field.getName().toLowerCase().equals("rid")) {
+                                    if (!field.getName().equals("rid")) {
                                         preparedStmt.setLong(fieldCounter3, (long) field.get(state));
                                     }
                                 } else {
@@ -704,7 +705,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                 }
                             } else if (field.getType() == Double.class || field.getType() == double.class) {
                                 if (field.get(state) != null) {
-                                    if (!field.getName().toLowerCase().equals("rid")) {
+                                    if (!field.getName().equals("rid")) {
                                         preparedStmt.setDouble(fieldCounter3, (double) field.get(state));
                                     }
                                 } else {
@@ -712,7 +713,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                 }
                             } else if (field.getType() == Float.class || field.getType() == float.class) {
                                 if (field.get(state) != null) {
-                                    if (!field.getName().toLowerCase().equals("rid")) {
+                                    if (!field.getName().equals("rid")) {
                                         preparedStmt.setFloat(fieldCounter3, (float) field.get(state));
                                     }
                                 } else {
@@ -721,7 +722,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                             }
                             else if (field.getType() == BigDecimal.class) {
                                 if (field.get(state) != null) {
-                                    if (!field.getName().toLowerCase().equals("rid")) {
+                                    if (!field.getName().equals("rid")) {
                                         preparedStmt.setBigDecimal(fieldCounter3, (BigDecimal) field.get(state));
                                     }
                                 } else {
@@ -837,7 +838,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                 }
                             }
 
-                            if (!field.getName().toLowerCase().equals("rid")) fieldCounter3++;
+                            if (!field.getName().equals("rid")) fieldCounter3++;
 
                         } catch (IllegalAccessException e) {
                             e.printStackTrace();
@@ -950,14 +951,14 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                         try {
                                             if(field.getName() != null && rs.getString(field.getName()) != null) {
                                                 field.setAccessible(true);
-                                                field.set(thisObject, rs.getString(field.getName().toLowerCase()));
+                                                field.set(thisObject, rs.getString(field.getName()));
                                             }
                                         } catch (SQLException e) {
                                             if (e.getSQLState().equals("42703")) {
                                                 // Invalid column name, thrown if select statement does not include column
                                                 fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                                         + "{}, This is usually because select statement did not include column and "
-                                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                                        + "can be ignored. Message is {}", field.getName(), e.getMessage());
                                             } else {
                                                 fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                                         ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -967,14 +968,14 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                         try {
                                             if(field.getName() != null && rs.getString(field.getName()) != null) {
                                                 field.setAccessible(true);
-                                                field.set(thisObject, rs.getInt(field.getName().toLowerCase()));
+                                                field.set(thisObject, rs.getInt(field.getName()));
                                             }
                                         } catch (SQLException e) {
                                             if (e.getSQLState().equals("42703")) {
                                                 // Invalid column name, thrown if select statement does not include column
                                                 fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                                         + "{}, This is usually because select statement did not include column and "
-                                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                                        + "can be ignored. Message is {}", field.getName(), e.getMessage());
                                             } else {
                                                 fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                                         ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -984,14 +985,14 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                         try {
                                             if(field.getName() != null && rs.getString(field.getName()) != null) {
                                                 field.setAccessible(true);
-                                                field.set(thisObject, rs.getLong(field.getName().toLowerCase()));
+                                                field.set(thisObject, rs.getLong(field.getName()));
                                             }
                                         } catch (SQLException e) {
                                             if (e.getSQLState().equals("42703")) {
                                                 // Invalid column name, thrown if select statement does not include column
                                                 fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                                                 + "{}, This is usually because select statement did not include column and "
-                                                                + "can be ignored. Message is {}", field.getName().toLowerCase(),
+                                                                + "can be ignored. Message is {}", field.getName(),
                                                         e.getMessage());
                                             } else {
                                                 fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
@@ -1002,14 +1003,14 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                         try {
                                             if(field.getName() != null && rs.getString(field.getName()) != null) {
                                                 field.setAccessible(true);
-                                                field.set(thisObject, rs.getDouble(field.getName().toLowerCase()));
+                                                field.set(thisObject, rs.getDouble(field.getName()));
                                             }
                                         } catch (SQLException e) {
                                             if (e.getSQLState().equals("42703")) {
                                                 // Invalid column name, thrown if select statement does not include column
                                                 fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                                         + "{}, This is usually because select statement did not include column and "
-                                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                                        + "can be ignored. Message is {}", field.getName(), e.getMessage());
                                             } else {
                                                 fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                                         ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -1019,14 +1020,14 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                         try {
                                             if(field.getName() != null && rs.getString(field.getName()) != null) {
                                                 field.setAccessible(true);
-                                                field.set(thisObject, rs.getFloat(field.getName().toLowerCase()));
+                                                field.set(thisObject, rs.getFloat(field.getName()));
                                             }
                                         } catch (SQLException e) {
                                             if (e.getSQLState().equals("42703")) {
                                                 // Invalid column name, thrown if select statement does not include column
                                                 fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                                         + "{}, This is usually because select statement did not include column and "
-                                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                                        + "can be ignored. Message is {}", field.getName(), e.getMessage());
                                             } else {
                                                 fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                                         ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -1036,14 +1037,14 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                         try {
                                             if(field.getName() != null && rs.getString(field.getName()) != null) {
                                                 field.setAccessible(true);
-                                                field.set(thisObject, rs.getInt(field.getName().toLowerCase()));
+                                                field.set(thisObject, rs.getInt(field.getName()));
                                             }
                                         } catch (SQLException e) {
                                             if (e.getSQLState().equals("42703")) {
                                                 // Invalid column name, thrown if select statement does not include column
                                                 fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                                         + "{}, This is usually because select statement did not include column and "
-                                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                                        + "can be ignored. Message is {}", field.getName(), e.getMessage());
                                             } else {
                                                 fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                                         ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -1053,14 +1054,14 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                         try {
                                             if(field.getName() != null && rs.getString(field.getName()) != null) {
                                                 field.setAccessible(true);
-                                                field.set(thisObject, rs.getBigDecimal(field.getName().toLowerCase()));
+                                                field.set(thisObject, rs.getBigDecimal(field.getName()));
                                             }
                                         } catch (SQLException e) {
                                             if (e.getSQLState().equals("42703")) {
                                                 // Invalid column name, thrown if select statement does not include column
                                                 fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                                         + "{}, This is usually because select statement did not include column and "
-                                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                                        + "can be ignored. Message is {}", field.getName(), e.getMessage());
                                             } else {
                                                 fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                                         ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -1070,14 +1071,14 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                         try {
                                             field.setAccessible(true);
                                             if (field.getName() != null && rs.getString(field.getName()) != null && rs.getString(field.getName()).length() > 0) {
-                                                field.set(thisObject, rs.getString(field.getName().toLowerCase()).charAt(0));
+                                                field.set(thisObject, rs.getString(field.getName()).charAt(0));
                                             }
                                         } catch (SQLException e) {
                                             if (e.getSQLState().equals("42703")) {
                                                 // Invalid column name, thrown if select statement does not include column
                                                 fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                                         + "{}, This is usually because select statement did not include column and "
-                                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                                        + "can be ignored. Message is {}", field.getName(), e.getMessage());
                                             } else {
                                                 fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                                         ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -1087,14 +1088,14 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                         try {
                                             if(field.getName() != null && rs.getString(field.getName()) != null) {
                                                 field.setAccessible(true);
-                                                field.set(thisObject, rs.getTimestamp(field.getName().toLowerCase()));
+                                                field.set(thisObject, rs.getTimestamp(field.getName()));
                                             }
                                         } catch (SQLException e) {
                                             if (e.getSQLState().equals("42703")) {
                                                 // Invalid column name, thrown if select statement does not include column
                                                 fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                                         + "{}, This is usually because select statement did not include column and "
-                                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                                        + "can be ignored. Message is {}", field.getName(), e.getMessage());
                                             } else {
                                                 fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                                         ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -1102,20 +1103,20 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                         } catch (NullPointerException npe) {
                                             // Nullpointer in timestap
                                             fdfLog.debug("NullPointer on timestamp column {}, This is usually because select"
-                                                    + "statement did not include column", field.getName().toLowerCase(), npe.getMessage());
+                                                    + "statement did not include column", field.getName(), npe.getMessage());
                                         }
                                     } else if (field.getType() == UUID.class) {
                                         try {
                                             if(field.getName() != null && rs.getString(field.getName()) != null) {
                                                 field.setAccessible(true);
-                                                field.set(thisObject, UUID.fromString(rs.getString(field.getName().toLowerCase())));
+                                                field.set(thisObject, UUID.fromString(rs.getString(field.getName())));
                                             }
                                         } catch (SQLException e) {
                                             if (e.getSQLState().equals("42703")) {
                                                 // Invalid column name, thrown if select statement does not include column
                                                 fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                                         + "{}, This is usually because select statement did not include column and "
-                                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                                        + "can be ignored. Message is {}", field.getName(), e.getMessage());
                                             } else {
                                                 fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                                         ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -1125,14 +1126,14 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                         try {
                                             if(field.getName() != null && rs.getString(field.getName()) != null) {
                                                 field.setAccessible(true);
-                                                field.set(thisObject, rs.getBoolean(field.getName().toLowerCase()));
+                                                field.set(thisObject, rs.getBoolean(field.getName()));
                                             }
                                         } catch (SQLException e) {
                                             if (e.getSQLState().equals("42703")) {
                                                 // Invalid column name, thrown if select statement does not include column
                                                 fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                                         + "{}, This is usually because select statement did not include column and "
-                                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                                        + "can be ignored. Message is {}", field.getName(), e.getMessage());
                                             } else {
                                                 fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                                         ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -1142,14 +1143,14 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                         try {
                                             if(field.getName() != null && rs.getString(field.getName()) != null) {
                                                 field.setAccessible(true);
-                                                field.set(thisObject, rs.getBoolean(field.getName().toLowerCase()));
+                                                field.set(thisObject, rs.getBoolean(field.getName()));
                                             }
                                         } catch (SQLException e) {
                                             if (e.getSQLState().equals("42703")) {
                                                 // Invalid column name, thrown if select statement does not include column
                                                 fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                                         + "{}, This is usually because select statement did not include column and "
-                                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                                        + "can be ignored. Message is {}", field.getName(), e.getMessage());
                                             } else {
                                                 fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                                         ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -1160,13 +1161,13 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                         try {
                                             field.setAccessible(true);
                                             field.set(thisObject, Enum.valueOf((Class<Enum>) field.getType(),
-                                                    rs.getString(field.getName().toLowerCase())));
+                                                    rs.getString(field.getName())));
                                         } catch (SQLException e) {
                                             if (e.getSQLState().equals("42703")) {
                                                 // Invalid column name, thrown if select statement does not include column
                                                 fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                                         + "{}, This is usually because select statement did not include column and "
-                                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                                        + "can be ignored. Message is {}", field.getName(), e.getMessage());
                                             } else {
                                                 fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                                         ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -1178,13 +1179,13 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                             field.setAccessible(true);
                                             field.set(thisObject,
                                                     FdfUtil.getClassByFullyQualifiedName(
-                                                            rs.getString(field.getName().toLowerCase())));
+                                                            rs.getString(field.getName())));
                                         } catch (SQLException e) {
                                             if (e.getSQLState().equals("42703")) {
                                                 // Invalid column name, thrown if select statement does not include column
                                                 fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                                         + "{}, This is usually because select statement did not include column and "
-                                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                                        + "can be ignored. Message is {}", field.getName(), e.getMessage());
                                             } else {
                                                 fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                                         ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -1309,7 +1310,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                                     // Invalid column name, thrown if select statement does not include column
                                                     fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                                             + "{}, This is usually because select statement did not include column and "
-                                                            + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                                            + "can be ignored. Message is {}", field.getName(), e.getMessage());
                                                 } else {
                                                     fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                                             ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -1321,7 +1322,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                         try {
                                             field.setAccessible(true);
 
-                                            byte[] data = Base64.getDecoder().decode(rs.getString(field.getName().toLowerCase()));
+                                            byte[] data = Base64.getDecoder().decode(rs.getString(field.getName()));
                                             ObjectInputStream ois = new ObjectInputStream(
                                                     new ByteArrayInputStream(data));
                                             Object o = ois.readObject();
@@ -1333,7 +1334,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                                 // Invalid column name, thrown if select statement does not include column
                                                 fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                                         + "{}, This is usually because select statement did not include column and "
-                                                        + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                                        + "can be ignored. Message is {}", field.getName(), e.getMessage());
                                             } else {
                                                 fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                                         ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -1345,7 +1346,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                         // Invalid column name, thrown if select statement does not include column
                                         fdfLog.debug("Select statement had sql state 42703 (Invalid column name) on column"
                                                 + "{}, This is usually because select statement did not include column and "
-                                                + "can be ignored. Message is {}", field.getName().toLowerCase(), e.getMessage());
+                                                + "can be ignored. Message is {}", field.getName(), e.getMessage());
                                     } else {
                                         fdfLog.warn("SQL error in Select\nCode: {},\nState: {}\nMessage" +
                                                 ": {}\n", e.getErrorCode(), e.getSQLState(), e.getMessage());
@@ -1393,32 +1394,32 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
     static String getFieldNameAndDataType(Field field) {
         String sql = "";
 
-        fdfLog.debug("checking field: {} of type: {} ", field.getName().toLowerCase(), field.getType());
+        fdfLog.debug("checking field: {} of type: {} ", field.getName(), field.getType());
 
         if (field.getType() == String.class) {
-            sql += field.getName().toLowerCase()+ " TEXT";
+            sql += field.getName()+ " TEXT";
         } else if (field.getType() == int.class || field.getType() == Integer.class) {
-            sql += field.getName().toLowerCase()+ " INT";
+            sql += field.getName()+ " INT";
         } else if (field.getType() == Long.class || field.getType() == long.class) {
 
             if (field.getName().equals("rid")) {
-                sql += field.getName().toLowerCase()+ " BIGSERIAL PRIMARY KEY";
+                sql += field.getName()+ " BIGSERIAL PRIMARY KEY";
             }
             else {
-                sql += field.getName().toLowerCase()+ " BIGINT";
+                sql += field.getName()+ " BIGINT";
             }
         } else if (field.getType() == Double.class || field.getType() == double.class) {
-            sql += field.getName().toLowerCase()+ " double precision";
+            sql += field.getName()+ " double precision";
         } else if (field.getType() == Float.class || field.getType() == float.class) {
-            sql += field.getName().toLowerCase()+ " real";
+            sql += field.getName()+ " real";
 
         }
         else if (field.getType() == BigDecimal.class) {
             sql += field.getName() + " NUMERIC(10,4)";
         } else if (field.getType() == boolean.class || field.getType() == Boolean.class) {
-            sql += field.getName().toLowerCase()+ " BOOLEAN";
+            sql += field.getName()+ " BOOLEAN";
         } else if (field.getType() == Date.class) {
-            sql += field.getName().toLowerCase()+ " TIMESTAMP";
+            sql += field.getName()+ " TIMESTAMP";
             if (field.getName().equals("arsd")) {
                 sql += " DEFAULT CURRENT_TIMESTAMP";
             } else {
@@ -1427,11 +1428,11 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
         } else if (field.getType() == UUID.class) {
             sql += field.getName() + " VARCHAR(132)";
         } else if (field.getType() == Character.class || field.getType() == char.class) {
-            sql += field.getName().toLowerCase()+ " CHAR";
+            sql += field.getName()+ " CHAR";
         } else if (field.getType() instanceof Class && ((Class<?>) field.getType()).isEnum()) {
-            sql += field.getName().toLowerCase()+ " VARCHAR(200)";
+            sql += field.getName()+ " VARCHAR(200)";
         } else if (Class.class.isAssignableFrom(field.getType())) {
-            sql += field.getName().toLowerCase()+ " VARCHAR(200)";
+            sql += field.getName()+ " VARCHAR(200)";
         }
         else if (field.getGenericType() instanceof ParameterizedType) {
             ParameterizedType pt = (ParameterizedType) field.getGenericType();
@@ -1453,7 +1454,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
             else {
                 // unknown build text fields to serialize
                 fdfLog.debug("Was not able to identify field: {} of type: {} ", field.getName(), field.getType());
-                sql += field.getName().toLowerCase()+ " bytea";
+                sql += field.getName()+ " bytea";
 
             }
 
@@ -1461,7 +1462,7 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
         else {
             // unknown build text fields to serialize
             fdfLog.debug("Was not able to identify field: {} of type: {} ", field.getName(), field.getType());
-            sql += field.getName().toLowerCase()+ " bytea";
+            sql += field.getName()+ " bytea";
 
         }
 
