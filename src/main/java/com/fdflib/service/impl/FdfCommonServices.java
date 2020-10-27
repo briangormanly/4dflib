@@ -1196,7 +1196,7 @@ public abstract class FdfCommonServices {
     }
 
     /**
-     * Creates a WhereClause that represents <i>WHERE rid = {@param rid}</i>
+     * Creates a WhereClause that represents <i>WHERE rid = @param rid</i>
      * @param rid Value for WhereClause
      * @return WhereClause for rid
      */
@@ -1209,7 +1209,7 @@ public abstract class FdfCommonServices {
         return whereRid;
     }
     /**
-     * Creates a WhereClause that represents <b>WHERE id = {@param id}</b>
+     * Creates a WhereClause that represents <b>WHERE id = @param id</b>
      * @param id Value for WhereClause
      * @return WhereClause for id
      */
@@ -1222,7 +1222,7 @@ public abstract class FdfCommonServices {
         return whereId;
     }
     /**
-     * Creates a WhereClause that represents <b>WHERE id IN ({@param idSet})</b>
+     * Creates a WhereClause that represents <b>WHERE id IN (@param idSet)</b>
      * @param idSet String that will be parsed into an IN statement value
      * @return WhereClause for id
      */

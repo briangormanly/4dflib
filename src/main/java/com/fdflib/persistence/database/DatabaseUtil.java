@@ -28,11 +28,11 @@ public class DatabaseUtil {
     private static org.slf4j.Logger fdfLog = LoggerFactory.getLogger(JdbcConnection.class);
 
     public enum DatabaseType {
-        MYSQL, POSTGRES, ORACLE, MSSQL, HSQL
+        MYSQL, MARIADB, POSTGRES, MSSQL, HSQL
     }
 
     public enum DatabaseProtocol {
-        JDBC_MYSQL, JDBC_POSTGRES, JDBC_HSQL
+        JDBC_MYSQL, JDBC_MARIADB, JDBC_POSTGRES, JDBC_HSQL
     }
 
     public enum DatabaseEncoding {
@@ -65,6 +65,11 @@ public class DatabaseUtil {
             }
 
             connection = protocolString + FdfSettings.DB_HOST + "/" + FdfSettings.DB_NAME + encodingString;
+        }
+
+        if(FdfSettings.DB_PROTOCOL == DatabaseUtil.DatabaseProtocol.JDBC_MARIADB) {
+            protocolString = "jdbc:mariadb://";
+            connection = protocolString + FdfSettings.DB_HOST + "/" + FdfSettings.DB_NAME;
         }
 
         if(FdfSettings.DB_PROTOCOL == DatabaseUtil.DatabaseProtocol.JDBC_POSTGRES) {
@@ -123,6 +128,11 @@ public class DatabaseUtil {
             }
 
             connection = protocolString + FdfSettings.DB_HOST + encodingString;
+        }
+
+        if(FdfSettings.DB_PROTOCOL == DatabaseUtil.DatabaseProtocol.JDBC_MARIADB) {
+            protocolString = "jdbc:mariadb://";
+            connection = protocolString + FdfSettings.DB_HOST;
         }
 
         if(FdfSettings.DB_PROTOCOL == DatabaseUtil.DatabaseProtocol.JDBC_POSTGRES) {
