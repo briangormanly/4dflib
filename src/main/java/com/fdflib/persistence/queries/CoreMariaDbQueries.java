@@ -74,7 +74,7 @@ public class CoreMariaDbQueries implements CorePersistenceImpl {
                         stmt.executeUpdate(sqlCreate);
                         stmt.executeUpdate(sqlUserGrant);
                         fdfLog.info("******************************************************************");
-                        fdfLog.info("4DFLib Database did not exist, attempting to create. MARIA!!!!!!!");
+                        fdfLog.info("4DFLib Database did not exist, attempting to create.");
                         fdfLog.info("******************************************************************");
 
                         fdfLog.info("Database created.");

@@ -255,7 +255,8 @@ public class CorePostgreSqlQueries implements CorePersistenceImpl {
                                 String fieldTest = "select * from information_schema.columns where table_catalog= '"
                                         + FdfSettings.DB_NAME.toLowerCase() + "' and table_name= '"
                                         + c.getSimpleName().toLowerCase() + "' and column_name= '"
-                                        + field.getName() + "';";
+                                        + field.getName().toLowerCase() + "';";
+                                fdfLog.debug("Checking existence of field {} with SQL: {}", c.getSimpleName().toLowerCase(), fieldTest);
 
                                 if (stmt != null) {
                                     rs = stmt.executeQuery(fieldTest);
