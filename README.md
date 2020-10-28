@@ -14,7 +14,7 @@ is ever deleted or updated, and you do not need to anything to implement this be
 also provides a basic service layer for accessing your data through time, allowing you to retrieve current and 
 historical data and filtering by time ranges.
 
-4DFLib currently works with HyperSQL (HSQLDB), PostgreSQL and MySQL, but many more are planned soon and you can easily 
+4DFLib currently works with HyperSQL (HSQLDB), PostgreSQL, MariaDB (new in 4DFLib 1.4) and MySQL (Only MySQL version 5.7), but many more are planned soon and you can easily 
 implement your own database see:
     com.fdflib.persistence.impl.CorePersistenceImpl;
     and example connections in: com.fdflib.persistence.database 
@@ -48,7 +48,6 @@ Please see license.txt for details.
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
 <h2>2. Logging</h2>
 
 4DFLib using SLF4J for logging for Logging Facade.  You can plug in your
@@ -69,7 +68,7 @@ That is it, for additional connection pool tuning see [FdfSettings](https://gith
         <dependency>
             <groupId>com.fdflib</groupId>
             <artifactId>4dflib</artifactId>
-            <version>1.3</version>
+            <version>1.4</version>
         </dependency>
         ...
     </dependencies>
@@ -78,7 +77,7 @@ That is it, for additional connection pool tuning see [FdfSettings](https://gith
 ```
 dependencies {
     ...
-    compile "com.fdflib:4dflib:1.3"
+    compile "com.fdflib:4dflib:1.4"
     ...
 }
 ```
@@ -86,7 +85,7 @@ dependencies {
 ```
 libraryDependencies ++= Seq(
   ...
-  "com.fdflib" % "4dflib" % "1.3"
+  "com.fdflib" % "4dflib" % "1.4"
   ...
 )
 ```
@@ -103,7 +102,7 @@ myModel.add(Foo.class);
 // call the initialization of library!
 FdfServices.initializeFdfDataModel(myModel);
 ```
-That is it!  Just add any classes you want to persist to myModel. If all was configured correctly, you will now have a HSQLDB database named 4dfapplicationdb with a table called Foo.  The database is written to disk by default in the hsql/ folder within your project.  HSQLDB is provided to test by default, but you can easly change 4DFLib to use MySQL and PostgreSQL as well. 
+That is it!  Just add any classes you want to persist to myModel. If all was configured correctly, you will now have a HSQLDB database named 4dfapplicationdb with a table called Foo.  The database is written to disk by default in the hsql/ folder within your project.  HSQLDB is provided to test by default, but you can easly change 4DFLib to use MariaDB, PostgreSQL or MySQL (version 5.7) as well. 
 
 Here is an example of a model class that is ready to be persisted by 4DFLib:
 ```
@@ -172,6 +171,18 @@ fdfSettings.DB_ROOT_PASSWORD = "";
 fdfSettings.DB_USER = "myUser";
 fdfSettings.DB_PASSWORD = "myUserPassword";       
 ```
+Example MariaDB configuration:
+```
+fdfSettings.PERSISTENCE = DatabaseUtil.DatabaseType.MARIADB;
+fdfSettings.DB_PROTOCOL = DatabaseUtil.DatabaseProtocol.JDBC_MARIADB;
+fdfSettings.DB_ENCODING = DatabaseUtil.DatabaseEncoding.UTF8;
+fdfSettings.DB_HOST = "localhost";
+fdfSettings.DB_NAME = "myDB";
+fdfSettings.DB_ROOT_USER = "root"; 
+fdfSettings.DB_ROOT_PASSWORD = "";
+fdfSettings.DB_USER = "myUser";
+fdfSettings.DB_PASSWORD = "myUserPassword";       
+```
 Example MySQL configuration:
 ```
 fdfSettings.PERSISTENCE = DatabaseUtil.DatabaseType.MYSQL;
@@ -182,7 +193,7 @@ fdfSettings.DB_NAME = "myDB";
 fdfSettings.DB_ROOT_USER = "root"; 
 fdfSettings.DB_ROOT_PASSWORD = "";
 fdfSettings.DB_USER = "myUser";
-fdfSettings.DB_PASSWORD = "myUserPassword";       
+fdfSettings.DB_PASSWORD = "myUserPassword";      
 ```
 Other configuration options:
 ```
@@ -211,6 +222,6 @@ public static String TEST_SYSTEM_PASSWORD = "testSystemPassword";
 ```
 <h2>Full Examples:</h2>
 
-We are working on updating the full examples to use version 1.3.2 of 4DFLib
+We are working on updating the full examples to use version 1.4 of 4DFLib
 
 
